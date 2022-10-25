@@ -3,13 +3,20 @@
 
 IntType TypeSystem::commonInt = IntType(4);
 VoidType TypeSystem::commonVoid = VoidType();
+FloatType TypeSystem::commonFloat = FloatType();
 
 Type* TypeSystem::intType = &commonInt;
 Type* TypeSystem::voidType = &commonVoid;
+Type* TypeSystem::floatType = &commonFloat;
 
 std::string IntType::toStr()
 {
     return "int";
+}
+
+std::string FloatType::toStr()
+{
+    return "float";
 }
 
 std::string VoidType::toStr()
