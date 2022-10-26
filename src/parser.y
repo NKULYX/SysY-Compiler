@@ -33,7 +33,7 @@
 %token ADD SUB MUL DIV MOD AND OR NOT LESS LESSEQ GREAT GREATEQ EQ NEQ ASSIGN
 
 %type <stmttype> Stmts Stmt AssignStmt BlockStmt IfStmt WhileStmt BreakStmt ContinueStmt ReturnStmt DeclStmt FuncDef
-%type <exprtype> Exp AddExp MulExp UnaryExp Cond LOrExp PrimaryExp LVal RelExp LAndExp
+%type <exprtype> Exp AddExp MulExp UnaryExp PrimaryExp LVal Cond LOrExp LAndExp EqExp RelExp
 %type <type> Type
 
 %precedence THEN
@@ -142,6 +142,7 @@ ContinueStmt
 // return 语句
 ReturnStmt
     :   RETURN Exp SEMICOLON {
+            std::cout << "ReturnStmt -> RETURN Exp SEMICOLON" << std::endl;
             $$ = new ReturnStmt($2);
         }
     |   RETURN SEMICOLON {
@@ -151,12 +152,12 @@ ReturnStmt
 
 // 变量表达式
 Exp
-    :   AddExp {$$ = $1;}
-    ;
-
-// 条件表达式
-Cond
-    :   LOrExp {$$ = $1;}
+    :   AddExp {
+            $$ = $1;
+        }
+    |   Cond {
+            $$ = $1;
+        }
     ;
 
 // 加法级表达式
@@ -201,7 +202,9 @@ UnaryExp
     |   ID LPAREN RPAREN {
             std::cout << "UnaryExp -> ID LPAREN RPAREN" << std::endl;
         }
-    // todo 单目运算符要不要单独抽出一个节点来
+    /* |   ID LPAREN FuncRParams RPAREN {
+            std::cout << "UnaryExp -> ID LPAREN FuncRParams RPAREN" << std::endl;
+        } */
     |   ADD UnaryExp {
             $$ = $2;
         }
@@ -228,37 +231,76 @@ PrimaryExp
     // todo 浮点数
     ;
 
+//todo 函数参数列表
+/* FuncRParams
+    :
+    ; */
+
+// 条件表达式
+Cond
+    :   LOrExp {$$ = $1;}
+    ;
+
+// 或运算表达式
+LOrExp
+    :   LAndExp {
+            $$ = $1;
+        }
+    |   LOrExp OR LAndExp {
+            SymbolEntry *se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            $$ = new BinaryExpr(se, BinaryExpr::OR, $1, $3);
+        }
+    ;
+
+// 与运算表达式
+LAndExp
+    :   EqExp {
+            $$ = $1;
+        }
+    |   LAndExp AND EqExp {
+            SymbolEntry *se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            $$ = new BinaryExpr(se, BinaryExpr::AND, $1, $3);
+        }
+    ;
+
+// 相等判断表达式
+EqExp
+    :   RelExp {
+            $$ = $1;
+        }
+    |   EqExp EQ RelExp {
+            SymbolEntry* se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            $$ = new BinaryExpr(se, BinaryExpr::EQ, $1, $3);
+        }
+    |   EqExp NEQ RelExp {
+            SymbolEntry* se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            $$ = new BinaryExpr(se, BinaryExpr::NEQ, $1, $3);
+        }
+    ;
+
 // 关系表达式
 RelExp
-    :
-    AddExp {$$ = $1;}
-    |
-    RelExp LESS AddExp
-    {
-        SymbolEntry *se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
-        $$ = new BinaryExpr(se, BinaryExpr::LESS, $1, $3);
-    }
+    :   AddExp {
+            $$ = $1;
+        }
+    |   RelExp LESS AddExp {
+            SymbolEntry *se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            $$ = new BinaryExpr(se, BinaryExpr::LESS, $1, $3);
+        }
+    |   RelExp LESSEQ AddExp {
+            SymbolEntry *se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            $$ = new BinaryExpr(se, BinaryExpr::LESSEQ, $1, $3);
+        }
+    |   RelExp GREAT AddExp {
+            SymbolEntry *se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            $$ = new BinaryExpr(se, BinaryExpr::GREAT, $1, $3);
+        }
+    |   RelExp GREATEQ AddExp {
+            SymbolEntry *se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            $$ = new BinaryExpr(se, BinaryExpr::GREATEQ, $1, $3);
+        }
     ;
-LAndExp
-    :
-    RelExp {$$ = $1;}
-    |
-    LAndExp AND RelExp
-    {
-        SymbolEntry *se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
-        $$ = new BinaryExpr(se, BinaryExpr::AND, $1, $3);
-    }
-    ;
-LOrExp
-    :
-    LAndExp {$$ = $1;}
-    |
-    LOrExp OR LAndExp
-    {
-        SymbolEntry *se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
-        $$ = new BinaryExpr(se, BinaryExpr::OR, $1, $3);
-    }
-    ;
+
 Type
     : TYPE_INT {
         $$ = TypeSystem::intType;
