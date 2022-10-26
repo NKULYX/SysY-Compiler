@@ -83,7 +83,7 @@ commentend "*/"
 }
 "const" {
     #ifdef ONLY_FOR_LEX
-        DEBUG_FOR_LAB4("TYPE_VOID", "const");
+        DEBUG_FOR_LAB4("CONST", "const");
         offset+=strlen(yytext);
     #else
         return CONST;
@@ -224,6 +224,14 @@ commentend "*/"
         offset+=strlen(yytext);
     #else
         return DIV;
+    #endif
+}
+"%" {
+    #ifdef ONLY_FOR_LEX
+        DEBUG_FOR_LAB4("MOD", "%");
+        offset+=strlen(yytext);
+    #else
+        return MOD;
     #endif
 }
 "||" {

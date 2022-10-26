@@ -29,6 +29,15 @@ void BinaryExpr::output(int level)
         case SUB:
             op_str = "sub";
             break;
+        case MUL:
+            op_str = "mul";
+            break;
+        case DIV:
+            op_str = "div";
+            break;
+        case MOD:
+            op_str = "mod";
+            break;
         case AND:
             op_str = "and";
             break;
@@ -42,6 +51,20 @@ void BinaryExpr::output(int level)
     fprintf(yyout, "%*cBinaryExpr\top: %s\n", level, ' ', op_str.c_str());
     expr1->output(level + 4);
     expr2->output(level + 4);
+}
+
+void OneOpExpr::output(int level) {
+    std::string op_str;
+    switch (op) {
+        case NOT:
+            op_str = "not";
+            break;
+        case SUB:
+            op_str = "minus";
+            break;
+    }
+    fprintf(yyout, "%*cOneOpExpr\top: %s\n", level, ' ', op_str.c_str());
+    expr->output(level + 4);
 }
 
 void Constant::output(int level)
