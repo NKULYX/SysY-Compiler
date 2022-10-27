@@ -372,7 +372,7 @@ ConstDef
             identifiers->install($1, se);
             $$ = new DefNode(new Id(se), (InitValNode*)$3, true, false);
         }
-    // todo 数组的定义
+    // todo 数组常量的定义
     ;
 
 // 常量初始化值
@@ -429,6 +429,7 @@ VarDef
             identifiers->install($1, se);
             $$ = new DefNode(new Id(se), (InitValNode*)$3, false, false);
         }
+    // todo 数组变量的定义
     ;
 
 // 变量初始化值
@@ -438,6 +439,7 @@ VarInitVal
             node->addNext((ExprNode*)$1);
             $$ = node;
         }
+    // todo 数组变量的初始化值
     ;
 
 // 函数定义
