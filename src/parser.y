@@ -5,6 +5,8 @@
     extern Ast ast;
     int yylex();
     int yyerror( char const * );
+
+    Type* currentType;
 }
 
 %code requires {
@@ -32,8 +34,8 @@
 %token LPAREN RPAREN LBRACKET RBRACKET LBRACE RBRACE COMMA SEMICOLON
 %token ADD SUB MUL DIV MOD AND OR NOT LESS LESSEQ GREAT GREATEQ EQ NEQ ASSIGN
 
-%type <stmttype> Stmts Stmt AssignStmt BlockStmt IfStmt WhileStmt BreakStmt ContinueStmt ReturnStmt DeclStmt FuncDef
-%type <exprtype> Exp AddExp MulExp UnaryExp PrimaryExp LVal Cond LOrExp LAndExp EqExp RelExp
+%type <stmttype> Stmts Stmt AssignStmt BlockStmt IfStmt WhileStmt BreakStmt ContinueStmt ReturnStmt DeclStmt ConstDefList ConstDef FuncDef
+%type <exprtype> Exp ConstExp AddExp MulExp UnaryExp PrimaryExp LVal Cond LOrExp LAndExp EqExp RelExp
 %type <type> Type
 
 %precedence THEN
@@ -117,21 +119,21 @@ IfStmt
         }
     ;
 
-// while 语句
+//todo while 语句
 WhileStmt
     :   WHILE LPAREN Cond RPAREN Stmt {
             std::cout << "WhileStmt -> WHILE LPAREN Cond RPAREN Stmt" << std::endl;
         }
     ;
 
-// break 语句
+//todo break 语句
 BreakStmt
     :   BREAK SEMICOLON {
             std::cout << "BreakStmt -> BREAK SEMICOLON" << std::endl;
         }
     ;
 
-// continue 语句
+//todo continue 语句
 ContinueStmt
     :   CONTINUE SEMICOLON{
             std::cout << "ContinueStmt -> CONTINUE SEMICOLON" << std::endl;
@@ -142,7 +144,6 @@ ContinueStmt
 // return 语句
 ReturnStmt
     :   RETURN Exp SEMICOLON {
-            std::cout << "ReturnStmt -> RETURN Exp SEMICOLON" << std::endl;
             $$ = new ReturnStmt($2);
         }
     |   RETURN SEMICOLON {
@@ -155,7 +156,11 @@ Exp
     :   AddExp {
             $$ = $1;
         }
-    |   Cond {
+    ;
+
+// 常量表达式
+ConstExp
+    :   AddExp {
             $$ = $1;
         }
     ;
@@ -202,6 +207,7 @@ UnaryExp
     |   ID LPAREN RPAREN {
             std::cout << "UnaryExp -> ID LPAREN RPAREN" << std::endl;
         }
+    // todo 函数调用
     /* |   ID LPAREN FuncRParams RPAREN {
             std::cout << "UnaryExp -> ID LPAREN FuncRParams RPAREN" << std::endl;
         } */
@@ -229,6 +235,9 @@ PrimaryExp
             $$ = new Constant(se);
         }
     // todo 浮点数
+    /* |   FLOATING {
+
+    } */
     ;
 
 //todo 函数参数列表
@@ -301,24 +310,69 @@ RelExp
         }
     ;
 
+// 类型
 Type
-    : TYPE_INT {
-        $$ = TypeSystem::intType;
-    }
-    | TYPE_VOID {
-        $$ = TypeSystem::voidType;
-    }
+    :   TYPE_INT {
+            $$ = TypeSystem::intType;
+            currentType = TypeSystem::intType;
+        }
+    |   TYPE_FLOAT {
+            $$ = TypeSystem::floatType;
+            currentType = TypeSystem::floatType;
+        }
+    |   TYPE_VOID {
+            $$ = TypeSystem::voidType;
+        }
     ;
+
+// 声明语句
 DeclStmt
-    :
-    Type ID SEMICOLON {
-        SymbolEntry *se;
-        se = new IdentifierSymbolEntry($1, $2, identifiers->getLevel());
-        identifiers->install($2, se);
-        $$ = new DeclStmt(new Id(se));
-        delete []$2;
-    }
+    :   CONST Type ConstDefList SEMICOLON {
+            $$ = $3;
+        }
+    |   Type ID SEMICOLON {
+            SymbolEntry *se;
+            se = new IdentifierSymbolEntry($1, $2, identifiers->getLevel());
+            identifiers->install($2, se);
+            $$ = new DeclStmt(new Id(se));
+            delete []$2;
+        }
     ;
+
+// 常量定义列表
+ConstDefList
+    :   ConstDefList COMMA ConstDef {
+            DeclStmt* node = (DeclStmt*) $1;
+            node->addNext((DefNode*)$3);
+            $$ = node;
+        }
+    |   ConstDef {
+            DeclStmt* node = new DeclStmt(true);
+            node->addNext((DefNode*)$1);
+            $$ = node;
+        }
+    ;
+
+// 常量定义
+ConstDef
+    :   ID ASSIGN ConstExp {
+            // 首先将ID插入符号表中
+            Type* type;
+            if(currentType->isInt()){
+                type = TypeSystem::constIntType;
+            }
+            else{
+                type = TypeSystem::constFloatType;
+            }
+            SymbolEntry *se;
+            se = new IdentifierSymbolEntry(type, $1, identifiers->getLevel());
+            identifiers->install($1, se);
+            $$ = new DefNode(new Id(se), $3);
+        }
+    // todo 数组的定义
+    ;
+
+// 函数定义
 FuncDef
     :
     Type ID {

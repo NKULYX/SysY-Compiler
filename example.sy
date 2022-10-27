@@ -1,4 +1,7 @@
 int main()
 {
-    return 1 <= 2 || 5 && 8 != 10;
+    if(1 <=2 && 13 != 10+4){
+        const int a = 10, b = 20;
+    }
+    return 1;
 }

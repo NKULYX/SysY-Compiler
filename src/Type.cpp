@@ -2,12 +2,16 @@
 #include <sstream>
 
 IntType TypeSystem::commonInt = IntType(4);
-VoidType TypeSystem::commonVoid = VoidType();
 FloatType TypeSystem::commonFloat = FloatType();
+ConstIntType TypeSystem::commonConstInt = ConstIntType();
+ConstFloatType TypeSystem::commonConstFloat = ConstFloatType();
+VoidType TypeSystem::commonVoid = VoidType();
 
 Type* TypeSystem::intType = &commonInt;
-Type* TypeSystem::voidType = &commonVoid;
 Type* TypeSystem::floatType = &commonFloat;
+Type* TypeSystem::constIntType = &commonConstInt;
+Type* TypeSystem::constFloatType = &commonConstFloat;
+Type* TypeSystem::voidType = &commonVoid;
 
 std::string IntType::toStr()
 {
@@ -17,6 +21,16 @@ std::string IntType::toStr()
 std::string FloatType::toStr()
 {
     return "float";
+}
+
+std::string ConstIntType::toStr()
+{
+    return "const int";
+}
+
+std::string ConstFloatType::toStr()
+{
+    return "const float";
 }
 
 std::string VoidType::toStr()

@@ -2,6 +2,7 @@
 #define __AST_H__
 
 #include <fstream>
+#include <vector>
 
 class SymbolEntry;
 
@@ -16,6 +17,7 @@ public:
     virtual void output(int level) = 0;
 };
 
+// todo 考虑加一个const标志位来表示是否为常量表达式？
 class ExprNode : public Node
 {
 protected:
@@ -81,12 +83,24 @@ public:
     void output(int level);
 };
 
+class DefNode : public StmtNode
+{
+private:
+    Id* id;
+    ExprNode* initVal;
+public:
+    DefNode(Id* id, ExprNode* initVal) : id(id), initVal(initVal){};
+    void output(int level);
+};
+
 class DeclStmt : public StmtNode
 {
 private:
-    Id *id;
+    bool isConst;
+    std::vector<DefNode*> defList;
 public:
-    DeclStmt(Id *id) : id(id){};
+    DeclStmt(bool isConst) : isConst(isConst){};
+    void addNext(DefNode* next);
     void output(int level);
 };
 

@@ -1,6 +1,7 @@
+#include <iostream>
+#include <string>
 #include "Ast.h"
 #include "SymbolTable.h"
-#include <string>
 #include "Type.h"
 
 extern FILE *yyout;
@@ -115,10 +116,29 @@ void SeqNode::output(int level)
     stmt2->output(level + 4);
 }
 
+void DeclStmt::addNext(DefNode* next)
+{
+    defList.push_back(next);
+}
+
 void DeclStmt::output(int level)
 {
     fprintf(yyout, "%*cDeclStmt\n", level, ' ');
-    id->output(level + 4);
+    for(auto def : defList){
+        def->output(level+4);
+    }
+}
+
+void DefNode::output(int level)
+{
+    fprintf(yyout, "%*cDefNode\n", level, ' ');
+    id->output(level+4);
+    if(initVal == nullptr){
+        fprintf(yyout, "%*cnull\n", level+4, ' ');
+    }
+    else{
+        initVal->output(level+4);
+    }
 }
 
 void IfStmt::output(int level)
