@@ -51,11 +51,15 @@ Program
 
 // 语句序列
 Stmts
-    :   Stmt{
-            $$=$1;
+    :   Stmts Stmt{
+            SeqNode* node = (SeqNode*)$1;
+            node->addNext((StmtNode*)$2);
+            $$ = (StmtNode*) node;
         }
-    |   Stmts Stmt{
-            $$ = new SeqNode($1, $2);
+    |   Stmt{
+            SeqNode* node = new SeqNode();
+            node->addNext((StmtNode*)$1);
+            $$ = (StmtNode*) node;
         }
     ;
 
@@ -119,10 +123,10 @@ IfStmt
         }
     ;
 
-//todo while 语句
+//while 语句
 WhileStmt
     :   WHILE LPAREN Cond RPAREN Stmt {
-            std::cout << "WhileStmt -> WHILE LPAREN Cond RPAREN Stmt" << std::endl;
+            $$ = new WhileStmt($3,$5);
         }
     ;
 
@@ -444,26 +448,25 @@ VarInitVal
 
 // 函数定义
 FuncDef
-    :
-    Type ID {
-        Type *funcType;
-        funcType = new FunctionType($1,{});
-        SymbolEntry *se = new IdentifierSymbolEntry(funcType, $2, identifiers->getLevel());
-        identifiers->install($2, se);
-        identifiers = new SymbolTable(identifiers);
-    }
-    LPAREN RPAREN
-    BlockStmt
-    {
-        SymbolEntry *se;
-        se = identifiers->lookup($2);
-        assert(se != nullptr);
-        $$ = new FunctionDef(se, $6);
-        SymbolTable *top = identifiers;
-        identifiers = identifiers->getPrev();
-        delete top;
-        delete []$2;
-    }
+    :   Type ID {
+            Type *funcType;
+            funcType = new FunctionType($1,{});
+            SymbolEntry *se = new IdentifierSymbolEntry(funcType, $2, identifiers->getLevel());
+            identifiers->install($2, se);
+            identifiers = new SymbolTable(identifiers);
+        }
+        LPAREN RPAREN
+        BlockStmt
+        {
+            SymbolEntry *se;
+            se = identifiers->lookup($2);
+            assert(se != nullptr);
+            $$ = new FunctionDef(se, $6);
+            SymbolTable *top = identifiers;
+            identifiers = identifiers->getPrev();
+            delete top;
+            delete []$2;
+        }
     ;
 %%
 

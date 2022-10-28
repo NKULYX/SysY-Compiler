@@ -109,11 +109,18 @@ void CompoundStmt::output(int level)
     stmt->output(level + 4);
 }
 
+void SeqNode::addNext(StmtNode* next)
+{
+    stmtList.push_back(next);
+}
+
 void SeqNode::output(int level)
 {
     fprintf(yyout, "%*cSequence\n", level, ' ');
-    stmt1->output(level + 4);
-    stmt2->output(level + 4);
+    for(auto stmt : stmtList)
+    {
+        stmt->output(level + 4);
+    }
 }
 
 void DeclStmt::addNext(DefNode* next)
@@ -142,7 +149,6 @@ void DefNode::output(int level)
         initVal->output(level+4);
     }
 }
-
 
 void InitValNode::addNext(ExprNode* next)
 {
@@ -173,6 +179,13 @@ void IfElseStmt::output(int level)
     cond->output(level + 4);
     thenStmt->output(level + 4);
     elseStmt->output(level + 4);
+}
+
+void WhileStmt::output(int level)
+{
+    fprintf(yyout, "%*cWhileStmt\n", level, ' ');
+    cond->output(level+4);
+    bodyStmt->output(level+4);
 }
 
 void ReturnStmt::output(int level)

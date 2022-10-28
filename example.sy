@@ -1,9 +1,15 @@
+const int aaa = 10;
 int main()
 {
+    int x = 1, y = 0;
     if(1 <=2 && 13 != 10+4){
         const int a = 10, b = 20;
     }
-    int x, y;
-    int m=1, n =2, p;
-    return 1;
+    while(x < 10)
+    {
+        y = y+1;
+        x = x+1;
+    }
+    int m=1+x, n =2, p;
+    return 1+aaa;
 }

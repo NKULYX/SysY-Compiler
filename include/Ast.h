@@ -77,9 +77,10 @@ public:
 class SeqNode : public StmtNode
 {
 private:
-    StmtNode *stmt1, *stmt2;
+    std::vector<StmtNode*> stmtList;
 public:
-    SeqNode(StmtNode *stmt1, StmtNode *stmt2) : stmt1(stmt1), stmt2(stmt2){};
+    SeqNode(){};
+    void addNext(StmtNode* next);
     void output(int level);
 };
 
@@ -137,6 +138,16 @@ private:
     StmtNode *elseStmt;
 public:
     IfElseStmt(ExprNode *cond, StmtNode *thenStmt, StmtNode *elseStmt) : cond(cond), thenStmt(thenStmt), elseStmt(elseStmt) {};
+    void output(int level);
+};
+
+class WhileStmt : public StmtNode
+{
+private:
+    ExprNode *cond;
+    StmtNode *bodyStmt;
+public:
+    WhileStmt(ExprNode *cond, StmtNode *bodyStmt) : cond(cond), bodyStmt(bodyStmt){};
     void output(int level);
 };
 
