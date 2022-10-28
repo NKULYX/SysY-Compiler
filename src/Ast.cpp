@@ -201,6 +201,19 @@ void AssignStmt::output(int level)
     expr->output(level + 4);
 }
 
+void FuncDefParamsNode::addNext(Id* next)
+{
+    paramsList.push_back(next);
+}
+
+void FuncDefParamsNode::output(int level)
+{
+    fprintf(yyout, "%*cFuncDefParamsNode\n", level, ' ');
+    for(auto param : paramsList){
+        param->output(level+4);
+    }
+}
+
 void FunctionDef::output(int level)
 {
     std::string name, type;
@@ -208,5 +221,11 @@ void FunctionDef::output(int level)
     type = se->getType()->toStr();
     fprintf(yyout, "%*cFunctionDefine function name: %s, type: %s\n", level, ' ', 
             name.c_str(), type.c_str());
+    if(params!=nullptr){
+        params->output(level+4);
+    }
+    else{
+        fprintf(yyout, "%*cFuncDefParamsNode NULL\n", level+4, ' ');
+    }
     stmt->output(level + 4);
 }

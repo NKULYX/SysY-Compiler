@@ -106,6 +106,7 @@ private:
 public:
     DefNode(Id* id, InitValNode* initVal, bool isConst, bool isArray) : 
         isConst(isConst), isArray(isArray), id(id), initVal(initVal){};
+    Id* getId() {return id;}
     void output(int level);
 };
 
@@ -170,13 +171,24 @@ public:
     void output(int level);
 };
 
+class FuncDefParamsNode : public StmtNode
+{
+private:
+    std::vector<Id*> paramsList;
+public:
+    FuncDefParamsNode() {};
+    void addNext(Id* next);
+    void output(int level);
+};
+
 class FunctionDef : public StmtNode
 {
 private:
     SymbolEntry *se;
+    FuncDefParamsNode *params;
     StmtNode *stmt;
 public:
-    FunctionDef(SymbolEntry *se, StmtNode *stmt) : se(se), stmt(stmt){};
+    FunctionDef(SymbolEntry *se, FuncDefParamsNode *params, StmtNode *stmt) : se(se), params(params), stmt(stmt){};
     void output(int level);
 };
 

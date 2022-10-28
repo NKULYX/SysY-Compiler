@@ -34,7 +34,8 @@
 %token LPAREN RPAREN LBRACKET RBRACKET LBRACE RBRACE COMMA SEMICOLON
 %token ADD SUB MUL DIV MOD AND OR NOT LESS LESSEQ GREAT GREATEQ EQ NEQ ASSIGN
 
-%type <stmttype> Stmts Stmt AssignStmt BlockStmt IfStmt WhileStmt BreakStmt ContinueStmt ReturnStmt DeclStmt ConstDefList ConstDef ConstInitVal VarDefList VarDef VarInitVal FuncDef
+%type <stmttype> Stmts Stmt AssignStmt BlockStmt IfStmt WhileStmt BreakStmt ContinueStmt ReturnStmt
+%type <stmttype> DeclStmt ConstDefList ConstDef ConstInitVal VarDefList VarDef VarInitVal FuncDef FuncParams FuncParam
 %type <exprtype> Exp ConstExp AddExp MulExp UnaryExp PrimaryExp LVal Cond LOrExp LAndExp EqExp RelExp
 %type <type> Type
 
@@ -208,9 +209,9 @@ UnaryExp
     :   PrimaryExp {
             $$ = $1;
         }
-    |   ID LPAREN RPAREN {
+    /* |   ID LPAREN RPAREN {
             std::cout << "UnaryExp -> ID LPAREN RPAREN" << std::endl;
-        }
+        } */
     // todo 函数调用
     /* |   ID LPAREN FuncRParams RPAREN {
             std::cout << "UnaryExp -> ID LPAREN FuncRParams RPAREN" << std::endl;
@@ -244,8 +245,8 @@ PrimaryExp
     } */
     ;
 
-//todo 函数参数列表
-/* FuncRParams
+/* //todo 函数参数列表
+FuncRParams
     :
     ; */
 
@@ -455,19 +456,45 @@ FuncDef
             identifiers->install($2, se);
             identifiers = new SymbolTable(identifiers);
         }
-        LPAREN RPAREN
-        BlockStmt
-        {
+        LPAREN FuncParams RPAREN BlockStmt {
             SymbolEntry *se;
             se = identifiers->lookup($2);
             assert(se != nullptr);
-            $$ = new FunctionDef(se, $6);
+            $$ = new FunctionDef(se, (FuncDefParamsNode*)$5, $7);
             SymbolTable *top = identifiers;
             identifiers = identifiers->getPrev();
             delete top;
             delete []$2;
         }
     ;
+
+// 函数参数列表
+FuncParams
+    :   FuncParams COMMA FuncParam {
+            FuncDefParamsNode* node = (FuncDefParamsNode*)$1;
+            node->addNext(((DefNode*)$3)->getId());
+            $$ = node;
+        }
+    |   FuncParam {
+            FuncDefParamsNode* node = new FuncDefParamsNode();
+            node->addNext(((DefNode*)$1)->getId());
+            $$ = node;
+        }
+    |   %empty {
+            $$ = nullptr;
+        }
+    ;
+
+// 函数参数
+FuncParam
+    :   Type ID {
+            SymbolEntry *se = new IdentifierSymbolEntry($1, $2, identifiers->getLevel());
+            identifiers->install($2, se);
+            $$ = new DefNode(new Id(se), nullptr, false, false);
+        }
+    // todo 数组函数参数
+    ;
+    
 %%
 
 int yyerror(char const* message)
