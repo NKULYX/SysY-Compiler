@@ -113,7 +113,12 @@ void FuncCallNode::output(int level)
     scope = dynamic_cast<IdentifierSymbolEntry*>(funcEntry)->getScope();
     fprintf(yyout, "%*cFuncCallNode\tfuncName: %s\t funcType: %s\tscope: %d\n", 
             level, ' ', name.c_str(), type.c_str(), scope);
-    params->output(level+4);
+    if(params!=nullptr){
+        params->output(level+4);
+    }
+    else{
+        fprintf(yyout, "%*cFuncCallParamsNode NULL\n", level+4, ' ');
+    }
 }
 
 void FuncCallParamsNode::addNext(ExprNode* next)
