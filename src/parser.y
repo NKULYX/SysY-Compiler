@@ -35,7 +35,7 @@
 %token ADD SUB MUL DIV MOD AND OR NOT LESS LESSEQ GREAT GREATEQ EQ NEQ ASSIGN
 
 %type <stmttype> Stmts Stmt AssignStmt BlockStmt IfStmt WhileStmt BreakStmt ContinueStmt ReturnStmt
-%type <stmttype> DeclStmt ConstDefList ConstDef ConstInitVal VarDefList VarDef VarInitVal FuncDef FuncParams FuncParam
+%type <stmttype> DeclStmt ConstDefList ConstDef ConstInitVal VarDefList VarDef VarInitVal FuncDef FuncParams FuncParam FuncRParams
 %type <exprtype> Exp ConstExp AddExp MulExp UnaryExp PrimaryExp LVal Cond LOrExp LAndExp EqExp RelExp
 %type <type> Type
 
@@ -213,9 +213,18 @@ UnaryExp
             std::cout << "UnaryExp -> ID LPAREN RPAREN" << std::endl;
         } */
     // todo 函数调用
-    /* |   ID LPAREN FuncRParams RPAREN {
-            std::cout << "UnaryExp -> ID LPAREN FuncRParams RPAREN" << std::endl;
-        } */
+    |   ID LPAREN FuncRParams RPAREN {
+            SymbolEntry *se;
+            se = identifiers->lookup($1);
+            if(se == nullptr)
+            {
+                fprintf(stderr, "identifier \"%s\" is undefined\n", (char*)$1);
+                delete [](char*)$1;
+                assert(se != nullptr);
+            }
+            SymbolEntry *tmp = new TemporarySymbolEntry(se->getType(), SymbolTable::getLabel());
+            $$ = new FuncCallNode(tmp, new Id(se), (FuncCallParamsNode*)$3);
+        }
     |   ADD UnaryExp {
             $$ = $2;
         }
@@ -245,10 +254,22 @@ PrimaryExp
     } */
     ;
 
-/* //todo 函数参数列表
+//todo 函数参数列表
 FuncRParams
-    :
-    ; */
+    :   FuncRParams COMMA Exp {
+            FuncCallParamsNode* node = (FuncCallParamsNode*) $1;
+            node->addNext($3);
+            $$ = node;
+        }
+    |   Exp {
+            FuncCallParamsNode* node = new FuncCallParamsNode();
+            node->addNext($1);
+            $$ = node;
+        }
+    |   %empty {
+            $$ = nullptr;
+        }
+    ;
 
 // 条件表达式
 Cond

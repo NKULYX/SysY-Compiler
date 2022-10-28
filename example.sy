@@ -1,4 +1,10 @@
 const int aaa = 10;
+
+int func(int a, int b)
+{
+    return a + b;
+}
+
 int main()
 {
     int x = 1, y = 0;
@@ -11,10 +17,6 @@ int main()
         x = x+1;
     }
     int m=1+x, n =2, p;
+    int f = func(x,y);
     return 1+aaa;
-}
-
-int func(int a, int b)
-{
-    return a + b;
 }

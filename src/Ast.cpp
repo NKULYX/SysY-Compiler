@@ -103,6 +103,32 @@ void Id::output(int level)
             name.c_str(), scope, type.c_str());
 }
 
+void FuncCallNode::output(int level)
+{
+    std::string name, type;
+    int scope;
+    SymbolEntry* funcEntry = funcId->getSymbolEntry();
+    name = funcEntry->toStr();
+    type = funcEntry->getType()->toStr();
+    scope = dynamic_cast<IdentifierSymbolEntry*>(funcEntry)->getScope();
+    fprintf(yyout, "%*cFuncCallNode\tfuncName: %s\t funcType: %s\tscope: %d\n", 
+            level, ' ', name.c_str(), type.c_str(), scope);
+    params->output(level+4);
+}
+
+void FuncCallParamsNode::addNext(ExprNode* next)
+{
+    paramsList.push_back(next);
+}
+
+void FuncCallParamsNode::output(int level)
+{
+    fprintf(yyout, "%*cFuncCallParamsNode\n", level, ' ');
+    for(auto param : paramsList){
+        param->output(level+4);
+    }
+}
+
 void CompoundStmt::output(int level)
 {
     fprintf(yyout, "%*cCompoundStmt\n", level, ' ');
