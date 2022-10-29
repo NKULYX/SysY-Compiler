@@ -19,6 +19,11 @@ void Ast::output()
         root->output(4);
 }
 
+Type* ExprNode::getType()
+{
+    return symbolEntry->getType();
+}
+
 void BinaryExpr::output(int level)
 {
     std::string op_str;
@@ -64,7 +69,7 @@ void BinaryExpr::output(int level)
             op_str = "neq";
             break;
     }
-    fprintf(yyout, "%*cBinaryExpr\top: %s\n", level, ' ', op_str.c_str());
+    fprintf(yyout, "%*cBinaryExpr\top: %s\ttype: %s\n", level, ' ', op_str.c_str(), symbolEntry->getType()->toStr().c_str());
     expr1->output(level + 4);
     expr2->output(level + 4);
 }
@@ -79,7 +84,7 @@ void OneOpExpr::output(int level) {
             op_str = "minus";
             break;
     }
-    fprintf(yyout, "%*cOneOpExpr\top: %s\n", level, ' ', op_str.c_str());
+    fprintf(yyout, "%*cOneOpExpr\top: %s\ttype: %s\n", level, ' ', op_str.c_str(), symbolEntry->getType()->toStr().c_str());
     expr->output(level + 4);
 }
 
@@ -101,6 +106,25 @@ void Id::output(int level)
     scope = dynamic_cast<IdentifierSymbolEntry*>(symbolEntry)->getScope();
     fprintf(yyout, "%*cId\tname: %s\tscope: %d\ttype: %s\n", level, ' ',
             name.c_str(), scope, type.c_str());
+}
+
+void EmptyStmt::output(int level)
+{
+    fprintf(yyout, "%*cEmptyStmt\n", level, ' ');
+}
+
+void ExprStmtNode::addNext(ExprNode* next)
+{
+    exprList.push_back(next);
+}
+
+void ExprStmtNode::output(int level)
+{
+    fprintf(yyout, "%*cExprStmtNode\n", level, ' ');
+    for(auto expr : exprList)
+    {
+        expr->output(level+4);
+    }
 }
 
 void FuncCallNode::output(int level)
@@ -137,7 +161,12 @@ void FuncCallParamsNode::output(int level)
 void CompoundStmt::output(int level)
 {
     fprintf(yyout, "%*cCompoundStmt\n", level, ' ');
-    stmt->output(level + 4);
+    if(stmt == nullptr){
+        fprintf(yyout, "%*cNull Stmt\n", level+4, ' ');
+    }
+    else{
+        stmt->output(level + 4);
+    }
 }
 
 void SeqNode::addNext(StmtNode* next)
