@@ -231,6 +231,9 @@ void InitValNode::output(int level)
     {
         child->output(level+4);
     }
+    if(leafNode!=nullptr){
+        leafNode->output(level+4);
+    }
 }
 
 void InitValNode::setLeafNode(ExprNode* leaf)
@@ -278,7 +281,7 @@ void ContinueStmt::output(int level)
 void ReturnStmt::output(int level)
 {
     fprintf(yyout, "%*cReturnStmt\n", level, ' ');
-    retValue->output(level + 4);
+    if(retValue!=nullptr) retValue->output(level + 4);
 }
 
 void AssignStmt::output(int level)
@@ -291,6 +294,15 @@ void AssignStmt::output(int level)
 void FuncDefParamsNode::addNext(Id* next)
 {
     paramsList.push_back(next);
+}
+
+std::vector<Type*> FuncDefParamsNode::getParamsType()
+{
+    std::vector<Type*> typeArray;
+    for(auto param : paramsList){
+        typeArray.push_back(param->getType());
+    }
+    return typeArray;
 }
 
 void FuncDefParamsNode::output(int level)

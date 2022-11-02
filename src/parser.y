@@ -36,7 +36,7 @@
 
 %type <stmttype> Stmts Stmt AssignStmt ExpStmt BlockStmt IfStmt WhileStmt BreakStmt ContinueStmt ReturnStmt
 %type <stmttype> DeclStmt ConstDefList ConstDef ConstInitVal VarDefList VarDef VarInitVal FuncDef FuncParams FuncParam FuncRParams
-%type <stmttype> ArrConstIndices /*ArrValIndices*/ ConstInitValList VarInitValList
+%type <stmttype> ArrConstIndices ArrValIndices ConstInitValList VarInitValList
 %type <exprtype> Exp ConstExp AddExp MulExp UnaryExp PrimaryExp LVal Cond LOrExp LAndExp EqExp RelExp
 %type <type> Type
 
@@ -94,7 +94,21 @@ LVal
             $$ = new Id(se);
             delete []$1;
         }
-    // 缺少数组的左值
+    // 数组左值
+    |   ID ArrValIndices {
+            SymbolEntry *se;
+            se = identifiers->lookup($1);
+            if(se == nullptr)
+            {
+                fprintf(stderr, "identifier \"%s\" is undefined\n", (char*)$1);
+                delete [](char*)$1;
+                assert(se != nullptr);
+            }
+            Id* newId = new Id(se);
+            newId->addIndices((ExprStmtNode*)$2);
+            $$ =  newId;
+            delete []$1;
+        }
     ;
 
 // 赋值语句
@@ -172,7 +186,7 @@ ReturnStmt
             $$ = new ReturnStmt($2);
         }
     |   RETURN SEMICOLON {
-            std::cout << "ReturnStmt -> RETURN SEMICOLON" << std::endl;
+            $$ = new ReturnStmt(nullptr);
         }
     ;
 
@@ -413,7 +427,7 @@ ArrConstIndices
         }
     ;
 
-/* // 数组的变量下标表示
+// 数组的变量下标表示
 ArrValIndices 
     :   ArrValIndices LBRACKET Exp RBRACKET {
             ExprStmtNode* node = (ExprStmtNode*)$1;
@@ -425,7 +439,7 @@ ArrValIndices
             node->addNext($2);
             $$ = node;
         }
-    ; */
+    ;
 
 // 声明语句
 DeclStmt
@@ -631,11 +645,20 @@ FuncDef
             identifiers->install($2, se);
             identifiers = new SymbolTable(identifiers);
         }
-        LPAREN FuncParams RPAREN BlockStmt {
+        LPAREN FuncParams{
             SymbolEntry *se;
             se = identifiers->lookup($2);
             assert(se != nullptr);
-            $$ = new FunctionDef(se, (FuncDefParamsNode*)$5, $7);
+            if($5!=nullptr){
+                //将函数参数类型写入符号表
+                ((FunctionType*)(se->getType()))->setparamsType(((FuncDefParamsNode*)$5)->getParamsType());
+            }   
+        } 
+        RPAREN BlockStmt {
+            SymbolEntry *se;
+            se = identifiers->lookup($2);
+            assert(se != nullptr);
+            $$ = new FunctionDef(se, (FuncDefParamsNode*)$5, $8);
             SymbolTable *top = identifiers;
             identifiers = identifiers->getPrev();
             delete top;

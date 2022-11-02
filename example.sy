@@ -1,5 +1,5 @@
 const int aaa = 10;
-
+float ppp[9+7];
 float ff = 1.0;
 
 int func(int a, int b)
@@ -13,12 +13,14 @@ int func1(int xswl[][5], float hehe[])
 {
     int a = getint();
     putint(a), a + 1;
+    xswl[8][4] = getint();
     return 1 + 1.0;
 }
 
 int main()
 {
-    int input = func1();
+    int rrr[16/5][2+3] = {{1, 2*8, 3}, {2+aaa}, {}};
+    int input = func1(rrr, ppp);
     int x = 1, y = 0;
     while(x < 10)
     {

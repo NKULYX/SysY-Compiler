@@ -61,7 +61,7 @@ class StmtNode : public Node
 {};
 
 class ExprStmtNode : public StmtNode
-{
+{//注意：该类由ExprStmt与ArrayIndices共享，二者的行为完全一致
 private:
     std::vector<ExprNode*> exprList;
 public:
@@ -237,6 +237,7 @@ private:
 public:
     FuncDefParamsNode() {};
     void addNext(Id* next);
+    std::vector<Type*> getParamsType();
     void output(int level);
 };
 

@@ -45,10 +45,20 @@ std::string VoidType::toStr()
     return "void";
 }
 
+void FunctionType::setparamsType(std::vector<Type*> in)
+{
+    paramsType = in;
+}
+
 std::string FunctionType::toStr()
 {
     std::ostringstream buffer;
-    buffer << returnType->toStr() << "()";
+    buffer << returnType->toStr() << "(";
+    for(int i = 0;i < (int)paramsType.size();i++){
+        if(i!=0) buffer << ", ";
+        buffer << paramsType[i]->toStr();
+    }
+    buffer << ")";
     return buffer.str();
 }
 
