@@ -35,6 +35,7 @@ INTEGER ([1-9][0-9]*|0)
 OCTAL (0[1-7][0-7]*|0)
 HEXAL (0(x|X)[1-9a-fA-F][0-9a-fA-F]*|0)
 FLOATING ((([0-9]*[.][0-9]*([eE][+-]?[0-9]+)?)|([0-9]+[eE][+-]?[0-9]+))[fLlL]?)
+HEXADECIMAL_FLOAT (0[xX](([0-9A-Fa-f]*[.][0-9A-Fa-f]*([pP][+-]?[0-9]+)?)|([0-9A-Fa-f]+[pP][+-]?[0-9]+))[fLlL]?)
 ID [[:alpha:]_][[:alpha:][:digit:]_]*
 EOL (\r\n|\n|\r)
 WHITE [\t ]
@@ -560,7 +561,20 @@ commentend "*/"
         DEBUG_FOR_LAB4("FLOATING", ""+std::string(yytext));
         offset+=strlen(yytext);
     #else
-        yylval.ftype = atoi(yytext);
+        float temp;
+        sscanf(yytext, "%f", &temp);
+        yylval.ftype = double(temp);
+        return FLOATING;
+    #endif
+}
+{HEXADECIMAL_FLOAT} {
+    #ifdef ONLY_FOR_LEX
+        DEBUG_FOR_LAB4("FLOATING", ""+std::string(yytext));
+        offset+=strlen(yytext);
+    #else
+        float temp;
+        sscanf(yytext, "%f", &temp);
+        yylval.ftype = double(temp);
         return FLOATING;
     #endif
 }
