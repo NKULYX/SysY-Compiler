@@ -57,23 +57,8 @@ public:
     void output(int level);
 };
 
-class Id : public ExprNode
-{
-public:
-    Id(SymbolEntry *se) : ExprNode(se){};
-    SymbolEntry* getSymbolEntry() {return symbolEntry;}
-    void output(int level);
-};
-
 class StmtNode : public Node
 {};
-
-class EmptyStmt : public StmtNode
-{
-public:
-    EmptyStmt(){};
-    void output(int level);
-};
 
 class ExprStmtNode : public StmtNode
 {
@@ -82,6 +67,25 @@ private:
 public:
     ExprStmtNode(){};
     void addNext(ExprNode* next);
+    void output(int level);
+};
+
+class Id : public ExprNode
+{
+private:
+    ExprStmtNode* indices;
+public:
+    Id(SymbolEntry *se) : ExprNode(se), indices(nullptr){};
+    SymbolEntry* getSymbolEntry() {return symbolEntry;}
+    bool isArray();     //必须配合indices!=nullptr使用（a[]的情况）
+    void addIndices(ExprStmtNode* idx) {indices = idx;}
+    void output(int level);
+};
+
+class EmptyStmt : public StmtNode
+{
+public:
+    EmptyStmt(){};
     void output(int level);
 };
 
@@ -128,11 +132,14 @@ class InitValNode : public StmtNode
 {
 private:
     bool isConst;
-    bool isArray;
-    std::vector<ExprNode*> initValList;
+    ExprNode* leafNode; //可能为空，j即使是叶节点（考虑{}）
+    std::vector<InitValNode*> innerList;//为空则为叶节点，这是唯一判断标准
 public:
-    InitValNode(bool isConst, bool isArray) : isConst(isConst), isArray(isArray){};
-    void addNext(ExprNode* next);
+    InitValNode(bool isConst) : 
+        isConst(isConst), leafNode(nullptr){};
+    void addNext(InitValNode* next);
+    void setLeafNode(ExprNode* leaf);
+    bool isLeaf();
     void output(int level);
 };
 
@@ -142,9 +149,9 @@ private:
     bool isConst;
     bool isArray;
     Id* id;
-    InitValNode* initVal;
+    Node* initVal;//对于非数组，是ExprNode；对于数组，是InitValueNode
 public:
-    DefNode(Id* id, InitValNode* initVal, bool isConst, bool isArray) : 
+    DefNode(Id* id, Node* initVal, bool isConst, bool isArray) : 
         isConst(isConst), isArray(isArray), id(id), initVal(initVal){};
     Id* getId() {return id;}
     void output(int level);
@@ -189,6 +196,18 @@ private:
     StmtNode *bodyStmt;
 public:
     WhileStmt(ExprNode *cond, StmtNode *bodyStmt) : cond(cond), bodyStmt(bodyStmt){};
+    void output(int level);
+};
+
+class BreakStmt : public StmtNode
+{
+public:
+    void output(int level);
+};
+
+class ContinueStmt : public StmtNode
+{
+public:
     void output(int level);
 };
 

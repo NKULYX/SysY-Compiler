@@ -9,7 +9,7 @@ int func(int a, int b)
     return -a + b + 1.0;
 }
 
-int func1()
+int func1(int xswl[][5], float hehe[])
 {
     int a = getint();
     putint(a), a + 1;
@@ -20,15 +20,16 @@ int main()
 {
     int input = func1();
     int x = 1, y = 0;
-    if(1 <=2 && 13 != 10+4){
-        const int a = 10, b = 20;
-    }
-    else{
-
-    }
     while(x < 10)
     {
         y = y+1;
+        if(1 <=2 && 13 != 10+4){
+            const int a = 10, b = 20;
+            continue;
+        }
+        else{
+            break;
+        }
         x = x+1;
     }
     int m=1+x, n =2, p;
