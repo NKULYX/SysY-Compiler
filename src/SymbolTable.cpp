@@ -69,7 +69,6 @@ SymbolTable::SymbolTable(SymbolTable *prev)
 */
 SymbolEntry* SymbolTable::lookup(std::string name)
 {
-    // Todo
     if(symbolTable.find(name)!=symbolTable.end()){
         return symbolTable[name];
     }else{

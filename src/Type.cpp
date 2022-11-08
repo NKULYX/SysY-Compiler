@@ -2,10 +2,10 @@
 #include <sstream>
 
 IntType TypeSystem::commonInt = IntType(4);
-FloatType TypeSystem::commonFloat = FloatType();
-ConstIntType TypeSystem::commonConstInt = ConstIntType();
-ConstFloatType TypeSystem::commonConstFloat = ConstFloatType();
-BoolType TypeSystem::commonBool = BoolType();
+FloatType TypeSystem::commonFloat = FloatType(4);
+ConstIntType TypeSystem::commonConstInt = ConstIntType(4);
+ConstFloatType TypeSystem::commonConstFloat = ConstFloatType(4);
+BoolType TypeSystem::commonBool = BoolType(1);
 VoidType TypeSystem::commonVoid = VoidType();
 
 Type* TypeSystem::intType = &commonInt;

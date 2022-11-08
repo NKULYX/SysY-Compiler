@@ -39,29 +39,37 @@ public:
 
 class FloatType : public Type
 {
+private:
+    int size;
 public:
-    FloatType() : Type(Type::FLOAT){};
+    FloatType(int size) : Type(Type::FLOAT), size(size){};
     std::string toStr();
 };
 
 class ConstIntType : public Type
 {
+private:
+    int size;
 public:
-    ConstIntType() : Type(Type::CONST_INT){};
+    ConstIntType(int size) : Type(Type::CONST_INT), size(size){};
     std::string toStr();
 };
 
 class ConstFloatType : public Type
 {
+private:
+    int size;
 public:
-    ConstFloatType() : Type(Type::CONST_FLOAT){};
+    ConstFloatType(int size) : Type(Type::CONST_FLOAT), size(size){};
     std::string toStr();
 };
 
 class BoolType : public Type
 {
+private:
+    int size;
 public:
-    BoolType() : Type(Type::BOOL){};
+    BoolType(int size) : Type(Type::BOOL), size(size){};
     std::string toStr();
 };
 

@@ -112,7 +112,8 @@ void Id::output(int level)
     fprintf(yyout, "%*cId\tname: %s\tscope: %d\ttype: %s\n", level, ' ',
             name.c_str(), scope, type.c_str());
     if(isArray() && indices!=nullptr){
-        indices->output(level+4);
+        fprintf(yyout, "%*cArrayIndices\n", level+4, ' ');
+        indices->output(level+8);
     }
 }
 

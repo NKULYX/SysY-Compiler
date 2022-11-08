@@ -298,7 +298,7 @@ UnaryExp
         }
     ;
 
-// 原始表达式
+// 基础表达式
 PrimaryExp
     :   LVal {
             $$ = $1;
@@ -506,7 +506,7 @@ ConstInitVal
             newNode->setLeafNode((ExprNode*)$1);
             $$ = newNode;
         }
-    // todo 常量数组的初始化值 
+    // 常量数组的初始化值 
     |   LBRACE ConstInitValList RBRACE{
             $$ = $2;
         }
@@ -573,7 +573,7 @@ VarDef
             identifiers->install($1, se);
             $$ = new DefNode(new Id(se), (Node*)$3, false, false);//类型向上转换
         }
-    // todo 数组变量的定义
+    // 数组变量的定义
     |   ID ArrConstIndices {
             Type* type;
             if(currentType->isInt()){
@@ -613,7 +613,7 @@ VarInitVal
             node->setLeafNode((ExprNode*)$1);
             $$ = node;
         }
-    // todo 数组变量的初始化值
+    // 数组变量的初始化值
     |   LBRACE VarInitValList RBRACE{
             $$ = $2;
         }
