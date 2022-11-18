@@ -8,7 +8,7 @@ class Type
 private:
     int kind;
 protected:
-    enum {INT, FLOAT, CONST_INT, CONST_FLOAT, VOID, BOOL, FUNC, INT_ARRAY, FLOAT_ARRAY, CONST_INT_ARRAY, CONST_FLOAT_ARRAY};
+    enum {INT, FLOAT, CONST_INT, CONST_FLOAT, VOID, BOOL, FUNC, INT_ARRAY, FLOAT_ARRAY, CONST_INT_ARRAY, CONST_FLOAT_ARRAY, PTR};
 public:
     Type(int kind) : kind(kind) {};
     virtual ~Type() {};
@@ -90,6 +90,7 @@ public:
     FunctionType(Type* returnType, std::vector<Type*> paramsType) : 
     Type(Type::FUNC), returnType(returnType), paramsType(paramsType){};
     void setparamsType(std::vector<Type*>);
+    Type* getRetType() {return returnType;};
     std::string toStr();
 };
 
@@ -134,6 +135,15 @@ public:
     ConstFloatArrayType() : Type(Type::CONST_FLOAT_ARRAY){};
     void pushBackDimension(int);
     std::vector<int> getDimensions();
+    std::string toStr();
+};
+
+class PointerType : public Type
+{
+private:
+    Type *valueType;
+public:
+    PointerType(Type* valueType) : Type(Type::PTR) {this->valueType = valueType;};
     std::string toStr();
 };
 
