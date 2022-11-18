@@ -20,9 +20,8 @@ bool dump_ir;
 int main(int argc, char *argv[])
 {
     int opt;
-    while ((opt = getopt(argc, argv, "ato:")) != -1)
+    while ((opt = getopt(argc, argv, "iato:")) != -1)
     {
-        fprintf(stderr, "%c\n", opt);
         switch (opt)
         {
         case 'o':
@@ -30,16 +29,14 @@ int main(int argc, char *argv[])
             fprintf(stderr, "%s\n", optarg);
             break;
         case 'a':
-            //dump_ast = true;
-            dump_ir = true;
+            dump_ast = true;
             break;
         case 't':
             dump_tokens = true;
             break;
-        // case 'i':
-        //     dump_ir = true;
-        //     fprintf(stderr, "irm on\n");
-        //     break;
+        case 'i':
+            dump_ir = true;
+            break;
         default:
             fprintf(stderr, "Usage: %s [-o outfile] infile\n", argv[0]);
             exit(EXIT_FAILURE);
