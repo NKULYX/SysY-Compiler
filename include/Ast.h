@@ -2,20 +2,39 @@
 #define __AST_H__
 
 #include <fstream>
+#include "Operand.h"
 #include <vector>
 
 class SymbolEntry;
 class Type;
+class Unit;
+class Function;
+class BasicBlock;
+class Instruction;
+class IRBuilder;
 
 class Node
 {
 private:
     static int counter;
     int seq;
+//added in lab6
+protected:
+    std::vector<Instruction*> true_list;
+    std::vector<Instruction*> false_list;
+    static IRBuilder *builder;
+    void backPatch(std::vector<Instruction*> &list, BasicBlock*bb);
+    std::vector<Instruction*> merge(std::vector<Instruction*> &list1, std::vector<Instruction*> &list2);
 public:
     Node();
     int getSeq() const {return seq;};
     virtual void output(int level) = 0;
+    //added in lab6
+    static void setIRBuilder(IRBuilder*ib) {builder = ib;};
+    virtual void typeCheck() = 0;
+    virtual void genCode() = 0;
+    std::vector<Instruction*>& trueList() {return true_list;}
+    std::vector<Instruction*>& falseList() {return false_list;}
 };
 
 // todo 考虑加一个const标志位来表示是否为常量表达式？
@@ -23,9 +42,12 @@ class ExprNode : public Node
 {
 protected:
     SymbolEntry *symbolEntry;
+    Operand *dst;   // The result of the subtree is stored into dst.
 public:
     ExprNode(SymbolEntry *symbolEntry) : symbolEntry(symbolEntry){};
     Type* getType();
+    Operand* getOperand() {return dst;};
+    SymbolEntry* getSymPtr() {return symbolEntry;};
 };
 
 class BinaryExpr : public ExprNode
@@ -37,6 +59,8 @@ public:
     enum {ADD, SUB, MUL, DIV, MOD, AND, OR, LESS, LESSEQ, GREAT, GREATEQ, EQ, NEQ};
     BinaryExpr(SymbolEntry *se, int op, ExprNode*expr1, ExprNode*expr2) : ExprNode(se), op(op), expr1(expr1), expr2(expr2){};
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class OneOpExpr : public ExprNode
@@ -48,6 +72,8 @@ public:
     enum {SUB, NOT};
     OneOpExpr(SymbolEntry *se, int op, ExprNode* expr): ExprNode(se), op(op), expr(expr){};
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class Constant : public ExprNode
@@ -55,6 +81,8 @@ class Constant : public ExprNode
 public:
     Constant(SymbolEntry *se) : ExprNode(se){};
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class StmtNode : public Node
@@ -68,6 +96,8 @@ public:
     ExprStmtNode(){};
     void addNext(ExprNode* next);
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class Id : public ExprNode
@@ -80,6 +110,8 @@ public:
     bool isArray();     //必须配合indices!=nullptr使用（a[]的情况）
     void addIndices(ExprStmtNode* idx) {indices = idx;}
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class EmptyStmt : public StmtNode
@@ -87,6 +119,8 @@ class EmptyStmt : public StmtNode
 public:
     EmptyStmt(){};
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class FuncCallParamsNode : public StmtNode
@@ -97,6 +131,8 @@ public:
     FuncCallParamsNode(){};
     void addNext(ExprNode* next);
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class FuncCallNode : public ExprNode
@@ -107,6 +143,8 @@ private:
 public:
     FuncCallNode(SymbolEntry *se, Id* id, FuncCallParamsNode* params) : ExprNode(se), funcId(id), params(params){};
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class CompoundStmt : public StmtNode
@@ -116,6 +154,8 @@ private:
 public:
     CompoundStmt(StmtNode *stmt) : stmt(stmt) {};
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class SeqNode : public StmtNode
@@ -126,6 +166,8 @@ public:
     SeqNode(){};
     void addNext(StmtNode* next);
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class InitValNode : public StmtNode
@@ -141,6 +183,8 @@ public:
     void setLeafNode(ExprNode* leaf);
     bool isLeaf();
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class DefNode : public StmtNode
@@ -155,10 +199,14 @@ public:
         isConst(isConst), isArray(isArray), id(id), initVal(initVal){};
     Id* getId() {return id;}
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class DeclStmt : public StmtNode
 {
+private:
+    Id *id;
 private:
     bool isConst;
     std::vector<DefNode*> defList;
@@ -166,6 +214,8 @@ public:
     DeclStmt(bool isConst) : isConst(isConst){};
     void addNext(DefNode* next);
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class IfStmt : public StmtNode
@@ -176,6 +226,8 @@ private:
 public:
     IfStmt(ExprNode *cond, StmtNode *thenStmt) : cond(cond), thenStmt(thenStmt){};
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class IfElseStmt : public StmtNode
@@ -187,6 +239,8 @@ private:
 public:
     IfElseStmt(ExprNode *cond, StmtNode *thenStmt, StmtNode *elseStmt) : cond(cond), thenStmt(thenStmt), elseStmt(elseStmt) {};
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class WhileStmt : public StmtNode
@@ -197,18 +251,24 @@ private:
 public:
     WhileStmt(ExprNode *cond, StmtNode *bodyStmt) : cond(cond), bodyStmt(bodyStmt){};
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class BreakStmt : public StmtNode
 {
 public:
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class ContinueStmt : public StmtNode
 {
 public:
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class ReturnStmt : public StmtNode
@@ -218,6 +278,8 @@ private:
 public:
     ReturnStmt(ExprNode*retValue) : retValue(retValue) {};
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class AssignStmt : public StmtNode
@@ -228,6 +290,8 @@ private:
 public:
     AssignStmt(ExprNode *lval, ExprNode *expr) : lval(lval), expr(expr) {};
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class FuncDefParamsNode : public StmtNode
@@ -239,6 +303,8 @@ public:
     void addNext(Id* next);
     std::vector<Type*> getParamsType();
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class FunctionDef : public StmtNode
@@ -250,6 +316,8 @@ private:
 public:
     FunctionDef(SymbolEntry *se, FuncDefParamsNode *params, StmtNode *stmt) : se(se), params(params), stmt(stmt){};
     void output(int level);
+    void typeCheck();
+    void genCode();
 };
 
 class Ast
@@ -260,6 +328,8 @@ public:
     Ast() {root = nullptr;}
     void setRoot(Node*n) {root = n;}
     void output();
+    void typeCheck();
+    void genCode(Unit *unit);
 };
 
 #endif

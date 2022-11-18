@@ -120,3 +120,10 @@ std::string ConstFloatArrayType::toStr()
 {
     return "const float array";
 }
+
+std::string PointerType::toStr()
+{
+    std::ostringstream buffer;
+    buffer << valueType->toStr() << "*";
+    return buffer.str();
+}
