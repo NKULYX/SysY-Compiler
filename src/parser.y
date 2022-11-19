@@ -54,14 +54,14 @@ Program
 // 语句序列
 Stmts
     :   Stmts Stmt{
-            SeqNode* node = (SeqNode*)$1;
-            node->addNext((StmtNode*)$2);
-            $$ = (StmtNode*) node;
+            SeqNode* node = dynamic_cast<SeqNode*>($1);
+            node->addNext(dynamic_cast<StmtNode*>($2));
+            $$ = dynamic_cast<StmtNode*>(node);
         }
     |   Stmt{
             SeqNode* node = new SeqNode();
-            node->addNext((StmtNode*)$1);
-            $$ = (StmtNode*) node;
+            node->addNext(dynamic_cast<StmtNode*>($1));
+            $$ = dynamic_cast<StmtNode*>(node);
         }
     ;
 
@@ -105,7 +105,7 @@ LVal
                 assert(se != nullptr);
             }
             Id* newId = new Id(se);
-            newId->addIndices((ExprStmtNode*)$2);
+            newId->addIndices(dynamic_cast<ExprStmtNode*>($2));
             $$ =  newId;
             delete []$1;
         }
@@ -121,7 +121,7 @@ AssignStmt
 // 表达式语句
 ExpStmt
     :   ExpStmt COMMA Exp {
-            ExprStmtNode* node = (ExprStmtNode*)$1;
+            ExprStmtNode* node = dynamic_cast<ExprStmtNode*>($1);
             node->addNext($3);
             $$ = node;
         }
@@ -283,7 +283,7 @@ UnaryExp
                 assert(se != nullptr);
             }
             SymbolEntry *tmp = new TemporarySymbolEntry(se->getType(), SymbolTable::getLabel());
-            $$ = new FuncCallNode(tmp, new Id(se), (FuncCallParamsNode*)$3);
+            $$ = new FuncCallNode(tmp, new Id(se), dynamic_cast<FuncCallParamsNode*>($3));
         }
     |   ADD UnaryExp {
             $$ = $2;
@@ -307,11 +307,11 @@ PrimaryExp
             $$ = $2;
         }
     |   INTEGER {
-            SymbolEntry *se = new ConstantSymbolEntry(TypeSystem::constIntType, $1);
+            SymbolEntry *se = new ConstantSymbolEntry(TypeSystem::intType, $1);
             $$ = new Constant(se);
         }
     |   FLOATING {
-            SymbolEntry *se = new ConstantSymbolEntry(TypeSystem::constFloatType, $1);
+            SymbolEntry *se = new ConstantSymbolEntry(TypeSystem::floatType, $1);
             $$ = new Constant(se);
         }
     ;
@@ -319,7 +319,7 @@ PrimaryExp
 // 函数参数列表
 FuncRParams
     :   FuncRParams COMMA Exp {
-            FuncCallParamsNode* node = (FuncCallParamsNode*) $1;
+            FuncCallParamsNode* node = dynamic_cast<FuncCallParamsNode*>($1);
             node->addNext($3);
             $$ = node;
         }
@@ -416,7 +416,7 @@ Type
 // 数组的常量下标表示
 ArrConstIndices 
     :   ArrConstIndices LBRACKET ConstExp RBRACKET {
-            ExprStmtNode* node = (ExprStmtNode*)$1;
+            ExprStmtNode* node = dynamic_cast<ExprStmtNode*>($1);
             node->addNext($3);
             $$ = node;          
         }
@@ -430,7 +430,7 @@ ArrConstIndices
 // 数组的变量下标表示
 ArrValIndices 
     :   ArrValIndices LBRACKET Exp RBRACKET {
-            ExprStmtNode* node = (ExprStmtNode*)$1;
+            ExprStmtNode* node = dynamic_cast<ExprStmtNode*>($1);
             node->addNext($3);
             $$ = node;          
         }
@@ -454,20 +454,21 @@ DeclStmt
 // 常量定义列表
 ConstDefList
     :   ConstDefList COMMA ConstDef {
-            DeclStmt* node = (DeclStmt*) $1;
-            node->addNext((DefNode*)$3);
+            DeclStmt* node = dynamic_cast<DeclStmt*>($1);
+            node->addNext(dynamic_cast<DefNode*>($3));
             $$ = node;
         }
     |   ConstDef {
             DeclStmt* node = new DeclStmt(true);
-            node->addNext((DefNode*)$1);
+            node->addNext(dynamic_cast<DefNode*>($1));
             $$ = node;
         }
     ;
 
 // 常量定义
 ConstDef
-    :   ID ASSIGN ConstExp {//此处文法有改动
+    :   ID ASSIGN ConstExp {
+            // 此处文法有改动
             // 首先将ID插入符号表中
             Type* type;
             if(currentType->isInt()){
@@ -479,8 +480,10 @@ ConstDef
             SymbolEntry *se;
             se = new IdentifierSymbolEntry(type, $1, identifiers->getLevel());
             identifiers->install($1, se);
-            $$ = new DefNode(new Id(se), (Node*)$3, true, false);//类型向上转换
+            // 类型向上转换
+            $$ = new DefNode(new Id(se), dynamic_cast<Node*>($3), true, false);
         }
+    // 数组常量的定义
     |   ID ArrConstIndices ASSIGN ConstInitVal{ 
             // 首先将ID插入符号表中
             Type* type;
@@ -494,16 +497,18 @@ ConstDef
             se = new IdentifierSymbolEntry(type, $1, identifiers->getLevel());
             identifiers->install($1, se);
             Id* id = new Id(se);
-            id->addIndices((ExprStmtNode*)$2);
-            $$ = new DefNode(id, (Node*)$4, true, true);//类型向上转换
-        }//数组常量的定义
+            id->addIndices(dynamic_cast<ExprStmtNode*>($2));
+            // 类型向上转换
+            $$ = new DefNode(id, dynamic_cast<Node*>($4), true, true);
+        }
     ;
 
 // 常量初始化值
 ConstInitVal
-    :   ConstExp {//不能直接赋值，否则根本无法判断是list还是expr
+    :   ConstExp {
+            // 不能直接赋值，否则根本无法判断是list还是expr
             InitValNode* newNode = new InitValNode(true);
-            newNode->setLeafNode((ExprNode*)$1);
+            newNode->setLeafNode(dynamic_cast<ExprNode*>($1));
             $$ = newNode;
         }
     // 常量数组的初始化值 
@@ -518,13 +523,13 @@ ConstInitVal
 // 数组常量初始化列表
 ConstInitValList
     :   ConstInitValList COMMA ConstInitVal{
-            InitValNode* node = (InitValNode*)$1;
-            node->addNext((InitValNode*)$3);
+            InitValNode* node = dynamic_cast<InitValNode*>($1);
+            node->addNext(dynamic_cast<InitValNode*>($3));
             $$ = node;
         }
     |   ConstInitVal{
             InitValNode* newNode = new InitValNode(true);
-            newNode->addNext((InitValNode*)$1);
+            newNode->addNext(dynamic_cast<InitValNode*>($1));
             $$ = newNode;
         }
     ;
@@ -532,13 +537,13 @@ ConstInitValList
 // 变量定义列表
 VarDefList
     :   VarDefList COMMA VarDef {
-            DeclStmt* node = (DeclStmt*) $1;
-            node->addNext((DefNode*)$3);
+            DeclStmt* node = dynamic_cast<DeclStmt*>($1);
+            node->addNext(dynamic_cast<DefNode*>($3));
             $$ = node;
         }
     |   VarDef {
             DeclStmt* node = new DeclStmt(true);
-            node->addNext((DefNode*)$1);
+            node->addNext(dynamic_cast<DefNode*>($1));
             $$ = node;
         }
     ;
@@ -571,7 +576,7 @@ VarDef
             SymbolEntry *se;
             se = new IdentifierSymbolEntry(type, $1, identifiers->getLevel());
             identifiers->install($1, se);
-            $$ = new DefNode(new Id(se), (Node*)$3, false, false);//类型向上转换
+            $$ = new DefNode(new Id(se), dynamic_cast<Node*>($3), false, false);//类型向上转换
         }
     // 数组变量的定义
     |   ID ArrConstIndices {
@@ -586,7 +591,7 @@ VarDef
             se = new IdentifierSymbolEntry(type, $1, identifiers->getLevel());
             identifiers->install($1, se);
             Id* id = new Id(se);
-            id->addIndices((ExprStmtNode*)$2);
+            id->addIndices(dynamic_cast<ExprStmtNode*>($2));
             $$ = new DefNode(id, nullptr, false, true);//类型向上转换
         }
     |   ID ArrConstIndices ASSIGN VarInitVal{
@@ -601,8 +606,8 @@ VarDef
             se = new IdentifierSymbolEntry(type, $1, identifiers->getLevel());
             identifiers->install($1, se);
             Id* id = new Id(se);
-            id->addIndices((ExprStmtNode*)$2);
-            $$ = new DefNode(id, (Node*)$4, false, true);//类型向上转换
+            id->addIndices(dynamic_cast<ExprStmtNode*>($2));
+            $$ = new DefNode(id, dynamic_cast<Node*>($4), false, true);//类型向上转换
         }
     ;
 
@@ -610,7 +615,7 @@ VarDef
 VarInitVal
     :   Exp {
             InitValNode* node = new InitValNode(false);
-            node->setLeafNode((ExprNode*)$1);
+            node->setLeafNode(dynamic_cast<ExprNode*>($1));
             $$ = node;
         }
     // 数组变量的初始化值
@@ -625,13 +630,13 @@ VarInitVal
 // 数组变量初始化列表
 VarInitValList
     :   VarInitValList COMMA VarInitVal{
-            InitValNode* node = (InitValNode*)$1;
-            node->addNext((InitValNode*)$3);
+            InitValNode* node = dynamic_cast<InitValNode*>($1);
+            node->addNext(dynamic_cast<InitValNode*>($3));
             $$ = node;
         }
     |   VarInitVal{
             InitValNode* newNode = new InitValNode(false);
-            newNode->addNext((InitValNode*)$1);
+            newNode->addNext(dynamic_cast<InitValNode*>($1));
             $$ = newNode;
         }
     ;
@@ -651,14 +656,16 @@ FuncDef
             assert(se != nullptr);
             if($5!=nullptr){
                 //将函数参数类型写入符号表
-                ((FunctionType*)(se->getType()))->setparamsType(((FuncDefParamsNode*)$5)->getParamsType());
+                (dynamic_cast<FunctionType*>(se->getType()))->setparamsType(
+                    (dynamic_cast<FuncDefParamsNode*>($5))->getParamsType()
+                );
             }   
         } 
         RPAREN BlockStmt {
             SymbolEntry *se;
             se = identifiers->lookup($2);
             assert(se != nullptr);
-            $$ = new FunctionDef(se, (FuncDefParamsNode*)$5, $8);
+            $$ = new FunctionDef(se, dynamic_cast<FuncDefParamsNode*>($5), $8);
             SymbolTable *top = identifiers;
             identifiers = identifiers->getPrev();
             delete top;
@@ -669,13 +676,13 @@ FuncDef
 // 函数参数列表
 FuncParams
     :   FuncParams COMMA FuncParam {
-            FuncDefParamsNode* node = (FuncDefParamsNode*)$1;
-            node->addNext(((DefNode*)$3)->getId());
+            FuncDefParamsNode* node = dynamic_cast<FuncDefParamsNode*>($1);
+            node->addNext((dynamic_cast<DefNode*>($3))->getId());
             $$ = node;
         }
     |   FuncParam {
             FuncDefParamsNode* node = new FuncDefParamsNode();
-            node->addNext(((DefNode*)$1)->getId());
+            node->addNext((dynamic_cast<DefNode*>($1))->getId());
             $$ = node;
         }
     |   %empty {
@@ -695,28 +702,28 @@ FuncParam
             Type* arrayType; 
             if($1==TypeSystem::intType){
                 arrayType = new IntArrayType();
-                ((IntArrayType*)arrayType)->pushBackDimension(-1);
+                (dynamic_cast<IntArrayType*>(arrayType))->pushBackDimension(-1);
             }
             else if($1==TypeSystem::floatType){
                 arrayType = new FloatArrayType();
-                ((FloatArrayType*)arrayType)->pushBackDimension(-1);
+                (dynamic_cast<FloatArrayType*>(arrayType))->pushBackDimension(-1);
             }
             //最高维未指定，记为默认值-1
             SymbolEntry *se = new IdentifierSymbolEntry(arrayType, $2, identifiers->getLevel());
             identifiers->install($2, se);
             Id* id = new Id(se);
-            id->addIndices((ExprStmtNode*)$5);
+            id->addIndices(dynamic_cast<ExprStmtNode*>($5));
             $$ = new DefNode(id, nullptr, false, true);
         }
     |   Type ID LBRACKET RBRACKET{
             Type* arrayType; 
             if($1==TypeSystem::intType){
                 arrayType = new IntArrayType();
-                ((IntArrayType*)arrayType)->pushBackDimension(-1);
+                (dynamic_cast<IntArrayType*>(arrayType))->pushBackDimension(-1);
             }
             else if($1==TypeSystem::floatType){
                 arrayType = new FloatArrayType();
-                ((FloatArrayType*)arrayType)->pushBackDimension(-1);
+                (dynamic_cast<FloatArrayType*>(arrayType))->pushBackDimension(-1);
             }
             //最高维未指定，记为默认值-1
             SymbolEntry *se = new IdentifierSymbolEntry(arrayType, $2, identifiers->getLevel());
