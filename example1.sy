@@ -5,7 +5,7 @@ float ff = 1.0;
 int func(int a, int b)
 {
     if(a>1) putint(a);
-    else;
+    else ;
     return -a + b + 1.0;
 }
 

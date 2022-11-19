@@ -31,7 +31,7 @@ public:
     virtual void output(int level) = 0;
     //added in lab6
     static void setIRBuilder(IRBuilder*ib) {builder = ib;};
-    virtual void typeCheck() = 0;
+    virtual void typeCheck(Node** parentToChild) = 0;
     virtual void genCode() = 0;
     std::vector<Instruction*>& trueList() {return true_list;}
     std::vector<Instruction*>& falseList() {return false_list;}
@@ -46,6 +46,7 @@ protected:
 public:
     ExprNode(SymbolEntry *symbolEntry) : symbolEntry(symbolEntry){};
     Type* getType();
+    void setType(Type* type);
     Operand* getOperand() {return dst;};
     SymbolEntry* getSymPtr() {return symbolEntry;};
 };
@@ -59,7 +60,7 @@ public:
     enum {ADD, SUB, MUL, DIV, MOD, AND, OR, LESS, LESSEQ, GREAT, GREATEQ, EQ, NEQ};
     BinaryExpr(SymbolEntry *se, int op, ExprNode*expr1, ExprNode*expr2) : ExprNode(se), op(op), expr1(expr1), expr2(expr2){};
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -72,7 +73,7 @@ public:
     enum {SUB, NOT};
     OneOpExpr(SymbolEntry *se, int op, ExprNode* expr): ExprNode(se), op(op), expr(expr){};
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -81,7 +82,7 @@ class Constant : public ExprNode
 public:
     Constant(SymbolEntry *se) : ExprNode(se){};
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -96,8 +97,9 @@ public:
     ExprStmtNode(){};
     void addNext(ExprNode* next);
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
+    void initDimInSymTable(IdentifierSymbolEntry* se);
 };
 
 class Id : public ExprNode
@@ -110,7 +112,7 @@ public:
     bool isArray();     //必须配合indices!=nullptr使用（a[]的情况）
     void addIndices(ExprStmtNode* idx) {indices = idx;}
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -119,7 +121,7 @@ class EmptyStmt : public StmtNode
 public:
     EmptyStmt(){};
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -131,7 +133,7 @@ public:
     FuncCallParamsNode(){};
     void addNext(ExprNode* next);
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -143,7 +145,7 @@ private:
 public:
     FuncCallNode(SymbolEntry *se, Id* id, FuncCallParamsNode* params) : ExprNode(se), funcId(id), params(params){};
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -154,7 +156,7 @@ private:
 public:
     CompoundStmt(StmtNode *stmt) : stmt(stmt) {};
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -166,7 +168,7 @@ public:
     SeqNode(){};
     void addNext(StmtNode* next);
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -174,7 +176,7 @@ class InitValNode : public StmtNode
 {
 private:
     bool isConst;
-    ExprNode* leafNode; //可能为空，j即使是叶节点（考虑{}）
+    ExprNode* leafNode; //可能为空，即使是叶节点（考虑{}）
     std::vector<InitValNode*> innerList;//为空则为叶节点，这是唯一判断标准
 public:
     InitValNode(bool isConst) : 
@@ -183,7 +185,7 @@ public:
     void setLeafNode(ExprNode* leaf);
     bool isLeaf();
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -193,13 +195,13 @@ private:
     bool isConst;
     bool isArray;
     Id* id;
-    Node* initVal;//对于非数组，是ExprNode；对于数组，是InitValueNode
+    Node* initVal;//对于非数组，是ExprNode；对于数组，是InitValNode
 public:
     DefNode(Id* id, Node* initVal, bool isConst, bool isArray) : 
         isConst(isConst), isArray(isArray), id(id), initVal(initVal){};
     Id* getId() {return id;}
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -214,7 +216,7 @@ public:
     DeclStmt(bool isConst) : isConst(isConst){};
     void addNext(DefNode* next);
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -226,7 +228,7 @@ private:
 public:
     IfStmt(ExprNode *cond, StmtNode *thenStmt) : cond(cond), thenStmt(thenStmt){};
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -239,7 +241,7 @@ private:
 public:
     IfElseStmt(ExprNode *cond, StmtNode *thenStmt, StmtNode *elseStmt) : cond(cond), thenStmt(thenStmt), elseStmt(elseStmt) {};
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -251,7 +253,7 @@ private:
 public:
     WhileStmt(ExprNode *cond, StmtNode *bodyStmt) : cond(cond), bodyStmt(bodyStmt){};
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -259,7 +261,7 @@ class BreakStmt : public StmtNode
 {
 public:
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -267,7 +269,7 @@ class ContinueStmt : public StmtNode
 {
 public:
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -278,7 +280,7 @@ private:
 public:
     ReturnStmt(ExprNode*retValue) : retValue(retValue) {};
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -290,7 +292,7 @@ private:
 public:
     AssignStmt(ExprNode *lval, ExprNode *expr) : lval(lval), expr(expr) {};
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -303,7 +305,7 @@ public:
     void addNext(Id* next);
     std::vector<Type*> getParamsType();
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 
@@ -316,7 +318,7 @@ private:
 public:
     FunctionDef(SymbolEntry *se, FuncDefParamsNode *params, StmtNode *stmt) : se(se), params(params), stmt(stmt){};
     void output(int level);
-    void typeCheck();
+    void typeCheck(Node** parentToChild);
     void genCode();
 };
 

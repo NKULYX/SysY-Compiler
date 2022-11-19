@@ -26,6 +26,13 @@ public:
     bool isConstFloatArray() const {return kind == CONST_FLOAT_ARRAY;}
     bool isArray() const {return kind == INT_ARRAY || kind == FLOAT_ARRAY || 
                             kind == CONST_FLOAT_ARRAY || kind == CONST_INT_ARRAY;}
+    //ATTENTION: FUNC excluded
+    bool isAnyInt() const {return kind == INT || kind == CONST_INT || kind == INT_ARRAY || kind == CONST_INT_ARRAY;}
+    //ATTENTION: FUNC excluded
+    bool isAnyFloat() const {return kind == FLOAT || kind == FLOAT_ARRAY || kind == CONST_FLOAT || kind == CONST_FLOAT_ARRAY;}
+    bool calculatable() const {return isAnyInt()||isAnyFloat() || isBool();}//不是void其实就行
+    bool isConst() const {return kind == CONST_INT || kind == CONST_FLOAT || 
+        kind == CONST_INT_ARRAY || kind == CONST_FLOAT_ARRAY;}
 };
 
 class IntType : public Type
