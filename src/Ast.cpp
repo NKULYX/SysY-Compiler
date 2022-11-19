@@ -10,6 +10,9 @@
 extern FILE *yyout;
 int Node::counter = 0;
 IRBuilder* Node::builder = nullptr;
+Type* returnType = nullptr;
+bool funcReturned = false;
+bool inIteration = false;//在迭代中
 
 Node::Node()
 {
@@ -260,122 +263,389 @@ void OneOpExpr::genCode()
 void Ast::typeCheck()
 {
     if(root != nullptr)
-        root->typeCheck();
+        root->typeCheck(nullptr);
 }
 
-void FunctionDef::typeCheck()
+void FunctionDef::typeCheck(Node** parentToChild)
+{
+    returnType = ((FunctionType*)se->getType())->getRetType();
+    funcReturned = false;
+    stmt->typeCheck(nullptr);
+    if(!funcReturned && !returnType->isVoid()){//expected returned value, but return statement not found
+        fprintf(stderr, "expected a %s type to return, but no returned value found\n", returnType->toStr().c_str());
+        exit(EXIT_FAILURE);
+    }
+    returnType = nullptr;
+}
+
+void BinaryExpr::typeCheck(Node** parentToChild)
+{
+    expr1->typeCheck((Node**)&(this->expr1));
+    expr2->typeCheck((Node**)&(this->expr2));
+    //检查是否void函数返回值参与运算
+    Type* realTypeLeft = expr1->getType()->isFunc() ? 
+        ((FunctionType*)expr1->getType())->getRetType() : 
+        expr1->getType();
+    if(!realTypeLeft->calculatable()){
+        fprintf(stderr, "type %s is not calculatable!\n", expr1->getType()->toStr().c_str());
+        exit(EXIT_FAILURE);
+    }
+    Type* realTypeRight = expr2->getType()->isFunc() ? 
+        ((FunctionType*)expr2->getType())->getRetType() : 
+        expr2->getType();
+    if(!realTypeRight->calculatable()){
+        fprintf(stderr, "type %s is not calculatable!\n", expr2->getType()->toStr().c_str());
+        exit(EXIT_FAILURE);
+    }
+    //推断父节点类型
+    //bool型一律按float处理
+    //TODO：增加bool类型处理?
+    if(realTypeLeft->isBool() && realTypeRight->isBool()){
+        //别忘了两边一边是bool一边是int/float的情况
+    }
+    if(realTypeLeft->isAnyInt() && realTypeRight->isAnyInt()) {
+        this->setType(TypeSystem::intType);
+    }
+    else{
+        if(op==MOD){//浮点值参与取模运算
+            fprintf(stderr, "mod is not supported with float or bool operands!\n");
+            exit(EXIT_FAILURE);
+        }
+        this->setType(TypeSystem::floatType);
+    }
+    //如果父节点不需要这个值，直接返回
+    if(parentToChild!=nullptr){
+        return;
+    }
+    //左右子树均为常数，计算常量值，替换节点
+    if(realTypeLeft->isConst() && realTypeRight->isConst()){
+        SymbolEntry *se;
+        if(this->getType()->isInt()){
+            int val = 0;
+            int leftValue = expr1->getSymPtr()->isConstant() ? 
+                ((ConstantSymbolEntry*)(expr1->getSymPtr()))->getValue() : //字面值常量
+                ((IdentifierSymbolEntry*)(expr1->getSymPtr()))->value;  //符号常量
+            int rightValue = expr2->getSymPtr()->isConstant() ? 
+                ((ConstantSymbolEntry*)(expr2->getSymPtr()))->getValue() : 
+                ((IdentifierSymbolEntry*)(expr2->getSymPtr()))->value;
+            switch (op) 
+            {
+            case ADD:
+                val = leftValue + rightValue;
+            break;
+            case SUB:
+                val = leftValue - rightValue;
+            break;
+            case MUL:
+                val = leftValue * rightValue;
+            break;
+            case DIV:
+                val = leftValue / rightValue;
+            break;
+            case MOD:
+                val = leftValue % rightValue;
+            break;
+            //现行文法不会出现以下可能，因为bool会被当做float处理
+            // case AND:
+            //     val = leftValue && rightValue;
+            // break;
+            // case OR:
+            //     val = leftValue || rightValue;
+            // break;
+            case LESS:
+                val = leftValue < rightValue;
+            break;
+            case LESSEQ:
+                val = leftValue <= rightValue;
+            break;
+            case GREAT:
+                val = leftValue > rightValue;
+            break;
+            case GREATEQ:
+                val = leftValue >= rightValue;
+            break;
+            case EQ:
+                val = leftValue == rightValue;
+            break;
+            case NEQ:
+                val = leftValue != rightValue;
+            break;
+            }
+            se = new ConstantSymbolEntry(TypeSystem::constIntType, val);
+        }
+        else{//float or bool
+            float val = 0;
+            float leftValue = expr1->getSymPtr()->isConstant() ? 
+                ((ConstantSymbolEntry*)(expr1->getSymPtr()))->getValue() : 
+                ((IdentifierSymbolEntry*)(expr1->getSymPtr()))->value;
+            float rightValue = expr2->getSymPtr()->isConstant() ? 
+                ((ConstantSymbolEntry*)(expr2->getSymPtr()))->getValue() : 
+                ((IdentifierSymbolEntry*)(expr2->getSymPtr()))->value;
+            switch (op) 
+            {
+            case ADD:
+                val = leftValue + rightValue;
+            break;
+            case SUB:
+                val = leftValue - rightValue;
+            break;
+            case MUL:
+                val = leftValue * rightValue;
+            break;
+            case DIV:
+                val = leftValue / rightValue;
+            break;
+            case MOD:
+                fprintf(stderr, "mod is not supported with float or bool operands!");
+                exit(EXIT_FAILURE);
+            break;
+            case AND:
+                val = leftValue && rightValue;
+            break;
+            case OR:
+                val = leftValue || rightValue;
+            break;
+            case LESS:
+                val = leftValue < rightValue;
+            break;
+            case LESSEQ:
+                val = leftValue <= rightValue;
+            break;
+            case GREAT:
+                val = leftValue > rightValue;
+            break;
+            case GREATEQ:
+                val = leftValue >= rightValue;
+            break;
+            case EQ:
+                val = leftValue == rightValue;
+            break;
+            case NEQ:
+                val = leftValue != rightValue;
+            break;
+            }
+            se = new ConstantSymbolEntry(TypeSystem::constFloatType, val);
+        }
+        Constant* newNode = new Constant(se);
+        *parentToChild = newNode;
+        //delete this;
+    }
+}
+
+void Constant::typeCheck(Node** parentToChild){}
+void Id::typeCheck(Node** parentToChild)
+{
+    if(isArray() && indices!=nullptr){//是数组，计算数组各indices的值
+        indices->typeCheck(nullptr);
+        //TODO：检查indices下的exprList(私有域)中的每个exprNode的类型，若不为自然数则报错
+        if(((IdentifierSymbolEntry*)getSymPtr())->arrayDimension.empty()){
+            indices->initDimInSymTable((IdentifierSymbolEntry*)getSymPtr());
+        }
+        else if(getType()->isConst()){//读取常量数组
+            //TODO: 将常量数组+全常量下标的数组元素访问替换为字面值常量节点Constant
+            //STEP：1.遍历indices下的exprList(私有域)，查看是否有非常量节点。若有，直接返回
+            //STEP: 2.若全部为常量下标，替换
+        }
+    }
+}
+
+void IfStmt::typeCheck(Node** parentToChild)
+{
+    cond->typeCheck((Node**)&(this->cond));
+    thenStmt->typeCheck((Node**)&(this->thenStmt));
+}
+
+void IfElseStmt::typeCheck(Node** parentToChild)
+{
+    cond->typeCheck((Node**)&(this->cond));
+    thenStmt->typeCheck((Node**)&(this->thenStmt));
+    elseStmt->typeCheck((Node**)&(this->elseStmt));
+}
+
+void CompoundStmt::typeCheck(Node** parentToChild)
+{
+    if(stmt!=nullptr){
+        stmt->typeCheck(nullptr);
+    }
+}
+
+void SeqNode::typeCheck(Node** parentToChild)
+{
+    for(int i = 0;i<(int)stmtList.size();++i){
+        stmtList[i]->typeCheck((Node**)&(stmtList[i]));
+    }
+}
+
+void DeclStmt::typeCheck(Node** parentToChild)
+{
+    for(int i = 0;i<(int)defList.size();++i){
+        defList[i]->typeCheck(nullptr);
+    }
+}
+
+void ReturnStmt::typeCheck(Node** parentToChild)
+{
+    //fprintf(stderr, "%s %s\n", returnType->toStr().c_str(), retValue->getType()->toStr().c_str());
+    if(returnType == nullptr){//not in a fuction
+        fprintf(stderr, "return statement outside functions\n");
+        exit(EXIT_FAILURE);
+    }
+    else if(returnType->isVoid() && retValue!=nullptr){//returned a value in void()
+        fprintf(stderr, "value returned in a void() function\n");
+        exit(EXIT_FAILURE);
+    }
+    else if(!returnType->isVoid() && retValue==nullptr){//expected returned value, but returned nothing
+        fprintf(stderr, "expected a %s type to return, but returned nothing\n", returnType->toStr().c_str());
+        exit(EXIT_FAILURE);
+    }
+    funcReturned = true;
+}
+
+void AssignStmt::typeCheck(Node** parentToChild)
+{
+    lval->typeCheck(nullptr);
+    expr->typeCheck((Node**)&(this->expr));
+    if(expr->getType()->isFunc() && ((FunctionType*)(expr->getType()))->getRetType()->isVoid()){//返回值为void的函数做运算数
+        fprintf(stderr, "expected a return value, but functionType %s returns nothing\n", expr->getType()->toStr().c_str());
+        exit(EXIT_FAILURE);
+    }
+}
+void FuncDefParamsNode::typeCheck(Node** parentToChild){}
+
+void ContinueStmt::typeCheck(Node** parentToChild)
+{
+    if(!inIteration){
+        fprintf(stderr, "continue statement outside iterations\n");
+        exit(EXIT_FAILURE);
+    }
+}
+void BreakStmt::typeCheck(Node** parentToChild)
+{
+    if(!inIteration){
+        fprintf(stderr, "break statement outside iterations\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void WhileStmt::typeCheck(Node** parentToChild)
+{
+    cond->typeCheck((Node**)&(this->cond));
+    inIteration = true;
+    bodyStmt->typeCheck((Node**)&(this->bodyStmt));
+    inIteration = false;
+}
+
+void InitValNode::typeCheck(Node** parentToChild)
+{
+    
+}
+
+void DefNode::typeCheck(Node** parentToChild)
+{
+    id->typeCheck(nullptr);
+    if(initVal==nullptr){//不赋初值，直接返回
+        return;
+    }
+    initVal->typeCheck((Node**)&(initVal));
+
+    if(!id->getType()->isArray()){//不是数组时，右边可能出现函数：int a = f();
+        if(((ExprNode*)initVal)->getType()->isFunc() && 
+            (!((FunctionType*)(((ExprNode*)initVal)->getType()))->getRetType()->calculatable())){//右边是个为返回值空的函数
+            fprintf(stderr, "expected a return value, but functionType %s return nothing\n", ((ExprNode*)initVal)->getType()->toStr().c_str());
+            exit(EXIT_FAILURE);
+        }
+    }
+    if(id->getType()->isConst()){
+        if(id->getType()->isArray()){
+            //TODO: initialize elements in symbol table
+        }
+        else{
+            //TODO: initialize elements in symbol table
+        }   
+    }
+}
+
+void FuncCallParamsNode::typeCheck(Node** parentToChild)
+{
+    // Todo: 实参形参匹配
+}
+
+void FuncCallNode::typeCheck(Node** parentToChild)
 {
     // Todo
 }
 
-void BinaryExpr::typeCheck()
+void ExprStmtNode::typeCheck(Node** parentToChild)
+{
+    for(int i = 0;i<(int)exprList.size();++i){
+        exprList[i]->typeCheck((Node**)&(exprList[i]));
+    }
+}
+
+void EmptyStmt::typeCheck(Node** parentToChild)
 {
     // Todo
 }
 
-void Constant::typeCheck()
+void OneOpExpr::typeCheck(Node** parentToChild)
 {
-    // Todo
-}
-
-void Id::typeCheck()
-{
-    // Todo
-}
-
-void IfStmt::typeCheck()
-{
-    // Todo
-}
-
-void IfElseStmt::typeCheck()
-{
-    // Todo
-}
-
-void CompoundStmt::typeCheck()
-{
-    // Todo
-}
-
-void SeqNode::typeCheck()
-{
-    // Todo
-}
-
-void DeclStmt::typeCheck()
-{
-    // Todo
-}
-
-void ReturnStmt::typeCheck()
-{
-    // Todo
-}
-
-void AssignStmt::typeCheck()
-{
-    // Todo
-}
-
-void FuncDefParamsNode::typeCheck()
-{
-    // Todo
-}
-
-void ContinueStmt::typeCheck()
-{
-    // Todo
-}
-
-void BreakStmt::typeCheck()
-{
-    // Todo
-}
-
-void WhileStmt::typeCheck()
-{
-    // Todo
-}
-
-void InitValNode::typeCheck()
-{
-    // Todo
-}
-
-void DefNode::typeCheck()
-{
-    // Todo
-}
-
-void FuncCallParamsNode::typeCheck()
-{
-    // Todo
-}
-
-void FuncCallNode::typeCheck()
-{
-    // Todo
-}
-
-void ExprStmtNode::typeCheck()
-{
-    // Todo
-}
-
-void EmptyStmt::typeCheck()
-{
-    // Todo
-}
-
-void OneOpExpr::typeCheck()
-{
-    // Todo
+    expr->typeCheck((Node**)&(this->expr));
+    //检查是否void函数返回值参与运算
+    Type* realType = expr->getType()->isFunc() ? 
+        ((FunctionType*)expr->getType())->getRetType() : 
+        expr->getType();
+    if(!realType->calculatable()){
+        fprintf(stderr, "type %s is not calculatable!\n", expr->getType()->toStr().c_str());
+        exit(EXIT_FAILURE);
+    }
+    //推断父节点类型
+    //bool型一律按float处理
+    if(realType->isAnyInt()) {
+        this->setType(TypeSystem::intType);
+    }
+    else{
+        this->setType(TypeSystem::floatType);
+    }
+    //如果父节点不需要这个值，直接返回
+    if(parentToChild!=nullptr){
+        return;
+    }
+    //孩子节点为常数，计算常量值，替换节点
+    if(realType->isConst()){
+        SymbolEntry *se;
+        double val = 0;
+        int initValue = expr->getSymPtr()->isConstant() ? 
+            ((ConstantSymbolEntry*)(expr->getSymPtr()))->getValue() : 
+            ((IdentifierSymbolEntry*)(expr->getSymPtr()))->value;
+        switch (op) 
+        {
+        case SUB:
+            val = -initValue;
+        break;
+        case NOT:
+            val = !initValue;
+        break;
+        }
+        if(this->getType()->isInt()){
+            se = new ConstantSymbolEntry(TypeSystem::constIntType, val);
+        }
+        else{//float or bool
+            se = new ConstantSymbolEntry(TypeSystem::constFloatType, val);
+        }
+        Constant* newNode = new Constant(se);
+        *parentToChild = newNode;
+        //delete this;
+    }
 }
 
 Type* ExprNode::getType()
 {
     return symbolEntry->getType();
+}
+
+void ExprNode::setType(Type* type)
+{
+    symbolEntry->setType(type);
 }
 
 void BinaryExpr::output(int level)
@@ -487,6 +757,22 @@ void ExprStmtNode::output(int level)
     for(auto expr : exprList)
     {
         expr->output(level+4);
+    }
+}
+
+void ExprStmtNode::initDimInSymTable(IdentifierSymbolEntry* se)
+{
+    for(auto expr :exprList){
+        if(!(expr->getSymPtr()->isConstant() || expr->getType()->isConst())){//既不是字面值常量，也不是常量id
+            fprintf(stderr, "array dimensions must be constant!\n");
+            exit(EXIT_FAILURE);
+        }
+        if(expr->getSymPtr()->isConstant()){//字面值常量，值存在ConstantSymbolEntry中
+            se->arrayDimension.push_back((int)((ConstantSymbolEntry*)(expr->getSymPtr()))->getValue());
+        }
+        else if(expr->getType()->isConst()){//符号常量，值存在IdentifierSymbolEntry中
+            se->arrayDimension.push_back((int)((IdentifierSymbolEntry*)(expr->getSymPtr()))->value);
+        }
     }
 }
 

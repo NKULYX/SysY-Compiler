@@ -307,11 +307,11 @@ PrimaryExp
             $$ = $2;
         }
     |   INTEGER {
-            SymbolEntry *se = new ConstantSymbolEntry(TypeSystem::intType, $1);
+            SymbolEntry *se = new ConstantSymbolEntry(TypeSystem::constIntType, $1);
             $$ = new Constant(se);
         }
     |   FLOATING {
-            SymbolEntry *se = new ConstantSymbolEntry(TypeSystem::floatType, $1);
+            SymbolEntry *se = new ConstantSymbolEntry(TypeSystem::constFloatType, $1);
             $$ = new Constant(se);
         }
     ;
