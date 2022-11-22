@@ -59,9 +59,9 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     yyparse();
+    ast.typeCheck();
     if(dump_ast)
         ast.output();
-    ast.typeCheck();
     ast.genCode(&unit);
     if(dump_ir)
         unit.output();

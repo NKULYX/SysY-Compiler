@@ -37,6 +37,7 @@ void Node::backPatch(std::vector<Instruction*> &list, BasicBlock*bb)
             dynamic_cast<UncondBrInstruction*>(inst)->setBranch(bb);
     }
 }
+
 std::vector<Instruction*> Node::merge(std::vector<Instruction*> &list1, std::vector<Instruction*> &list2)
 {
     std::vector<Instruction*> res(list1);
@@ -266,18 +267,28 @@ void Ast::typeCheck()
         root->typeCheck(nullptr);
 }
 
+/**
+ * 主要工作是检查函数是否有返回值以及返回值类型是否匹配
+ */
 void FunctionDef::typeCheck(Node** parentToChild)
 {
+    // 获取函数的返回值类型
     returnType = ((FunctionType*)se->getType())->getRetType();
+    // 判断函数是否返回
     funcReturned = false;
     stmt->typeCheck(nullptr);
-    if(!funcReturned && !returnType->isVoid()){//expected returned value, but return statement not found
+    // 非void类型的函数需要有返回值
+    if(!funcReturned && !returnType->isVoid()){
         fprintf(stderr, "expected a %s type to return, but no returned value found\n", returnType->toStr().c_str());
         exit(EXIT_FAILURE);
     }
     returnType = nullptr;
 }
 
+/**
+ * 二元表达式类型检查工作主要为
+ * 对两个孩子运算数类型的检查，并根据类型对父节点的类型进行调整
+ */
 void BinaryExpr::typeCheck(Node** parentToChild)
 {
     expr1->typeCheck((Node**)&(this->expr1));
@@ -297,24 +308,33 @@ void BinaryExpr::typeCheck(Node** parentToChild)
         fprintf(stderr, "type %s is not calculatable!\n", expr2->getType()->toStr().c_str());
         exit(EXIT_FAILURE);
     }
-    //推断父节点类型
-    //bool型一律按float处理
-    //TODO：增加bool类型处理?
-    if(realTypeLeft->isBool() && realTypeRight->isBool()){
-        //别忘了两边一边是bool一边是int/float的情况
-    }
-    if(realTypeLeft->isAnyInt() && realTypeRight->isAnyInt()) {
-        this->setType(TypeSystem::intType);
-    }
-    else{
-        if(op==MOD){//浮点值参与取模运算
+    // 在语法解析阶段就对父节点和孩子节点的类型进行了相应的转换设置
+    // 在类型检查阶段就没有必要再对这部分进行检查了
+    // 可以对mod取模运算检查一下是否有浮点参与
+    if(op == MOD) {
+        if(!(realTypeLeft->isAnyInt() && realTypeRight->isAnyInt())) {
             fprintf(stderr, "mod is not supported with float or bool operands!\n");
             exit(EXIT_FAILURE);
         }
-        this->setType(TypeSystem::floatType);
     }
-    //如果父节点不需要这个值，直接返回
-    if(parentToChild!=nullptr){
+    // 推断父节点类型
+    // bool型一律按float处理
+    // TODO：增加bool类型处理?
+    // if(realTypeLeft->isBool() && realTypeRight->isBool()){
+    //     //别忘了两边一边是bool一边是int/float的情况
+    // }
+    // if(realTypeLeft->isAnyInt() && realTypeRight->isAnyInt()) {
+    //     this->setType(TypeSystem::intType);
+    // }
+    // else{
+    //     if(op==MOD){//浮点值参与取模运算
+    //         fprintf(stderr, "mod is not supported with float or bool operands!\n");
+    //         exit(EXIT_FAILURE);
+    //     }
+    //     this->setType(TypeSystem::floatType);
+    // }
+    // 如果父节点不需要这个值，直接返回
+    if(parentToChild==nullptr){
         return;
     }
     //左右子树均为常数，计算常量值，替换节点
@@ -399,12 +419,6 @@ void BinaryExpr::typeCheck(Node** parentToChild)
                 fprintf(stderr, "mod is not supported with float or bool operands!");
                 exit(EXIT_FAILURE);
             break;
-            case AND:
-                val = leftValue && rightValue;
-            break;
-            case OR:
-                val = leftValue || rightValue;
-            break;
             case LESS:
                 val = leftValue < rightValue;
             break;
@@ -433,15 +447,21 @@ void BinaryExpr::typeCheck(Node** parentToChild)
 }
 
 void Constant::typeCheck(Node** parentToChild){}
+
 void Id::typeCheck(Node** parentToChild)
 {
-    if(isArray() && indices!=nullptr){//是数组，计算数组各indices的值
+    // 如果是一个普通变量就什么也不做
+    // 如果是数组 要看看维度信息有没有初始化
+    // 由于在语法解析阶段已经判断了标识符先定义再使用
+    // 所以如果维度信息还未初始化则说明当前是数组定义阶段
+    if(isArray() && indices!=nullptr){
         indices->typeCheck(nullptr);
-        //TODO：检查indices下的exprList(私有域)中的每个exprNode的类型，若不为自然数则报错
+        // 检查indices下的exprList(私有域)中的每个exprNode的类型，若不为自然数则报错
         if(((IdentifierSymbolEntry*)getSymPtr())->arrayDimension.empty()){
             indices->initDimInSymTable((IdentifierSymbolEntry*)getSymPtr());
         }
-        else if(getType()->isConst()){//读取常量数组
+        // 读取常量数组 这个不打算做了
+        else if(getType()->isConst()){
             //TODO: 将常量数组+全常量下标的数组元素访问替换为字面值常量节点Constant
             //STEP：1.遍历indices下的exprList(私有域)，查看是否有非常量节点。若有，直接返回
             //STEP: 2.若全部为常量下标，替换
@@ -505,11 +525,16 @@ void AssignStmt::typeCheck(Node** parentToChild)
 {
     lval->typeCheck(nullptr);
     expr->typeCheck((Node**)&(this->expr));
+    if(lval->getType()->isConst()) {
+        fprintf(stderr, "Unable to assign value to const variable %s\n", lval->getSymPtr()->toStr().c_str());
+        exit(EXIT_FAILURE);
+    }
     if(expr->getType()->isFunc() && ((FunctionType*)(expr->getType()))->getRetType()->isVoid()){//返回值为void的函数做运算数
         fprintf(stderr, "expected a return value, but functionType %s returns nothing\n", expr->getType()->toStr().c_str());
         exit(EXIT_FAILURE);
     }
 }
+
 void FuncDefParamsNode::typeCheck(Node** parentToChild){}
 
 void ContinueStmt::typeCheck(Node** parentToChild)
@@ -519,6 +544,7 @@ void ContinueStmt::typeCheck(Node** parentToChild)
         exit(EXIT_FAILURE);
     }
 }
+
 void BreakStmt::typeCheck(Node** parentToChild)
 {
     if(!inIteration){
@@ -543,7 +569,8 @@ void InitValNode::typeCheck(Node** parentToChild)
 void DefNode::typeCheck(Node** parentToChild)
 {
     id->typeCheck(nullptr);
-    if(initVal==nullptr){//不赋初值，直接返回
+    // 不赋初值，直接返回
+    if(initVal==nullptr){
         return;
     }
     initVal->typeCheck((Node**)&(initVal));
@@ -556,23 +583,74 @@ void DefNode::typeCheck(Node** parentToChild)
         }
     }
     if(id->getType()->isConst()){
+        // 判断是否用变量给常量赋值
+        if(!isArray) {
+            if(!((ExprNode*)initVal)->getType()->isConst()) {
+                fprintf(stderr, "attempt to initialize variable value to const\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+        else{
+            // if(!(InitValNode*)initVal)->isConst()) {
+            //     fprintf(stderr, "attempt to initialize variable value to const\n");
+            //     exit(EXIT_FAILURE);
+            // }
+        }
+        // 接下来就是常量计算的工作了
+        // 数组初始化值 暂时不打算做了
         if(id->getType()->isArray()){
             //TODO: initialize elements in symbol table
         }
+        // 常量初始化值
         else{
-            //TODO: initialize elements in symbol table
+            IdentifierSymbolEntry* se = (IdentifierSymbolEntry*)id->getSymPtr();
+            se->value = ((ConstantSymbolEntry*)((ExprNode*)initVal)->getSymPtr())->getValue();
         }   
     }
 }
 
 void FuncCallParamsNode::typeCheck(Node** parentToChild)
 {
-    // Todo: 实参形参匹配
+    // 对每一个孩子节点进行常量计算
+    for(ExprNode* param : paramsList) {
+        param->typeCheck((Node**)&param);
+    }
 }
 
 void FuncCallNode::typeCheck(Node** parentToChild)
 {
-    // Todo
+    // 先对FuncCallParamsNode进行类型检查，主要是完成常量计算
+    this->params->typeCheck(nullptr);
+    // 然后进行类型匹配
+    std::vector<Type*> funcParamsType = (dynamic_cast<FunctionType*>(this->funcId->getSymPtr()->getType()))->getParamsType();
+    std::vector<ExprNode*> funcCallParams = this->params->getParamsList();
+    // 如果数量不一致直接报错
+    if(funcCallParams.size() != funcParamsType.size()) {
+        fprintf(stderr, "function %s call params number is not consistent\n",this->funcId->getSymPtr()->toStr().c_str());
+        exit(EXIT_FAILURE);
+    }
+    // 依次匹配类型
+    for(int i = 0; i < funcParamsType.size(); i++){
+        Type* needType = funcParamsType[i];
+        Type* giveType = funcCallParams[i]->getSymPtr()->getType();
+        // 暂时不考虑类型转化的问题 所有的类型转化均到IR生成再做
+        // 除了void类型都可以进行转化
+        if(!needType->calculatable() && giveType->calculatable()
+         ||needType->calculatable() && !giveType->calculatable()){
+            fprintf(stderr, "function %s call params type is not consistent\n",this->funcId->getSymPtr()->toStr().c_str());
+            exit(EXIT_FAILURE);
+        }
+        // 检查数组是否匹配
+        if(!needType->isArray() && giveType->isArray()
+         ||needType->isArray() && !giveType->isArray()){
+            fprintf(stderr, "function %s call params type is not consistent\n",this->funcId->getSymPtr()->toStr().c_str());
+            exit(EXIT_FAILURE);
+        }
+        //TODO: 检查数组维度是否匹配
+        if(needType->isArray() && giveType->isArray()){
+
+        }
+    }
 }
 
 void ExprStmtNode::typeCheck(Node** parentToChild)
@@ -582,10 +660,7 @@ void ExprStmtNode::typeCheck(Node** parentToChild)
     }
 }
 
-void EmptyStmt::typeCheck(Node** parentToChild)
-{
-    // Todo
-}
+void EmptyStmt::typeCheck(Node** parentToChild){}
 
 void OneOpExpr::typeCheck(Node** parentToChild)
 {
@@ -763,14 +838,18 @@ void ExprStmtNode::output(int level)
 void ExprStmtNode::initDimInSymTable(IdentifierSymbolEntry* se)
 {
     for(auto expr :exprList){
-        if(!(expr->getSymPtr()->isConstant() || expr->getType()->isConst())){//既不是字面值常量，也不是常量id
-            fprintf(stderr, "array dimensions must be constant!\n");
+        // 既不是字面值常量，也不是常量表达式
+        if(!(expr->getSymPtr()->isConstant() || expr->getType()->isConst())){
+            fprintf(stderr, "array dimensions must be constant! %d %d\n", expr->getSymPtr()->isConstant(), expr->getType()->isConst());
+            fprintf(stderr, "%d %d\n", (int)((ConstantSymbolEntry*)(expr->getSymPtr()))->getValue(), (int)((IdentifierSymbolEntry*)(expr->getSymPtr()))->value);
             exit(EXIT_FAILURE);
         }
-        if(expr->getSymPtr()->isConstant()){//字面值常量，值存在ConstantSymbolEntry中
+        // 字面值常量，值存在ConstantSymbolEntry中
+        if(expr->getSymPtr()->isConstant()){
             se->arrayDimension.push_back((int)((ConstantSymbolEntry*)(expr->getSymPtr()))->getValue());
         }
-        else if(expr->getType()->isConst()){//符号常量，值存在IdentifierSymbolEntry中
+        // 常量表达式，值存在IdentifierSymbolEntry中
+        else if(expr->getType()->isConst()){
             se->arrayDimension.push_back((int)((IdentifierSymbolEntry*)(expr->getSymPtr()))->value);
         }
     }

@@ -211,7 +211,7 @@ AddExp
         }
     |   AddExp ADD MulExp {
             SymbolEntry *se;
-            if($1->getType()->isInt() && $3->getType()->isInt()){
+            if($1->getType()->isAnyInt() && $3->getType()->isAnyInt()){
                 se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
             }
             else{
@@ -221,7 +221,7 @@ AddExp
         }
     |   AddExp SUB MulExp {
             SymbolEntry *se;
-            if($1->getType()->isInt() && $3->getType()->isInt()){
+            if($1->getType()->isAnyInt() && $3->getType()->isAnyInt()){
                 se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
             }
             else{
@@ -238,7 +238,7 @@ MulExp
         }
     |   MulExp MUL UnaryExp {
             SymbolEntry *se;
-            if($1->getType()->isInt() && $3->getType()->isInt()){
+            if($1->getType()->isAnyInt() && $3->getType()->isAnyInt()){
                 se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
             }
             else{
@@ -248,7 +248,7 @@ MulExp
         }
     |   MulExp DIV UnaryExp {
             SymbolEntry *se;
-            if($1->getType()->isInt() && $3->getType()->isInt()){
+            if($1->getType()->isAnyInt() && $3->getType()->isAnyInt()){
                 se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
             }
             else{
@@ -258,7 +258,7 @@ MulExp
         }
     |   MulExp MOD UnaryExp {
             SymbolEntry *se;
-            if($1->getType()->isInt() && $3->getType()->isInt()){
+            if($1->getType()->isAnyInt() && $3->getType()->isAnyInt()){
                 se = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
             }
             else{
@@ -307,11 +307,11 @@ PrimaryExp
             $$ = $2;
         }
     |   INTEGER {
-            SymbolEntry *se = new ConstantSymbolEntry(TypeSystem::intType, $1);
+            SymbolEntry *se = new ConstantSymbolEntry(TypeSystem::constIntType, $1);
             $$ = new Constant(se);
         }
     |   FLOATING {
-            SymbolEntry *se = new ConstantSymbolEntry(TypeSystem::floatType, $1);
+            SymbolEntry *se = new ConstantSymbolEntry(TypeSystem::constFloatType, $1);
             $$ = new Constant(se);
         }
     ;

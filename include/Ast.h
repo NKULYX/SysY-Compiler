@@ -135,6 +135,7 @@ public:
     void output(int level);
     void typeCheck(Node** parentToChild);
     void genCode();
+    std::vector<ExprNode*> getParamsList() {return this->paramsList;};
 };
 
 class FuncCallNode : public ExprNode
@@ -184,6 +185,7 @@ public:
     void addNext(InitValNode* next);
     void setLeafNode(ExprNode* leaf);
     bool isLeaf();
+    // bool isConst() const { return isConst; }
     void output(int level);
     void typeCheck(Node** parentToChild);
     void genCode();
