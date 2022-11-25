@@ -44,7 +44,7 @@ protected:
     SymbolEntry *symbolEntry;
     Operand *dst;   // The result of the subtree is stored into dst.
 public:
-    ExprNode(SymbolEntry *symbolEntry) : symbolEntry(symbolEntry){};
+    ExprNode(SymbolEntry *se) : symbolEntry(se){dst = new Operand(se);}
     Type* getType();
     void setType(Type* type);
     Operand* getOperand() {return dst;};
@@ -80,7 +80,7 @@ public:
 class Constant : public ExprNode
 {
 public:
-    Constant(SymbolEntry *se) : ExprNode(se){};
+    Constant(SymbolEntry *se) : ExprNode(se){}
     void output(int level);
     void typeCheck(Node** parentToChild);
     void genCode();

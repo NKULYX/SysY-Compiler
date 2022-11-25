@@ -17,7 +17,7 @@ Type* TypeSystem::voidType = &commonVoid;
 
 std::string IntType::toStr()
 {
-    return "int";
+    return "i32";
 }
 
 std::string FloatType::toStr()
@@ -27,7 +27,7 @@ std::string FloatType::toStr()
 
 std::string ConstIntType::toStr()
 {
-    return "const int";
+    return "i32";
 }
 
 std::string ConstFloatType::toStr()
