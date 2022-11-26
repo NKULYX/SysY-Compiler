@@ -1,8 +1,8 @@
-const int aaa = 10;
+//const int aaa = 10;
 int main() {
-    int a [1 + 1 + aaa];
-    int b = 1 + 2, c = 3 + 4 * 5;
-    int d = (1.0 * 4) /3;
-    if(1+2 <= b && 4 > aaa);
-    return 0;
+    //int a [1 + 1 + aaa];
+    //int b = 1 + 2, c = 3 + 4 * 5;
+    //int d = (1.0 * 4) /3;
+    //if(1+2 <= b && 4 > aaa);
+    return 4 * (1 / 5) - 4 + 1 * 1;
 }

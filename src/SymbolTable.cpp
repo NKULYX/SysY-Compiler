@@ -27,6 +27,9 @@ IdentifierSymbolEntry::IdentifierSymbolEntry(Type *type, std::string name, int s
 
 std::string IdentifierSymbolEntry::toStr()
 {
+    if(isGlobal()){
+        return "@" + name;
+    }
     return name;
 }
 
@@ -38,7 +41,7 @@ TemporarySymbolEntry::TemporarySymbolEntry(Type *type, int label) : SymbolEntry(
 std::string TemporarySymbolEntry::toStr()
 {
     std::ostringstream buffer;
-    buffer << "t" << label;
+    buffer << "%" << label;
     return buffer.str();
 }
 
