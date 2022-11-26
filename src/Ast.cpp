@@ -133,8 +133,12 @@ void Constant::genCode()
 
 void Id::genCode()
 {
+    if(getType()->isConst()){
+        return;
+    }
     BasicBlock *bb = builder->getInsertBB();
     Operand *addr = dynamic_cast<IdentifierSymbolEntry*>(symbolEntry)->getAddr();
+    dst = new Operand(new TemporarySymbolEntry(dst->getType(), SymbolTable::getLabel()));
     new LoadInstruction(dst, addr, bb);
 }
 
@@ -178,30 +182,8 @@ void SeqNode::genCode()
 
 void DeclStmt::genCode()
 {
-    IdentifierSymbolEntry *se = dynamic_cast<IdentifierSymbolEntry *>(id->getSymPtr());
-    if(se->isGlobal())
-    {
-        Operand *addr;
-        SymbolEntry *addr_se;
-        addr_se = new IdentifierSymbolEntry(*se);
-        addr_se->setType(new PointerType(se->getType()));
-        addr = new Operand(addr_se);
-        se->setAddr(addr);
-    }
-    else if(se->isLocal())
-    {
-        Function *func = builder->getInsertBB()->getParent();
-        BasicBlock *entry = func->getEntry();
-        Instruction *alloca;
-        Operand *addr;
-        SymbolEntry *addr_se;
-        Type *type;
-        type = new PointerType(se->getType());
-        addr_se = new TemporarySymbolEntry(type, SymbolTable::getLabel());
-        addr = new Operand(addr_se);
-        alloca = new AllocaInstruction(addr, se);                   // allocate space for local id in function stack.
-        entry->insertFront(alloca);                                 // allocate instructions should be inserted into the begin of the entry block.
-        se->setAddr(addr);                                          // set the addr operand in symbol entry so that we can use it in subsequent code generation.
+    for(auto stmt : defList){
+        stmt->genCode();
     }
 }
 
@@ -252,7 +234,41 @@ void InitValNode::genCode()
 
 void DefNode::genCode()
 {
-    // Todo
+    Operand *addr;
+    IdentifierSymbolEntry *se = dynamic_cast<IdentifierSymbolEntry *>(id->getSymPtr());
+    if(se->isGlobal())
+    {
+        SymbolEntry *addr_se;
+        addr_se = new IdentifierSymbolEntry(*se);
+        addr_se->setType(new PointerType(se->getType()));
+        addr = new Operand(addr_se);
+        se->setAddr(addr);
+    }
+    else if(se->isLocal())
+    {
+        Function *func = builder->getInsertBB()->getParent();
+        BasicBlock *entry = func->getEntry();
+        Instruction *alloca;
+        SymbolEntry *addr_se;
+        Type *type;
+        type = new PointerType(se->getType());
+        addr_se = new TemporarySymbolEntry(type, SymbolTable::getLabel());
+        addr = new Operand(addr_se);
+        alloca = new AllocaInstruction(addr, se);                   // allocate space for local id in function stack.
+        entry->insertFront(alloca);                                 // allocate instructions should be inserted into the begin of the entry block.
+        se->setAddr(addr);                                          // set the addr operand in symbol entry so that we can use it in subsequent code generation.
+    }
+    //add array instructions here
+    if(initVal!=nullptr){
+        BasicBlock *bb = builder->getInsertBB();
+        initVal->genCode();
+        Operand *src = dynamic_cast<ExprNode *>(initVal)->getOperand();
+    /***
+     * We haven't implemented array yet, the lval can only be ID. So we just store the result of the `expr` to the addr of the id.
+     * If you want to implement array, you have to caculate the address first and then store the result into it.
+     */
+    new StoreInstruction(addr, src, bb);
+    }
 }
 
 void FuncCallParamsNode::genCode()

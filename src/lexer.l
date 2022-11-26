@@ -32,8 +32,8 @@
 %}
 
 INTEGER ([1-9][0-9]*|0)
-OCTAL (0[1-7][0-7]*|0)
-HEXAL (0(x|X)[1-9a-fA-F][0-9a-fA-F]*|0)
+OCTAL (0[0-7][0-7]*)
+HEXAL (0(x|X)[0-9a-fA-F][0-9a-fA-F]*)
 FLOATING ((([0-9]*[.][0-9]*([eE][+-]?[0-9]+)?)|([0-9]+[eE][+-]?[0-9]+))[fLlL]?)
 HEXADECIMAL_FLOAT (0[xX](([0-9A-Fa-f]*[.][0-9A-Fa-f]*([pP][+-]?[0-9]+)?)|([0-9A-Fa-f]+[pP][+-]?[0-9]+))[fLlL]?)
 ID [[:alpha:]_][[:alpha:][:digit:]_]*
