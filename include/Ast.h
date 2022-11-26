@@ -210,8 +210,6 @@ public:
 class DeclStmt : public StmtNode
 {
 private:
-    Id *id;
-private:
     bool isConst;
     std::vector<DefNode*> defList;
 public:

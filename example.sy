@@ -4,5 +4,9 @@ int main() {
     //int b = 1 + 2, c = 3 + 4 * 5;
     //int d = (1.0 * 4) /3;
     //if(1+2 <= b && 4 > aaa);
-    return 4 * (1 / 5) - 4 + 1 * 1;
+    //return 4 * (1 / 5) - 4 + 1 * 1;
+    int sudo = 0;
+    int rm = 5, r = 3, home = 5;
+    sudo = rm -r /home*       0;
+    return 0;
 }

@@ -1,4 +1,5 @@
 #include "SymbolTable.h"
+#include "Type.h"
 #include <iostream>
 #include <sstream>
 
@@ -27,6 +28,11 @@ IdentifierSymbolEntry::IdentifierSymbolEntry(Type *type, std::string name, int s
 
 std::string IdentifierSymbolEntry::toStr()
 {
+    if(type==TypeSystem::constIntType||type==TypeSystem::constFloatType){//如果value有，int或float型常量
+        std::ostringstream buffer;
+        buffer << value;
+        return buffer.str();
+    }
     if(isGlobal()){
         return "@" + name;
     }
@@ -41,7 +47,7 @@ TemporarySymbolEntry::TemporarySymbolEntry(Type *type, int label) : SymbolEntry(
 std::string TemporarySymbolEntry::toStr()
 {
     std::ostringstream buffer;
-    buffer << "%" << label;
+    buffer << "%t" << label;
     return buffer.str();
 }
 
