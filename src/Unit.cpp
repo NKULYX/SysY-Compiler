@@ -10,8 +10,16 @@ void Unit::removeFunc(Function *func)
     func_list.erase(std::find(func_list.begin(), func_list.end(), func));
 }
 
+void Unit::insertDecl(IdentifierSymbolEntry* se)
+{
+    declare_func.insert(se);
+}
+
 void Unit::output() const
 {
+    for (auto decl : declare_func){
+        decl->outputFuncDecl();
+    }
     for (auto &func : func_list)
         func->output();
 }

@@ -2,6 +2,9 @@
 #include "Type.h"
 #include <iostream>
 #include <sstream>
+#include <string.h>
+
+extern FILE* yyout;
 
 SymbolEntry::SymbolEntry(Type *type, int kind) 
 {
@@ -37,6 +40,30 @@ std::string IdentifierSymbolEntry::toStr()
         return "@" + name;
     }
     return name;
+}
+
+void IdentifierSymbolEntry::outputFuncDecl()
+{
+    fprintf(yyout, "declare %s @%s(", 
+        dynamic_cast<FunctionType*>(type)->getRetType()->toStr().c_str(), (const char*)name.c_str());
+    bool first = true;
+    for(auto type : dynamic_cast<FunctionType*>(type)->getParamsType()){
+        if(!first){
+            first = false;
+            fprintf(yyout, ", ");
+        }
+        fprintf(yyout,"%s", type->toStr().c_str());
+    }
+    fprintf(yyout, ")\n");
+}
+
+bool IdentifierSymbolEntry::isLibFunc()
+{
+    return name=="getint" || name=="getch" || name=="getfloat" 
+        || name=="getdouble" || name=="getarray" || name=="getfarray" 
+        || name=="putint" || name=="putch" || name=="putfloat" 
+        || name=="putarray" || name=="putfarray" || name=="putf" 
+        || name=="starttime" || name=="stoptime";
 }
 
 TemporarySymbolEntry::TemporarySymbolEntry(Type *type, int label) : SymbolEntry(type, SymbolEntry::TEMPORARY)

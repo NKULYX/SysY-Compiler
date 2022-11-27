@@ -273,17 +273,46 @@ void DefNode::genCode()
 
 void FuncCallParamsNode::genCode()
 {
-    // Todo
+    for(auto expr : paramsList){
+        expr->genCode();
+    }
+}
+
+std::vector<Operand*> FuncCallParamsNode::getOperandList()
+{
+    std::vector<Operand*> result;
+    for(auto param : paramsList){
+        result.push_back(param->getOperand());
+    }
+    return result;
 }
 
 void FuncCallNode::genCode()
 {
-    // Todo
+    //找到对应function的符号表项
+    IdentifierSymbolEntry* actualSE = dynamic_cast<IdentifierSymbolEntry*>(funcId->getSymPtr());
+    if(actualSE->isLibFunc()){//若为库函数，则输出declare语句
+        builder->getUnit()->insertDecl(actualSE);
+    }
+    //输出call语句
+    //TODO: 内联函数
+    BasicBlock *bb = builder->getInsertBB();
+    //void 型函数不能返回
+    if(params==nullptr){
+        std::vector<Operand*> emptyList;
+        new CallInstruction(dst, emptyList, dynamic_cast<IdentifierSymbolEntry*>(funcId->getSymPtr()), bb);
+    }
+    else{
+        params->genCode();//生成计算各个实参的中间代码
+        new CallInstruction(dst, params->getOperandList(), dynamic_cast<IdentifierSymbolEntry*>(funcId->getSymPtr()), bb);
+    }
 }
 
 void ExprStmtNode::genCode()
 {
-    // Todo
+    for(auto expr : exprList){
+        expr->genCode();
+    }
 }
 
 void EmptyStmt::genCode()
@@ -632,38 +661,38 @@ void DefNode::typeCheck(Node** parentToChild)
     }
     initVal->typeCheck((Node**)&(initVal));
 
-    if(!id->getType()->isArray()){//不是数组时，右边可能出现函数：int a = f();
-        if(((ExprNode*)initVal)->getType()->isFunc() && 
-            (!((FunctionType*)(((ExprNode*)initVal)->getType()))->getRetType()->calculatable())){//右边是个为返回值空的函数
-            fprintf(stderr, "expected a return value, but functionType %s return nothing\n", ((ExprNode*)initVal)->getType()->toStr().c_str());
-            exit(EXIT_FAILURE);
-        }
-    }
-    if(id->getType()->isConst()){
-        // 判断是否用变量给常量赋值
-        if(!isArray) {
-            if(!((ExprNode*)initVal)->getType()->isConst()) {
-                fprintf(stderr, "attempt to initialize variable value to const\n");
-                exit(EXIT_FAILURE);
-            }
-        }
-        else{
-            // if(!(InitValNode*)initVal)->isConst()) {
-            //     fprintf(stderr, "attempt to initialize variable value to const\n");
-            //     exit(EXIT_FAILURE);
-            // }
-        }
-        // 接下来就是常量计算的工作了
-        // 数组初始化值 暂时不打算做了
-        if(id->getType()->isArray()){
-            //TODO: initialize elements in symbol table
-        }
-        // 常量初始化值
-        else{
-            IdentifierSymbolEntry* se = (IdentifierSymbolEntry*)id->getSymPtr();
-            se->value = ((ConstantSymbolEntry*)((ExprNode*)initVal)->getSymPtr())->getValue();
-        }   
-    }
+    // if(!id->getType()->isArray()){//不是数组时，右边可能出现函数：int a = f();
+    //     if(((ExprNode*)initVal)->getType()->isFunc() && 
+    //         (!((FunctionType*)(((ExprNode*)initVal)->getType()))->getRetType()->calculatable())){//右边是个为返回值空的函数
+    //         fprintf(stderr, "expected a return value, but functionType %s return nothing\n", ((ExprNode*)initVal)->getType()->toStr().c_str());
+    //         exit(EXIT_FAILURE);
+    //     }
+    // }
+    // if(id->getType()->isConst()){
+    //     // 判断是否用变量给常量赋值
+    //     if(!isArray) {
+    //         if(!((ExprNode*)initVal)->getType()->isConst()) {
+    //             fprintf(stderr, "attempt to initialize variable value to const\n");
+    //             exit(EXIT_FAILURE);
+    //         }
+    //     }
+    //     else{
+    //         // if(!(InitValNode*)initVal)->isConst()) {
+    //         //     fprintf(stderr, "attempt to initialize variable value to const\n");
+    //         //     exit(EXIT_FAILURE);
+    //         // }
+    //     }
+    //     // 接下来就是常量计算的工作了
+    //     // 数组初始化值 暂时不打算做了
+    //     if(id->getType()->isArray()){
+    //         //TODO: initialize elements in symbol table
+    //     }
+    //     // 常量初始化值
+    //     else{
+    //         IdentifierSymbolEntry* se = (IdentifierSymbolEntry*)id->getSymPtr();
+    //         se->value = ((ConstantSymbolEntry*)((ExprNode*)initVal)->getSymPtr())->getValue();
+    //     }   
+    // }
 }
 
 void FuncCallParamsNode::typeCheck(Node** parentToChild)
@@ -677,15 +706,18 @@ void FuncCallParamsNode::typeCheck(Node** parentToChild)
 void FuncCallNode::typeCheck(Node** parentToChild)
 {
     // 先对FuncCallParamsNode进行类型检查，主要是完成常量计算
-    this->params->typeCheck(nullptr);
-    // 然后进行类型匹配
-    std::vector<Type*> funcParamsType = (dynamic_cast<FunctionType*>(this->funcId->getSymPtr()->getType()))->getParamsType();
+    if(this->params==nullptr){
+        return;
+    }
+    this->params->typeCheck(nullptr); 
     std::vector<ExprNode*> funcCallParams = this->params->getParamsList();
+    std::vector<Type*> funcParamsType = (dynamic_cast<FunctionType*>(this->funcId->getSymPtr()->getType()))->getParamsType();
     // 如果数量不一致直接报错
     if(funcCallParams.size() != funcParamsType.size()) {
         fprintf(stderr, "function %s call params number is not consistent\n",this->funcId->getSymPtr()->toStr().c_str());
         exit(EXIT_FAILURE);
     }
+    // 然后进行类型匹配
     // 依次匹配类型
     for(int i = 0; i < funcParamsType.size(); i++){
         Type* needType = funcParamsType[i];

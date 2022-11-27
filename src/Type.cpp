@@ -52,14 +52,15 @@ void FunctionType::setparamsType(std::vector<Type*> in)
 
 std::string FunctionType::toStr()
 {
-    std::ostringstream buffer;
-    buffer << returnType->toStr() << "(";
-    for(int i = 0;i < (int)paramsType.size();i++){
-        if(i!=0) buffer << ", ";
-        buffer << paramsType[i]->toStr();
-    }
-    buffer << ")";
-    return buffer.str();
+    return returnType->toStr();
+    // std::ostringstream buffer;
+    // buffer << returnType->toStr() << "(";
+    // for(int i = 0;i < (int)paramsType.size();i++){
+    //     if(i!=0) buffer << ", ";
+    //     buffer << paramsType[i]->toStr();
+    // }
+    // buffer << ")";
+    // return buffer.str();
 }
 
 void IntArrayType::pushBackDimension(int dim)

@@ -297,6 +297,48 @@ void LoadInstruction::output() const
     fprintf(yyout, "  %s = load %s, %s %s, align 4\n", dst.c_str(), dst_type.c_str(), src_type.c_str(), src.c_str());
 }
 
+CallInstruction::CallInstruction(Operand *dst, std::vector<Operand*> params, IdentifierSymbolEntry* funcse, BasicBlock *insert_bb) : Instruction(CALL, insert_bb)
+{
+    operands.push_back(dst);//返回值，目标寄存器
+    dst->setDef(this);
+    for(auto param : params){//参数，源寄存器
+        operands.push_back(param);
+        param->addUse(this);
+    }
+    funcSE = funcse;
+}
+
+CallInstruction::~CallInstruction()
+{
+    operands[0]->setDef(nullptr);
+    if(operands[0]->usersNum() == 0)
+        delete operands[0];
+    for(int i = 1;i<(int)operands.size(); i++){
+        operands[i]->removeUse(this);
+    }
+}
+//只输出call语句前半部分：call void @putch(
+void CallInstruction::output() const
+{
+    std::string dst = operands[0]->toStr();
+    std::string dst_type;
+    dst_type = operands[0]->getType()->toStr();
+    Type* returnType = dynamic_cast<FunctionType*>(funcSE->getType())->getRetType();
+    if(!returnType->isVoid()){//仅当返回值为非void时，向临时寄存器赋值
+        fprintf(yyout, "  %s =", dst.c_str());
+    }
+    fprintf(yyout, "  call %s %s(", dst_type.c_str(), funcSE->toStr().c_str());
+    for(int i = 1;i<(int)operands.size(); i++){
+        std::string src = operands[i]->toStr();
+        std::string src_type = operands[i]->getType()->toStr();
+        if(i!=1){
+            fprintf(yyout, ", ");
+        }
+        fprintf(yyout, "%s %s", src_type.c_str(), src.c_str());
+    }
+    fprintf(yyout, ")\n");
+}
+
 StoreInstruction::StoreInstruction(Operand *dst_addr, Operand *src, BasicBlock *insert_bb) : Instruction(STORE, insert_bb)
 {
     operands.push_back(dst_addr);
