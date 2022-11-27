@@ -97,6 +97,8 @@ public:
     void setAddr(Operand *addr) {this->addr = addr;};
     Operand* getAddr() {return addr;};
     // You can add any function you need here.
+    void outputFuncDecl();
+    bool isLibFunc();
     //对外暴露所有实际值
     //实际值不区分int和float，实际类型需要根据符号表中的type判断
     double value;

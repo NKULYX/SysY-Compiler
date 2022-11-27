@@ -136,6 +136,7 @@ public:
     void typeCheck(Node** parentToChild);
     void genCode();
     std::vector<ExprNode*> getParamsList() {return this->paramsList;};
+    std::vector<Operand*> getOperandList();
 };
 
 class FuncCallNode : public ExprNode

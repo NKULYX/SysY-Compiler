@@ -331,11 +331,13 @@ commentend "*/"
         char *lexeme = new char[strlen(yytext) + 1];
         strcpy(lexeme, yytext);
         yylval.strtype = lexeme;
-        Type* funcType = new FunctionType(TypeSystem::intType, {});//返回类型int，无参数
-        SymbolTable* globalTable;    //全域符号表
-        for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
-        SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
-        globalTable->install(yytext, entry);
+        if(identifiers->lookup(yytext)==nullptr){//符号表内未找到，插入
+            Type* funcType = new FunctionType(TypeSystem::intType, {});//返回类型int，无参数
+            SymbolTable* globalTable;    //全域符号表
+            for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
+            SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
+            globalTable->install(yytext, entry);
+        }
         return ID;
     #endif
 }
@@ -347,11 +349,13 @@ commentend "*/"
         char *lexeme = new char[strlen(yytext) + 1];
         strcpy(lexeme, yytext);
         yylval.strtype = lexeme;
-        Type* funcType = new FunctionType(TypeSystem::intType, {});//返回类型int，无参数
-        SymbolTable* globalTable;    //全域符号表
-        for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
-        SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
-        globalTable->install(yytext, entry);
+        if(identifiers->lookup(yytext)==nullptr){//符号表内未找到，插入
+            Type* funcType = new FunctionType(TypeSystem::intType, {});//返回类型int，无参数
+            SymbolTable* globalTable;    //全域符号表
+            for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
+            SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
+            globalTable->install(yytext, entry);
+        }
         return ID;
     #endif
 }
@@ -363,11 +367,13 @@ commentend "*/"
         char *lexeme = new char[strlen(yytext) + 1];
         strcpy(lexeme, yytext);
         yylval.strtype = lexeme;
-        Type* funcType = new FunctionType(TypeSystem::floatType, {});//返回类型int，无参数
-        SymbolTable* globalTable;    //全域符号表
-        for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
-        SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
-        globalTable->install(yytext, entry);
+        if(identifiers->lookup(yytext)==nullptr){//符号表内未找到，插入
+            Type* funcType = new FunctionType(TypeSystem::floatType, {});//返回类型int，无参数
+            SymbolTable* globalTable;    //全域符号表
+            for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
+            SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
+            globalTable->install(yytext, entry);
+        }
         return ID;
     #endif
 }
@@ -379,15 +385,17 @@ commentend "*/"
         char *lexeme = new char[strlen(yytext) + 1];
         strcpy(lexeme, yytext);
         yylval.strtype = lexeme;
-        std::vector<Type*> vec; //形参类型表
-        Type* arrayType = new IntArrayType();
-        ((IntArrayType*)arrayType)->pushBackDimension(-1);
-        vec.push_back(arrayType);
-        Type* funcType = new FunctionType(TypeSystem::intType, vec);//返回类型int，参数[int array]
-        SymbolTable* globalTable;    //全域符号表
-        for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
-        SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
-        globalTable->install(yytext, entry);
+        if(identifiers->lookup(yytext)==nullptr){//符号表内未找到，插入
+            std::vector<Type*> vec; //形参类型表
+            Type* arrayType = new IntArrayType();
+            ((IntArrayType*)arrayType)->pushBackDimension(-1);
+            vec.push_back(arrayType);
+            Type* funcType = new FunctionType(TypeSystem::intType, vec);//返回类型int，参数[int array]
+            SymbolTable* globalTable;    //全域符号表
+            for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
+            SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
+            globalTable->install(yytext, entry);
+        }
         return ID;
     #endif
 }
@@ -400,14 +408,16 @@ commentend "*/"
         strcpy(lexeme, yytext);
         yylval.strtype = lexeme;
         std::vector<Type*> vec; //形参类型表
-        Type* arrayType = new FloatArrayType();
-        ((FloatArrayType*)arrayType)->pushBackDimension(-1);
-        vec.push_back(arrayType);
-        Type* funcType = new FunctionType(TypeSystem::intType, vec);//返回类型int，参数[float array]
-        SymbolTable* globalTable;    //全域符号表
-        for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
-        SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
-        globalTable->install(yytext, entry);
+        if(identifiers->lookup(yytext)==nullptr){//符号表内未找到，插入
+            Type* arrayType = new FloatArrayType();
+            ((FloatArrayType*)arrayType)->pushBackDimension(-1);
+            vec.push_back(arrayType);
+            Type* funcType = new FunctionType(TypeSystem::intType, vec);//返回类型int，参数[float array]
+            SymbolTable* globalTable;    //全域符号表
+            for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
+            SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
+            globalTable->install(yytext, entry);
+        }
         return ID;
     #endif
 }
@@ -419,13 +429,15 @@ commentend "*/"
         char *lexeme = new char[strlen(yytext) + 1];
         strcpy(lexeme, yytext);
         yylval.strtype = lexeme;
-        std::vector<Type*> vec; //形参类型表
-        vec.push_back(TypeSystem::intType);
-        Type* funcType = new FunctionType(TypeSystem::voidType, vec);//返回类型void，参数表[int]
-        SymbolTable* globalTable;    //全域符号表
-        for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
-        SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
-        globalTable->install(yytext, entry);
+        if(identifiers->lookup(yytext)==nullptr){//符号表内未找到，插入
+            std::vector<Type*> vec; //形参类型表
+            vec.push_back(TypeSystem::intType);
+            Type* funcType = new FunctionType(TypeSystem::voidType, vec);//返回类型void，参数表[int]
+            SymbolTable* globalTable;    //全域符号表
+            for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
+            SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
+            globalTable->install(yytext, entry);
+        }
         return ID;
     #endif
 }
@@ -437,13 +449,15 @@ commentend "*/"
         char *lexeme = new char[strlen(yytext) + 1];
         strcpy(lexeme, yytext);
         yylval.strtype = lexeme;
-        std::vector<Type*> vec; //形参类型表
-        vec.push_back(TypeSystem::intType);
-        Type* funcType = new FunctionType(TypeSystem::voidType, vec);//返回类型void，参数表[int]
-        SymbolTable* globalTable;    //全域符号表
-        for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
-        SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
-        globalTable->install(yytext, entry);
+        if(identifiers->lookup(yytext)==nullptr){//符号表内未找到，插入
+            std::vector<Type*> vec; //形参类型表
+            vec.push_back(TypeSystem::intType);
+            Type* funcType = new FunctionType(TypeSystem::voidType, vec);//返回类型void，参数表[int]
+            SymbolTable* globalTable;    //全域符号表
+            for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
+            SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
+            globalTable->install(yytext, entry);
+        }
         return ID;
     #endif
 }
@@ -455,13 +469,15 @@ commentend "*/"
         char *lexeme = new char[strlen(yytext) + 1];
         strcpy(lexeme, yytext);
         yylval.strtype = lexeme;
-        std::vector<Type*> vec; //形参类型表
-        vec.push_back(TypeSystem::floatType);
-        Type* funcType = new FunctionType(TypeSystem::voidType, vec);//返回类型void，参数表[int]
-        SymbolTable* globalTable;    //全域符号表
-        for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
-        SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
-        globalTable->install(yytext, entry);
+        if(identifiers->lookup(yytext)==nullptr){//符号表内未找到，插入
+            std::vector<Type*> vec; //形参类型表
+            vec.push_back(TypeSystem::floatType);
+            Type* funcType = new FunctionType(TypeSystem::voidType, vec);//返回类型void，参数表[int]
+            SymbolTable* globalTable;    //全域符号表
+            for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
+            SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
+            globalTable->install(yytext, entry);
+        }
         return ID;
     #endif
 }
@@ -473,16 +489,18 @@ commentend "*/"
         char *lexeme = new char[strlen(yytext) + 1];
         strcpy(lexeme, yytext);
         yylval.strtype = lexeme;
-        std::vector<Type*> vec; //形参类型表
-        vec.push_back(TypeSystem::intType);
-        Type* arrayType = new IntArrayType();
-        ((IntArrayType*)arrayType)->pushBackDimension(-1);
-        vec.push_back(arrayType);
-        Type* funcType = new FunctionType(TypeSystem::voidType, vec);//返回类型void，参数表[int, int array]
-        SymbolTable* globalTable;    //全域符号表
-        for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
-        SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
-        globalTable->install(yytext, entry);
+        if(identifiers->lookup(yytext)==nullptr){//符号表内未找到，插入
+            std::vector<Type*> vec; //形参类型表
+            vec.push_back(TypeSystem::intType);
+            Type* arrayType = new IntArrayType();
+            ((IntArrayType*)arrayType)->pushBackDimension(-1);
+            vec.push_back(arrayType);
+            Type* funcType = new FunctionType(TypeSystem::voidType, vec);//返回类型void，参数表[int, int array]
+            SymbolTable* globalTable;    //全域符号表
+            for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
+            SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
+            globalTable->install(yytext, entry);
+        }
         return ID;
     #endif
 }
@@ -494,16 +512,18 @@ commentend "*/"
         char *lexeme = new char[strlen(yytext) + 1];
         strcpy(lexeme, yytext);
         yylval.strtype = lexeme;
-        std::vector<Type*> vec; //形参类型表
-        vec.push_back(TypeSystem::intType);
-        Type* arrayType = new FloatArrayType();
-        ((FloatArrayType*)arrayType)->pushBackDimension(-1);
-        vec.push_back(arrayType);
-        Type* funcType = new FunctionType(TypeSystem::voidType, vec);//返回类型void，参数表[int, float array]
-        SymbolTable* globalTable;    //全域符号表
-        for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
-        SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
-        globalTable->install(yytext, entry);
+        if(identifiers->lookup(yytext)==nullptr){//符号表内未找到，插入
+            std::vector<Type*> vec; //形参类型表
+            vec.push_back(TypeSystem::intType);
+            Type* arrayType = new FloatArrayType();
+            ((FloatArrayType*)arrayType)->pushBackDimension(-1);
+            vec.push_back(arrayType);
+            Type* funcType = new FunctionType(TypeSystem::voidType, vec);//返回类型void，参数表[int, float array]
+            SymbolTable* globalTable;    //全域符号表
+            for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
+            SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
+            globalTable->install(yytext, entry);
+        }
         return ID;
     #endif
 }
@@ -523,11 +543,13 @@ commentend "*/"
         char *lexeme = new char[strlen(yytext) + 1];
         strcpy(lexeme, yytext);
         yylval.strtype = lexeme;
-        Type* funcType = new FunctionType(TypeSystem::voidType, {});//返回类型void，无参数
-        SymbolTable* globalTable;    //全域符号表
-        for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
-        SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
-        globalTable->install(yytext, entry);
+        if(identifiers->lookup(yytext)==nullptr){//符号表内未找到，插入
+            Type* funcType = new FunctionType(TypeSystem::voidType, {});//返回类型void，无参数
+            SymbolTable* globalTable;    //全域符号表
+            for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
+            SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
+            globalTable->install(yytext, entry);
+        }
         return ID;
     #endif
 }
@@ -539,11 +561,13 @@ commentend "*/"
         char *lexeme = new char[strlen(yytext) + 1];
         strcpy(lexeme, yytext);
         yylval.strtype = lexeme;
-        Type* funcType = new FunctionType(TypeSystem::voidType, {});//返回类型void，无参数
-        SymbolTable* globalTable;    //全域符号表
-        for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
-        SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
-        globalTable->install(yytext, entry);
+        if(identifiers->lookup(yytext)==nullptr){//符号表内未找到，插入
+            Type* funcType = new FunctionType(TypeSystem::voidType, {});//返回类型void，无参数
+            SymbolTable* globalTable;    //全域符号表
+            for(globalTable = identifiers;globalTable->getPrev();globalTable = globalTable->getPrev()); //全域符号表
+            SymbolEntry* entry = new IdentifierSymbolEntry(funcType, yytext, 0);//作用域GLOBAL(0)
+            globalTable->install(yytext, entry);
+        }
         return ID;
     #endif
 }
