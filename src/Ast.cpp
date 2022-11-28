@@ -705,13 +705,18 @@ void FuncCallParamsNode::typeCheck(Node** parentToChild)
 
 void FuncCallNode::typeCheck(Node** parentToChild)
 {
-    // 先对FuncCallParamsNode进行类型检查，主要是完成常量计算
-    if(this->params==nullptr){
+    std::vector<Type*> funcParamsType = (dynamic_cast<FunctionType*>(this->funcId->getSymPtr()->getType()))->getParamsType();
+    // 首先对于无参的进行检查
+    if(this->params==nullptr && funcParamsType.size() != 0){
+        fprintf(stderr, "function %s call params number is not consistent\n",this->funcId->getSymPtr()->toStr().c_str());
+        exit(EXIT_FAILURE);
+    }
+    else if(this->params==nullptr) {
         return;
     }
+    // 先对FuncCallParamsNode进行类型检查，主要是完成常量计算
     this->params->typeCheck(nullptr); 
     std::vector<ExprNode*> funcCallParams = this->params->getParamsList();
-    std::vector<Type*> funcParamsType = (dynamic_cast<FunctionType*>(this->funcId->getSymPtr()->getType()))->getParamsType();
     // 如果数量不一致直接报错
     if(funcCallParams.size() != funcParamsType.size()) {
         fprintf(stderr, "function %s call params number is not consistent\n",this->funcId->getSymPtr()->toStr().c_str());
