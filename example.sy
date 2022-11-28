@@ -1,22 +1,12 @@
-//const int aaa = 10;
 int main() {
-    //int a [1 + 1 + aaa];
-    //int b = 1 + 2, c = 3 + 4 * 5;
-    //int d = (1.0 * 4) /3;
-    //if(1+2 <= b && 4 > aaa);
-    //return 4 * (1 / 5) - 4 + 1 * 1;
-    int a = getint();
-    if(a>10) {
-        a = a + 1;
-        if(a < 20) {
-            a = a + 2;
-        }
-        else {
-            a = a - 2;
-        }
+    int a;
+    a = 10;
+    if (+-!!!a) {
+        a = - - -1;
     }
     else {
-        a = a - 1;
+        a = 0;
     }
+    putint(a);
     return 0;
 }

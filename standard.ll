@@ -1,5 +1,5 @@
-; ModuleID = 'test.c'
-source_filename = "test.c"
+; ModuleID = 'standard.c'
+source_filename = "standard.c"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
@@ -12,18 +12,22 @@ define dso_local i32 @main() #0 {
   store i32 10, i32* %2, align 4
   store float 0x402E75C280000000, float* %3, align 4
   %4 = load i32, i32* %2, align 4
-  %5 = sitofp i32 %4 to float
-  %6 = load float, float* %3, align 4
-  %7 = fcmp ogt float %5, %6
-  br i1 %7, label %8, label %11
+  %5 = icmp ne i32 %4, 0
+  %6 = xor i1 %5, true
+  %7 = xor i1 %6, true
+  %8 = xor i1 %7, true
+  %9 = zext i1 %8 to i32
+  %10 = sub nsw i32 0, %9
+  %11 = icmp ne i32 %10, 0
+  br i1 %11, label %12, label %15
 
-8:                                                ; preds = %0
-  %9 = load i32, i32* %2, align 4
-  %10 = add nsw i32 %9, 1
-  store i32 %10, i32* %2, align 4
-  br label %11
+12:                                               ; preds = %0
+  %13 = load i32, i32* %2, align 4
+  %14 = add nsw i32 %13, 1
+  store i32 %14, i32* %2, align 4
+  br label %15
 
-11:                                               ; preds = %8, %0
+15:                                               ; preds = %12, %0
   ret i32 0
 }
 
