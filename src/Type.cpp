@@ -37,7 +37,7 @@ std::string ConstFloatType::toStr()
 
 std::string BoolType::toStr()
 {
-    return "bool";
+    return "i1";
 }
 
 std::string VoidType::toStr()

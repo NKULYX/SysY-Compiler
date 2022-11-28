@@ -33,8 +33,9 @@ void Node::backPatch(std::vector<Instruction*> &list, BasicBlock*bb)
     {
         if(inst->isCond())
             dynamic_cast<CondBrInstruction*>(inst)->setTrueBranch(bb);
-        else if(inst->isUncond())
+        else if(inst->isUncond()){
             dynamic_cast<UncondBrInstruction*>(inst)->setBranch(bb);
+        }
     }
 }
 
@@ -66,7 +67,27 @@ void FunctionDef::genCode()
      * Construct control flow graph. You need do set successors and predecessors for each basic block.
      * Todo
     */
-   
+    // 遍历Function中所有的BasicBlock，在各个BasicBlock之间建立控制流关系
+    for (auto block = func->begin(); block != func->end(); block++) {
+        // 获取该块的最后一条指令
+        Instruction* last = (*block)->rbegin();
+        // 对于有条件的跳转指令，需要对其true分支和false分支都设置控制流关系
+        if (last->isCond()) {
+            BasicBlock *trueBlock = dynamic_cast<CondBrInstruction*>(last)->getTrueBranch();
+            BasicBlock *falseBlock = dynamic_cast<CondBrInstruction*>(last)->getFalseBranch();
+            (*block)->addSucc(trueBlock);
+            (*block)->addSucc(falseBlock);
+            trueBlock->addPred(*block);
+            falseBlock->addPred(*block);
+        } 
+        // 对于无条件的跳转指令，只需要对其目标基本块设置控制流关系即可
+        if (last->isUncond()) {
+            BasicBlock* dstBlock = dynamic_cast<UncondBrInstruction*>(last)->getBranch();
+            (*block)->addSucc(dstBlock);
+            dstBlock->addPred(*block);
+        }
+    }
+
 }
 
 void BinaryExpr::genCode()
@@ -93,9 +114,43 @@ void BinaryExpr::genCode()
         // true_list = expr2->trueList();
         // false_list = merge(expr1->falseList(), expr2->falseList());
     }
-    else if(op >= LESS && op <= GREAT)
+    else if(op >= LESS && op <= NEQ)
     {
-        // Todo
+        expr1->genCode();
+        expr2->genCode();
+        Operand *src1 = expr1->getOperand();
+        Operand *src2 = expr2->getOperand();
+        int opcode;
+        switch (op)
+        {
+        case LESS:
+            opcode = CmpInstruction::L;
+            break;
+        case LESSEQ:
+            opcode = CmpInstruction::LE;
+            break;
+        case GREAT:
+            opcode = CmpInstruction::G;
+            break;
+        case GREATEQ:
+            opcode = CmpInstruction::GE;
+            break;
+        case EQ:
+            opcode = CmpInstruction::E;
+            break;
+        case NEQ:
+            opcode = CmpInstruction::NE;
+            break;
+        }
+        new CmpInstruction(opcode, dst, src1, src2, bb);
+
+        // 跳转目标block
+        BasicBlock* trueBlock, *falseBlock, *mergeBlock;
+        trueBlock = new BasicBlock(func);
+        falseBlock = new BasicBlock(func);
+        mergeBlock = new BasicBlock(func);
+        true_list.push_back(new CondBrInstruction(trueBlock, falseBlock, dst, bb));
+        false_list.push_back(new UncondBrInstruction(mergeBlock, falseBlock));
     }
     else if(op >= ADD && op <= MOD)
     {
@@ -165,7 +220,31 @@ void IfStmt::genCode()
 
 void IfElseStmt::genCode()
 {
-    // Todo
+    Function *func;
+    BasicBlock *then_bb, *else_bb, *end_bb;
+
+    func = builder->getInsertBB()->getParent();
+    then_bb = new BasicBlock(func);
+    else_bb = new BasicBlock(func);
+    end_bb = new BasicBlock(func);
+
+    cond->genCode();
+    backPatch(cond->trueList(), then_bb);
+    backPatch(cond->falseList(), else_bb);
+
+    // 先处理then分支
+    builder->setInsertBB(then_bb);
+    thenStmt->genCode();
+    then_bb = builder->getInsertBB();
+    new UncondBrInstruction(end_bb, then_bb);
+
+    // 再处理else分支
+    builder->setInsertBB(else_bb);
+    elseStmt->genCode();
+    else_bb = builder->getInsertBB();
+    new UncondBrInstruction(end_bb, else_bb);
+
+    builder->setInsertBB(end_bb);
 }
 
 void CompoundStmt::genCode()
@@ -317,7 +396,7 @@ void ExprStmtNode::genCode()
 
 void EmptyStmt::genCode()
 {
-    // Todo
+    // Todo 这个还需要做嘛
 }
 
 void OneOpExpr::genCode()
@@ -332,6 +411,7 @@ void OneOpExpr::genCode()
         int opcode = BinaryInstruction::SUB;
         new BinaryInstruction(opcode, dst, src1, src2, bb);
     }
+    // TODO 非运算
     else if(op == NOT)
     {
         // BasicBlock *trueBB = new BasicBlock(func);  // if the result of lhs is true, jump to the trueBB.
@@ -661,38 +741,38 @@ void DefNode::typeCheck(Node** parentToChild)
     }
     initVal->typeCheck((Node**)&(initVal));
 
-    // if(!id->getType()->isArray()){//不是数组时，右边可能出现函数：int a = f();
-    //     if(((ExprNode*)initVal)->getType()->isFunc() && 
-    //         (!((FunctionType*)(((ExprNode*)initVal)->getType()))->getRetType()->calculatable())){//右边是个为返回值空的函数
-    //         fprintf(stderr, "expected a return value, but functionType %s return nothing\n", ((ExprNode*)initVal)->getType()->toStr().c_str());
-    //         exit(EXIT_FAILURE);
-    //     }
-    // }
-    // if(id->getType()->isConst()){
-    //     // 判断是否用变量给常量赋值
-    //     if(!isArray) {
-    //         if(!((ExprNode*)initVal)->getType()->isConst()) {
-    //             fprintf(stderr, "attempt to initialize variable value to const\n");
-    //             exit(EXIT_FAILURE);
-    //         }
-    //     }
-    //     else{
-    //         // if(!(InitValNode*)initVal)->isConst()) {
-    //         //     fprintf(stderr, "attempt to initialize variable value to const\n");
-    //         //     exit(EXIT_FAILURE);
-    //         // }
-    //     }
-    //     // 接下来就是常量计算的工作了
-    //     // 数组初始化值 暂时不打算做了
-    //     if(id->getType()->isArray()){
-    //         //TODO: initialize elements in symbol table
-    //     }
-    //     // 常量初始化值
-    //     else{
-    //         IdentifierSymbolEntry* se = (IdentifierSymbolEntry*)id->getSymPtr();
-    //         se->value = ((ConstantSymbolEntry*)((ExprNode*)initVal)->getSymPtr())->getValue();
-    //     }   
-    // }
+    if(!id->getType()->isArray()){//不是数组时，右边可能出现函数：int a = f();
+        if(((ExprNode*)initVal)->getType()->isFunc() && 
+            (!((FunctionType*)(((ExprNode*)initVal)->getType()))->getRetType()->calculatable())){//右边是个为返回值空的函数
+            fprintf(stderr, "expected a return value, but functionType %s return nothing\n", ((ExprNode*)initVal)->getType()->toStr().c_str());
+            exit(EXIT_FAILURE);
+        }
+    }
+    if(id->getType()->isConst()){
+        // 判断是否用变量给常量赋值
+        if(!isArray) {
+            if(!((ExprNode*)initVal)->getType()->isConst()) {
+                fprintf(stderr, "attempt to initialize variable value to const\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+        else{
+            if(!((InitValNode*)initVal)->isConst()) {
+                fprintf(stderr, "attempt to initialize variable value to const\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+        // 接下来就是常量计算的工作了
+        // 数组初始化值 暂时不打算做了
+        if(id->getType()->isArray()){
+            //TODO: initialize elements in symbol table
+        }
+        // 常量初始化值
+        else{
+            IdentifierSymbolEntry* se = (IdentifierSymbolEntry*)id->getSymPtr();
+            se->value = ((ConstantSymbolEntry*)((ExprNode*)initVal)->getSymPtr())->getValue();
+        }   
+    }
 }
 
 void FuncCallParamsNode::typeCheck(Node** parentToChild)
@@ -1039,7 +1119,7 @@ void InitValNode::addNext(InitValNode* next)
 
 void InitValNode::output(int level)
 {
-    std::string constStr = isConst ? "true" : "false";
+    std::string constStr = isconst ? "true" : "false";
     fprintf(yyout, "%*cInitValNode\tisConst:%s\n", level, ' ', constStr.c_str());
     for(auto child : innerList)
     {

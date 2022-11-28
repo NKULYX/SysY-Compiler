@@ -177,16 +177,16 @@ public:
 class InitValNode : public StmtNode
 {
 private:
-    bool isConst;
+    bool isconst;
     ExprNode* leafNode; //可能为空，即使是叶节点（考虑{}）
     std::vector<InitValNode*> innerList;//为空则为叶节点，这是唯一判断标准
 public:
-    InitValNode(bool isConst) : 
-        isConst(isConst), leafNode(nullptr){};
+    InitValNode(bool isconst) : 
+        isconst(isconst), leafNode(nullptr){};
     void addNext(InitValNode* next);
     void setLeafNode(ExprNode* leaf);
     bool isLeaf();
-    // bool isConst() const { return isConst; }
+    bool isConst() const { return isconst; }
     void output(int level);
     void typeCheck(Node** parentToChild);
     void genCode();
