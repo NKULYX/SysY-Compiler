@@ -60,10 +60,10 @@ void IdentifierSymbolEntry::outputFuncDecl()
     }
     // 否则应该为变量的声明
     else {
-        if(this->type->isInt() || this->type->isConstInt()) {
+        if(this->type->isInt()) {
             fprintf(yyout, "@%s = dso_local global %s %d\n", this->name.c_str(), this->type->toStr().c_str(), (int)value);
         }
-        else if(this->type->isFloat() || this->type->isConstFloat()) {
+        else if(this->type->isFloat()) {
             fprintf(yyout, "@%s = dso_local global %s %f\n",this->name.c_str(), this->type->toStr().c_str(), value);
         }
     }

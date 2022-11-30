@@ -1,9 +1,9 @@
+const int ch = 48;
+int i = 1;
 int main() {
-    const int ch = 48;
-    int i = 1;
     while (i < 12) {
         int j = 0;
-        while (i == i) {
+        while (1 == 1 && 10) {
             if (j % 3 == 1) {
                 putch(ch + 1);
             } else {

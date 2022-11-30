@@ -589,7 +589,7 @@ void BinaryExpr::typeCheck(Node** parentToChild)
                 val = leftValue != rightValue;
             break;
             }
-            se = new ConstantSymbolEntry(TypeSystem::boolType, val);
+            se = new ConstantSymbolEntry(TypeSystem::constBoolType, val);
         }
         // 如果该节点结果的目标类型为int
         else if(this->getType()->isInt()){
