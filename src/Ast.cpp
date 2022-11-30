@@ -88,7 +88,6 @@ void FunctionDef::genCode()
             dstBlock->addPred(*block);
         }
     }
-
 }
 
 void BinaryExpr::genCode()
@@ -554,7 +553,46 @@ void BinaryExpr::typeCheck(Node** parentToChild)
     //左右子树均为常数，计算常量值，替换节点
     if(realTypeLeft->isConst() && realTypeRight->isConst()){
         SymbolEntry *se;
-        if(this->getType()->isInt()){
+        // 如果该节点结果的目标类型为bool
+        if(this->getType()->isBool()) {
+            bool val = 0;
+            float leftValue = expr1->getSymPtr()->isConstant() ? 
+                ((ConstantSymbolEntry*)(expr1->getSymPtr()))->getValue() : 
+                ((IdentifierSymbolEntry*)(expr1->getSymPtr()))->value;
+            float rightValue = expr2->getSymPtr()->isConstant() ? 
+                ((ConstantSymbolEntry*)(expr2->getSymPtr()))->getValue() : 
+                ((IdentifierSymbolEntry*)(expr2->getSymPtr()))->value;
+            switch(op)
+            {
+            case AND:
+                val = leftValue && rightValue;
+            break;
+            case OR:
+                val = leftValue || rightValue;
+            break;
+            case LESS:
+                val = leftValue < rightValue;
+            break;
+            case LESSEQ:
+                val = leftValue <= rightValue;
+            break;
+            case GREAT:
+                val = leftValue > rightValue;
+            break;
+            case GREATEQ:
+                val = leftValue >= rightValue;
+            break;
+            case EQ:
+                val = leftValue == rightValue;
+            break;
+            case NEQ:
+                val = leftValue != rightValue;
+            break;
+            }
+            se = new ConstantSymbolEntry(TypeSystem::boolType, val);
+        }
+        // 如果该节点结果的目标类型为int
+        else if(this->getType()->isInt()){
             int val = 0;
             int leftValue = expr1->getSymPtr()->isConstant() ? 
                 ((ConstantSymbolEntry*)(expr1->getSymPtr()))->getValue() : //字面值常量
@@ -579,35 +617,35 @@ void BinaryExpr::typeCheck(Node** parentToChild)
             case MOD:
                 val = leftValue % rightValue;
             break;
-            //现行文法不会出现以下可能，因为bool会被当做float处理
             // case AND:
             //     val = leftValue && rightValue;
             // break;
             // case OR:
             //     val = leftValue || rightValue;
             // break;
-            case LESS:
-                val = leftValue < rightValue;
-            break;
-            case LESSEQ:
-                val = leftValue <= rightValue;
-            break;
-            case GREAT:
-                val = leftValue > rightValue;
-            break;
-            case GREATEQ:
-                val = leftValue >= rightValue;
-            break;
-            case EQ:
-                val = leftValue == rightValue;
-            break;
-            case NEQ:
-                val = leftValue != rightValue;
-            break;
+            // case LESS:
+            //     val = leftValue < rightValue;
+            // break;
+            // case LESSEQ:
+            //     val = leftValue <= rightValue;
+            // break;
+            // case GREAT:
+            //     val = leftValue > rightValue;
+            // break;
+            // case GREATEQ:
+            //     val = leftValue >= rightValue;
+            // break;
+            // case EQ:
+            //     val = leftValue == rightValue;
+            // break;
+            // case NEQ:
+            //     val = leftValue != rightValue;
+            // break;
             }
             se = new ConstantSymbolEntry(TypeSystem::constIntType, val);
         }
-        else{//float or bool
+        // 如果该节点结果的目标类型为float
+        else{
             float val = 0;
             float leftValue = expr1->getSymPtr()->isConstant() ? 
                 ((ConstantSymbolEntry*)(expr1->getSymPtr()))->getValue() : 
@@ -629,34 +667,33 @@ void BinaryExpr::typeCheck(Node** parentToChild)
             case DIV:
                 val = leftValue / rightValue;
             break;
-            case MOD:
-                fprintf(stderr, "mod is not supported with float or bool operands!");
-                exit(EXIT_FAILURE);
-            break;
-            case LESS:
-                val = leftValue < rightValue;
-            break;
-            case LESSEQ:
-                val = leftValue <= rightValue;
-            break;
-            case GREAT:
-                val = leftValue > rightValue;
-            break;
-            case GREATEQ:
-                val = leftValue >= rightValue;
-            break;
-            case EQ:
-                val = leftValue == rightValue;
-            break;
-            case NEQ:
-                val = leftValue != rightValue;
-            break;
+            // case MOD:
+            //     fprintf(stderr, "mod is not supported with float or bool operands!");
+            //     exit(EXIT_FAILURE);
+            // break;
+            // case LESS:
+            //     val = leftValue < rightValue;
+            // break;
+            // case LESSEQ:
+            //     val = leftValue <= rightValue;
+            // break;
+            // case GREAT:
+            //     val = leftValue > rightValue;
+            // break;
+            // case GREATEQ:
+            //     val = leftValue >= rightValue;
+            // break;
+            // case EQ:
+            //     val = leftValue == rightValue;
+            // break;
+            // case NEQ:
+            //     val = leftValue != rightValue;
+            // break;
             }
             se = new ConstantSymbolEntry(TypeSystem::constFloatType, val);
         }
         Constant* newNode = new Constant(se);
         *parentToChild = newNode;
-        //delete this;
     }
 }
 
