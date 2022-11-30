@@ -10,7 +10,7 @@ define dso_local i32 @main() #0 {
   %3 = alloca float, align 4
   store i32 0, i32* %1, align 4
   store i32 10, i32* %2, align 4
-  store float 0x402E75C280000000, float* %3, align 4
+  store float 15.23, float* %3, align 4
   %4 = load i32, i32* %2, align 4
   %5 = icmp ne i32 %4, 0
   %6 = xor i1 %5, true
@@ -28,7 +28,9 @@ define dso_local i32 @main() #0 {
   br label %15
 
 15:                                               ; preds = %12, %0
-  ret i32 0
+  %16 = load float, float* %3, align 4
+  %17 = fptosi float %16 to i32
+  ret i32 %17
 }
 
 attributes #0 = { noinline nounwind optnone uwtable "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "frame-pointer"="all" "less-precise-fpmad"="false" "min-legal-vector-width"="0" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }

@@ -49,9 +49,16 @@ void BasicBlock::output() const
         for (auto i = pred.begin() + 1; i != pred.end(); i++)
             fprintf(yyout, ", %%B%d", (*i)->getNo());
     }
+    if(!succ.empty())
+    {
+        fprintf(yyout, "%*c; succs = %%B%d", 32, '\t', succ[0]->getNo());
+        for (auto i = succ.begin() + 1; i != succ.end(); i++)
+            fprintf(yyout, ", %%B%d", (*i)->getNo());
+    }
     fprintf(yyout, "\n");
-    for (auto i = head->getNext(); i != head; i = i->getNext())
+    for (auto i = head->getNext(); i != head; i = i->getNext()) {
         i->output();
+    }
 }
 
 void BasicBlock::addSucc(BasicBlock *bb)

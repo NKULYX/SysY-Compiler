@@ -362,3 +362,28 @@ void StoreInstruction::output() const
 
     fprintf(yyout, "  store %s %s, %s %s, align 4\n", src_type.c_str(), src.c_str(), dst_type.c_str(), dst.c_str());
 }
+
+ZextInstruction::ZextInstruction(Operand *src, Operand *dst, BasicBlock *insert_bb) : Instruction(ZEXT, insert_bb)
+{
+    operands.push_back(src);
+    operands.push_back(dst);
+    dst->setDef(this);
+    src->addUse(this);
+}
+
+ZextInstruction::~ZextInstruction()
+{
+    operands[0]->setDef(nullptr);
+    if(operands[0]->usersNum() == 0)
+        delete operands[0];
+    operands[1]->removeUse(this);
+}
+
+void ZextInstruction::output() const
+{
+    std::string src = operands[0]->toStr();
+    std::string dst = operands[1]->toStr();
+    std::string src_type = operands[0]->getType()->toStr();
+    std::string dst_type = operands[1]->getType()->toStr();
+    fprintf(yyout, "  %s = zext %s %s to %s align 4\n", dst.c_str(), src_type.c_str(), src.c_str(), dst_type.c_str());
+}

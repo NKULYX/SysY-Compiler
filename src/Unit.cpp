@@ -17,8 +17,15 @@ void Unit::insertDecl(IdentifierSymbolEntry* se)
 
 void Unit::output() const
 {
+    // 先定义全局变量
     for (auto decl : declare_func){
-        decl->outputFuncDecl();
+        if(!decl->isLibFunc())
+            decl->outputFuncDecl();
+    }
+    // 再定义库函数
+    for (auto decl : declare_func){
+        if(decl->isLibFunc())
+            decl->outputFuncDecl();
     }
     for (auto &func : func_list)
         func->output();

@@ -44,17 +44,29 @@ std::string IdentifierSymbolEntry::toStr()
 
 void IdentifierSymbolEntry::outputFuncDecl()
 {
-    fprintf(yyout, "declare %s @%s(", 
-        dynamic_cast<FunctionType*>(type)->getRetType()->toStr().c_str(), (const char*)name.c_str());
-    bool first = true;
-    for(auto type : dynamic_cast<FunctionType*>(type)->getParamsType()){
-        if(!first){
-            first = false;
-            fprintf(yyout, ", ");
+    // 如果是库函数的声明
+    if(this->type->isFunc()) {
+        fprintf(yyout, "declare %s @%s(", 
+            dynamic_cast<FunctionType*>(type)->getRetType()->toStr().c_str(), (const char*)name.c_str());
+        bool first = true;
+        for(auto type : dynamic_cast<FunctionType*>(type)->getParamsType()){
+            if(!first){
+                first = false;
+                fprintf(yyout, ", ");
+            }
+            fprintf(yyout,"%s", type->toStr().c_str());
         }
-        fprintf(yyout,"%s", type->toStr().c_str());
+        fprintf(yyout, ")\n");
     }
-    fprintf(yyout, ")\n");
+    // 否则应该为变量的声明
+    else {
+        if(this->type->isInt() || this->type->isConstInt()) {
+            fprintf(yyout, "@%s = dso_local global %s %d\n", this->name.c_str(), this->type->toStr().c_str(), (int)value);
+        }
+        else if(this->type->isFloat() || this->type->isConstFloat()) {
+            fprintf(yyout, "@%s = dso_local global %s %f\n",this->name.c_str(), this->type->toStr().c_str(), value);
+        }
+    }
 }
 
 bool IdentifierSymbolEntry::isLibFunc()

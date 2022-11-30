@@ -20,6 +20,7 @@ public:
     void setPrev(Instruction *);
     Instruction *getNext();
     Instruction *getPrev();
+    int getType() {return instType;};
     virtual void output() const = 0;
 protected:
     unsigned instType;
@@ -28,7 +29,7 @@ protected:
     Instruction *next;
     BasicBlock *parent;
     std::vector<Operand*> operands;
-    enum {BINARY, COND, UNCOND, RET, LOAD, STORE, CMP, ALLOCA, CALL};
+    enum {BINARY, COND, UNCOND, RET, LOAD, STORE, CMP, ALLOCA, CALL, ZEXT};
 };
 
 // meaningless instruction, used as the head node of the instruction list.
@@ -126,6 +127,16 @@ class RetInstruction : public Instruction
 public:
     RetInstruction(Operand *src, BasicBlock *insert_bb = nullptr);
     ~RetInstruction();
+    void output() const;
+};
+
+// 符号扩展零填充指令
+// 用于逻辑运算表达式中
+class ZextInstruction : public Instruction
+{
+public:
+    ZextInstruction(Operand *src, Operand *dst, BasicBlock *insert_bb = nullptr);
+    ~ZextInstruction();
     void output() const;
 };
 

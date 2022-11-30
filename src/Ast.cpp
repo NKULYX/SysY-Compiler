@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <assert.h>
 #include "Ast.h"
 #include "SymbolTable.h"
 #include "Type.h"
@@ -12,7 +13,7 @@ int Node::counter = 0;
 IRBuilder* Node::builder = nullptr;
 Type* returnType = nullptr;
 bool funcReturned = false;
-bool inIteration = false;//在迭代中
+int inIteration = 0;//在迭代中
 
 Node::Node()
 {
@@ -288,7 +289,39 @@ void AssignStmt::genCode()
 
 void WhileStmt::genCode()
 {
-    // Todo
+    // 将当前的whileStmt压栈
+    whileStack.push(this);
+    Function* func = builder->getInsertBB()->getParent();
+    BasicBlock* stmt_bb, *cond_bb, *end_bb, *bb = builder->getInsertBB();
+    stmt_bb = new BasicBlock(func);
+    cond_bb = new BasicBlock(func);
+    end_bb = new BasicBlock(func);
+
+    this->condBlock = cond_bb;
+    this->endBlock = end_bb;
+
+    // 先从当前的bb跳转到cond_bb进行条件判断
+    new UncondBrInstruction(cond_bb, bb);
+
+    // 调整插入点到cond_bb，对条件判断部分生成中间代码
+    builder->setInsertBB(cond_bb);
+    cond->genCode();
+    backPatch(cond->trueList(), stmt_bb);
+    backPatch(cond->falseList(), end_bb);
+
+    // 调整插入点到stmt_bb，对循环体部分生成中间代码
+    builder->setInsertBB(stmt_bb);
+    bodyStmt->genCode();
+    // 循环体完成之后，增加一句无条件跳转到cond_bb
+    stmt_bb = builder->getInsertBB();
+    new UncondBrInstruction(cond_bb, stmt_bb);
+
+    // 重新调整插入点到end_bb
+    builder->setInsertBB(end_bb);
+
+
+    // 将当前的whileStmt出栈
+    whileStack.pop();
 }
 
 void FuncDefParamsNode::genCode()
@@ -298,12 +331,35 @@ void FuncDefParamsNode::genCode()
 
 void ContinueStmt::genCode()
 {
-    // Todo
+    assert(whileStack.size()!=0);
+    Function* func = builder->getInsertBB()->getParent();
+    BasicBlock* bb = builder->getInsertBB();
+    // 首先获取当前所在的while
+    WhileStmt* whileStmt = whileStack.top();
+    // 获取条件判断block
+    BasicBlock* cond_bb = whileStmt->getCondBlock();
+    // 在当前基本块中生成一条跳转到条件判断的语句
+    new UncondBrInstruction(cond_bb, bb);
+    // 声明一个新的基本块用来插入后续的指令
+    BasicBlock* nextBlock = new BasicBlock(func);
+    builder->setInsertBB(nextBlock);
+    
 }
 
 void BreakStmt::genCode()
 {
-    // Todo
+    assert(whileStack.size()!=0);
+    Function* func = builder->getInsertBB()->getParent();
+    BasicBlock* bb = builder->getInsertBB();
+    // 首先获取当前所在的while
+    WhileStmt* whileStmt = whileStack.top();
+    // 获取条件判断block
+    BasicBlock* end_bb = whileStmt->getEndBlock();
+    // 在当前基本块中生成一条跳转到条件判断的语句
+    new UncondBrInstruction(end_bb, bb);
+    // 声明一个新的基本块用来插入后续的指令
+    BasicBlock* nextBlock = new BasicBlock(func);
+    builder->setInsertBB(nextBlock);
 }
 
 void InitValNode::genCode()
@@ -322,6 +378,7 @@ void DefNode::genCode()
         addr_se->setType(new PointerType(se->getType()));
         addr = new Operand(addr_se);
         se->setAddr(addr);
+        this->builder->getUnit()->insertDecl(se);
     }
     else if(se->isLocal())
     {
@@ -414,7 +471,7 @@ void OneOpExpr::genCode()
     }
     else if(op == NOT)
     {
-        // TODO
+        
     }
 }
 
@@ -716,9 +773,9 @@ void BreakStmt::typeCheck(Node** parentToChild)
 void WhileStmt::typeCheck(Node** parentToChild)
 {
     cond->typeCheck((Node**)&(this->cond));
-    inIteration = true;
+    inIteration++;
     bodyStmt->typeCheck((Node**)&(this->bodyStmt));
-    inIteration = false;
+    inIteration--;
 }
 
 void InitValNode::typeCheck(Node** parentToChild)
@@ -726,6 +783,7 @@ void InitValNode::typeCheck(Node** parentToChild)
     
 }
 
+// TODO: 这段代码逻辑太乱了，需要重构
 void DefNode::typeCheck(Node** parentToChild)
 {
     id->typeCheck(nullptr);
@@ -766,6 +824,19 @@ void DefNode::typeCheck(Node** parentToChild)
             IdentifierSymbolEntry* se = (IdentifierSymbolEntry*)id->getSymPtr();
             se->value = ((ConstantSymbolEntry*)((ExprNode*)initVal)->getSymPtr())->getValue();
         }   
+    }
+    // 如果是全局变量，也要根据需要赋值
+    if(dynamic_cast<IdentifierSymbolEntry*>(id->getSymPtr())->isGlobal()) {
+        // 对于初始化值不为空的，要进行初始化赋值
+        if(initVal != nullptr) {
+            // 只允许使用常量对全局变量进行赋值
+            if(!((ExprNode*)initVal)->getType()->isConst()) {
+                fprintf(stderr, "not allow to initialize global variable with not const value\n");
+                exit(EXIT_FAILURE);
+            }
+            IdentifierSymbolEntry* se = (IdentifierSymbolEntry*)id->getSymPtr();
+            se->value = ((ConstantSymbolEntry*)((ExprNode*)initVal)->getSymPtr())->getValue();
+        }
     }
 }
 

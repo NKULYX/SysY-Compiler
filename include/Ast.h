@@ -4,6 +4,7 @@
 #include <fstream>
 #include "Operand.h"
 #include <vector>
+#include <stack>
 
 class SymbolEntry;
 class Type;
@@ -251,11 +252,15 @@ class WhileStmt : public StmtNode
 private:
     ExprNode *cond;
     StmtNode *bodyStmt;
+    BasicBlock* condBlock;
+    BasicBlock* endBlock;
 public:
     WhileStmt(ExprNode *cond, StmtNode *bodyStmt) : cond(cond), bodyStmt(bodyStmt){};
     void output(int level);
     void typeCheck(Node** parentToChild);
     void genCode();
+    BasicBlock* getCondBlock() {return this->condBlock;}
+    BasicBlock* getEndBlock() {return this->endBlock;}
 };
 
 class BreakStmt : public StmtNode
@@ -334,5 +339,7 @@ public:
     void typeCheck();
     void genCode(Unit *unit);
 };
+
+static std::stack<WhileStmt*> whileStack;
 
 #endif
