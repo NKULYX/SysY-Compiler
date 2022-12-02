@@ -78,7 +78,9 @@ void FunctionDef::genCode()
     BasicBlock *entry = func->getEntry();
     // set the insert point to the entry basicblock of this function.
     builder->setInsertBB(entry);
-
+    if(params!=nullptr){
+        params->genCode();
+    }
     stmt->genCode();
 
     /**
@@ -382,10 +384,27 @@ void WhileStmt::genCode()
     // 将当前的whileStmt出栈
     whileStack.pop();
 }
-
+//函数参数可以看作局部变量声明，而且还带赋值
 void FuncDefParamsNode::genCode()
 {
-    // Todo
+    Function *func = builder->getInsertBB()->getParent();
+    BasicBlock *entry = func->getEntry();
+    for(auto id : paramsList){
+        func->insertParam(id->getOperand());
+        IdentifierSymbolEntry* se = dynamic_cast<IdentifierSymbolEntry*>(id->getSymbolEntry());
+        Type *type = new PointerType(id->getType());
+        SymbolEntry *addr_se = new TemporarySymbolEntry(type, SymbolTable::getLabel());
+        Operand* addr = new Operand(addr_se);
+        Instruction *alloca = new AllocaInstruction(addr, se);// allocate space for local id in function stack.
+        entry->insertFront(alloca);                           // allocate instructions should be inserted into the begin of the entry block.
+        se->setAddr(addr);
+        Operand *src = id->getOperand();
+        /***
+         * We haven't implemented array yet, the lval can only be ID. So we just store the result of the `expr` to the addr of the id.
+         * If you want to implement array, you have to caculate the address first and then store the result into it.
+         */
+        new StoreInstruction(addr, src, entry);
+    }
 }
 
 void ContinueStmt::genCode()
