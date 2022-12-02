@@ -282,7 +282,7 @@ UnaryExp
                 delete [](char*)$1;
                 assert(se != nullptr);
             }
-            SymbolEntry *tmp = new TemporarySymbolEntry(se->getType(), SymbolTable::getLabel());
+            SymbolEntry *tmp = new TemporarySymbolEntry(dynamic_cast<FunctionType*>(se->getType())->getRetType(), SymbolTable::getLabel());
             $$ = new FuncCallNode(tmp, new Id(se), dynamic_cast<FuncCallParamsNode*>($3));
         }
     |   ADD UnaryExp {

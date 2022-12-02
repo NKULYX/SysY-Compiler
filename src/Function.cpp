@@ -18,7 +18,7 @@ Function::~Function()
     auto delete_list = block_list;
     for (auto &i : delete_list)
         delete i;
-    parent->removeFunc(this);
+    // parent->removeFunc(this);
 }
 
 // remove the basicblock bb from its block_list.

@@ -27,8 +27,9 @@ void Unit::output() const
         if(decl->isLibFunc())
             decl->outputFuncDecl();
     }
-    for (auto &func : func_list)
+    for (auto &func : func_list){
         func->output();
+    }
 }
 
 Unit::~Unit()
