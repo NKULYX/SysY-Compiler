@@ -27,6 +27,11 @@ void Function::remove(BasicBlock *bb)
     block_list.erase(std::find(block_list.begin(), block_list.end(), bb));
 }
 
+// TODO : 添加有参数的函数声明
+// 这里有很多问题 现行的实现方法并不能够找到函数参数对应的符号表项
+// 以及函数参数应该使用什么样的临时寄存器
+// 以及这个函数对应的符号表怎么找 甚至我觉得他现在的符号表设计就有问题
+// 建议先把int能解决就行 float和数组先放放吧 工作量我觉得不小
 void Function::output() const
 {
     FunctionType* funcType = dynamic_cast<FunctionType*>(sym_ptr->getType());
