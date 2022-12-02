@@ -293,7 +293,7 @@ UnaryExp
             $$ = new OneOpExpr(tmp, OneOpExpr::SUB, $2);
         }
     |   NOT UnaryExp {
-            SymbolEntry *tmp = new TemporarySymbolEntry($2->getType(), SymbolTable::getLabel());
+            SymbolEntry *tmp = new TemporarySymbolEntry(TypeSystem::boolType, SymbolTable::getLabel());
             $$ = new OneOpExpr(tmp, OneOpExpr::NOT, $2);
         }
     ;

@@ -2,18 +2,26 @@
 #include <sstream>
 
 IntType TypeSystem::commonInt = IntType(4);
+IntType TypeSystem::commonConstInt = IntType(4, true);
 FloatType TypeSystem::commonFloat = FloatType(4);
-ConstIntType TypeSystem::commonConstInt = ConstIntType(4);
-ConstFloatType TypeSystem::commonConstFloat = ConstFloatType(4);
+FloatType TypeSystem::commonConstFloat = FloatType(4, true);
 BoolType TypeSystem::commonBool = BoolType(1);
+BoolType TypeSystem::commonConstBool = BoolType(1, true);
 VoidType TypeSystem::commonVoid = VoidType();
 
 Type* TypeSystem::intType = &commonInt;
-Type* TypeSystem::floatType = &commonFloat;
 Type* TypeSystem::constIntType = &commonConstInt;
+Type* TypeSystem::floatType = &commonFloat;
 Type* TypeSystem::constFloatType = &commonConstFloat;
 Type* TypeSystem::boolType = &commonBool;
+Type* TypeSystem::constBoolType = &commonConstBool;
 Type* TypeSystem::voidType = &commonVoid;
+
+Type* TypeSystem::getMaxType(Type* type1, Type* type2){
+    if(type1->isFloat() || type2->isFloat()) return floatType;
+    if(type1->isInt() || type2->isInt()) return intType;
+    else return boolType;
+}
 
 std::string IntType::toStr()
 {
@@ -25,15 +33,15 @@ std::string FloatType::toStr()
     return "float";
 }
 
-std::string ConstIntType::toStr()
-{
-    return "i32";
-}
+// std::string ConstIntType::toStr()
+// {
+//     return "i32";
+// }
 
-std::string ConstFloatType::toStr()
-{
-    return "const float";
-}
+// std::string ConstFloatType::toStr()
+// {
+//     return "const float";
+// }
 
 std::string BoolType::toStr()
 {

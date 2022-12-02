@@ -385,5 +385,5 @@ void ZextInstruction::output() const
     std::string dst = operands[1]->toStr();
     std::string src_type = operands[0]->getType()->toStr();
     std::string dst_type = operands[1]->getType()->toStr();
-    fprintf(yyout, "  %s = zext %s %s to %s align 4\n", dst.c_str(), src_type.c_str(), src.c_str(), dst_type.c_str());
+    fprintf(yyout, "  %s = zext %s %s to %s\n", dst.c_str(), src_type.c_str(), src.c_str(), dst_type.c_str());
 }

@@ -26,6 +26,7 @@ protected:
     static IRBuilder *builder;
     void backPatch(std::vector<Instruction*> &list, BasicBlock*bb);
     std::vector<Instruction*> merge(std::vector<Instruction*> &list1, std::vector<Instruction*> &list2);
+    Operand* typeCast(Type* targetType, Operand* operand);
 public:
     Node();
     int getSeq() const {return seq;};
