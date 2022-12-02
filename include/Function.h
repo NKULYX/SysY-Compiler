@@ -21,6 +21,7 @@ private:
     SymbolEntry *sym_ptr;
     BasicBlock *entry;
     Unit *parent;
+    std::vector<Operand*> params_list;
 
 public:
     Function(Unit *, SymbolEntry *);
@@ -35,6 +36,7 @@ public:
     reverse_iterator rbegin() { return block_list.rbegin(); };
     reverse_iterator rend() { return block_list.rend(); };
     SymbolEntry *getSymPtr() { return sym_ptr; };
+    void insertParam(Operand* param) {params_list.push_back(param);}
 };
 
 #endif

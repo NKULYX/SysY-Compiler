@@ -1,5 +1,5 @@
-int func1() {
-    int a = 10;
+int func1(int a) {
+    //int a = 10;
     return a;
 }
 
@@ -9,7 +9,8 @@ int func2() {
 }
 
 int main() {
-    int a = func1();
+    int e = 6;
+    int a = func1(e);
     putint(a - func2());
     return 0;
 }

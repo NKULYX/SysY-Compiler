@@ -39,6 +39,9 @@ std::string IdentifierSymbolEntry::toStr()
     if(isGlobal()){
         return "@" + name;
     }
+    else if(isParam()){
+        return "%" + name;
+    }
     return name;
 }
 
