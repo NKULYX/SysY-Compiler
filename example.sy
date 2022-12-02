@@ -1,16 +1,11 @@
-int func1(int a) {
-    //int a = 10;
-    return a;
-}
-
-int func2() {
-    int b = 1;
-    return b+5;
-}
-
 int main() {
-    int e = 6;
-    int a = func1(e);
-    putint(a - func2());
-    return 0;
+    int a;
+    a = 10;
+    if (+-!!!a) {
+        a = - - -1;
+    }
+    else {
+        a = 0;
+    }
+    return a;
 }

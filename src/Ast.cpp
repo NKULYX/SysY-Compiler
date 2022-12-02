@@ -89,6 +89,17 @@ void FunctionDef::genCode()
     */
     // 遍历Function中所有的BasicBlock，在各个BasicBlock之间建立控制流关系
     for (auto block = func->begin(); block != func->end(); block++) {
+        // 清除ret之后的全部指令
+        Instruction* index = (*block)->begin();
+        while(index != (*block)->end()) {
+            if(index->isRet()) {
+                while(index != (*block)->rbegin()) {
+                    (*block)->remove(index->getNext());
+                }
+                break;
+            }
+            index = index->getNext();
+        }
         // 获取该块的最后一条指令
         Instruction* last = (*block)->rbegin();
         // (*block)->output();
@@ -207,7 +218,6 @@ void BinaryExpr::genCode()
     }
 }
 
-// TODO: 非运算还未实现
 void OneOpExpr::genCode()
 {
     BasicBlock *bb = builder->getInsertBB();
@@ -216,7 +226,7 @@ void OneOpExpr::genCode()
     {
         expr->genCode();
         Operand *src1 = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, 0));
-        Operand *src2 = expr->getOperand();
+        Operand *src2 = typeCast(TypeSystem::intType, expr->getOperand());
         int opcode = BinaryInstruction::SUB;
         new BinaryInstruction(opcode, dst, src1, src2, bb);
     }
