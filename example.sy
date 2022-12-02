@@ -1,3 +1,5 @@
+const int ch = 48;
+int i = 1;
 int main() {
     const int ch = 48;
     int i = 1;
