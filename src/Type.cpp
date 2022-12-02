@@ -23,6 +23,19 @@ Type* TypeSystem::getMaxType(Type* type1, Type* type2){
     else return boolType;
 }
 
+bool TypeSystem::needCast(Type* type1, Type* type2) {
+    if(type1->isInt() && type2->isInt()) {
+        return false;
+    }
+    if(type1->isFloat() && type2->isFloat()) {
+        return false;
+    }
+    if(type1->isBool() && type2->isBool()) {
+        return false;
+    }
+    return true;
+}
+
 std::string IntType::toStr()
 {
     return "i32";

@@ -176,7 +176,8 @@ public:
     static Type *boolType;
     static Type *constBoolType;
     static Type *voidType;
-    Type* getMaxType(Type* type1, Type* type2);
+    static Type* getMaxType(Type* type1, Type* type2);
+    static bool needCast(Type* type1, Type* type2);
 };
 
 

@@ -18,7 +18,7 @@ int genBr = 0;
 
 Operand* Node::typeCast(Type* targetType, Operand* operand) {
     // 首先判断是否真的需要类型转化
-    if(operand->getType() == targetType) {
+    if(!TypeSystem::needCast(operand->getType(), targetType)) {
         return operand;
     }
     BasicBlock *bb = builder->getInsertBB();
@@ -89,7 +89,7 @@ void FunctionDef::genCode()
     for (auto block = func->begin(); block != func->end(); block++) {
         // 获取该块的最后一条指令
         Instruction* last = (*block)->rbegin();
-        (*block)->output();
+        // (*block)->output();
         // 对于有条件的跳转指令，需要对其true分支和false分支都设置控制流关系
         if (last->isCond()) {
             BasicBlock *trueBlock = dynamic_cast<CondBrInstruction*>(last)->getTrueBranch();
@@ -112,6 +112,7 @@ void BinaryExpr::genCode()
 {
     BasicBlock *bb = builder->getInsertBB();
     Function *func = bb->getParent();
+    Type* maxType = TypeSystem::getMaxType(expr1->getSymPtr()->getType(), expr2->getSymPtr()->getType());
     if (op == AND)
     {
         BasicBlock *trueBB = new BasicBlock(func);  // if the result of lhs is true, jump to the trueBB.
@@ -140,8 +141,8 @@ void BinaryExpr::genCode()
         expr1->genCode();
         expr2->genCode();
         genBr++;
-        Operand *src1 = expr1->getOperand();
-        Operand *src2 = expr2->getOperand();
+        Operand *src1 = typeCast(maxType, expr1->getOperand());
+        Operand *src2 = typeCast(maxType, expr2->getOperand());
         int opcode;
         switch (op)
         {
@@ -179,8 +180,8 @@ void BinaryExpr::genCode()
     {
         expr1->genCode();
         expr2->genCode();
-        Operand *src1 = expr1->getOperand();
-        Operand *src2 = expr2->getOperand();
+        Operand *src1 = typeCast(maxType, expr1->getOperand());
+        Operand *src2 = typeCast(maxType, expr2->getOperand());
         int opcode;
         switch (op)
         {
@@ -734,6 +735,24 @@ void BinaryExpr::typeCheck(Node** parentToChild)
         }
         Constant* newNode = new Constant(se);
         *parentToChild = newNode;
+    }
+    // 调整 && 和 || 运算符的两个操作数
+    // 操作数类型不为 bool，或者se是一个常量bool
+    // 则说明此时的情况为 a || 1 或者 a && a + b
+    // 增加一个和1的EQ判断
+    if(op == AND || op == OR) {
+        if(!expr1->getSymPtr()->getType()->isBool() || expr1->getSymPtr()->isConstant()) {
+            Constant* zeroNode = new Constant(new ConstantSymbolEntry(TypeSystem::constIntType, 0));
+            TemporarySymbolEntry* tmpSe = new TemporarySymbolEntry(TypeSystem::boolType, SymbolTable::getLabel());
+            BinaryExpr* newCond = new BinaryExpr(tmpSe, BinaryExpr::NEQ, zeroNode, expr1);
+            expr1 = newCond;
+        }
+        if(!expr2->getSymPtr()->getType()->isBool() || expr2->getSymPtr()->isConstant()) {
+            Constant* zeroNode = new Constant(new ConstantSymbolEntry(TypeSystem::constIntType, 0));
+            TemporarySymbolEntry* tmpSe = new TemporarySymbolEntry(TypeSystem::boolType, SymbolTable::getLabel());
+            BinaryExpr* newCond = new BinaryExpr(tmpSe, BinaryExpr::NEQ, zeroNode, expr2);
+            expr2 = newCond;
+        }
     }
 }
 
