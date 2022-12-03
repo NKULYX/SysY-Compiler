@@ -30,7 +30,7 @@ protected:
     Instruction *next;
     BasicBlock *parent;
     std::vector<Operand*> operands;
-    enum {BINARY, COND, UNCOND, RET, LOAD, STORE, CMP, ALLOCA, CALL, ZEXT};
+    enum {BINARY, COND, UNCOND, RET, LOAD, STORE, CMP, ALLOCA, CALL, ZEXT, FBINARY, FCMP, CAST};
 };
 
 // meaningless instruction, used as the head node of the instruction list.
@@ -139,6 +139,35 @@ public:
     ZextInstruction(Operand *src, Operand *dst, BasicBlock *insert_bb = nullptr);
     ~ZextInstruction();
     void output() const;
+};
+
+// 浮点数二元运算指令
+class FBinaryInstruction : public Instruction
+{
+public:
+    FBinaryInstruction(unsigned opcode, Operand *dst, Operand *src1, Operand *src2, BasicBlock *insert_bb = nullptr);
+    ~FBinaryInstruction();
+    void output() const;
+    enum {ADD, SUB, MUL, DIV, MOD, AND, OR};
+};
+
+// 浮点数的比较指令
+class FCmpInstruction : public Instruction
+{
+public:
+    FCmpInstruction(unsigned opcode, Operand *dst, Operand *src1, Operand *src2, BasicBlock *insert_bb = nullptr);
+    ~FCmpInstruction();
+    void output() const;
+    enum {L, LE, G, GE, E, NE};
+};
+
+class IntFloatCastInstructionn : public Instruction
+{
+public:
+    IntFloatCastInstructionn(unsigned opcode, Operand *src, Operand *dst, BasicBlock *insert_bb = nullptr);
+    ~IntFloatCastInstructionn();
+    void output() const;
+    enum {I2F, F2I};
 };
 
 #endif
