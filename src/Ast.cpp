@@ -225,6 +225,11 @@ void OneOpExpr::genCode()
 {
     BasicBlock *bb = builder->getInsertBB();
     Function *func = bb->getParent();
+    /*
+    * 取相反数的操作可能会涉及到int float和bool
+    * 对于int和float指令，运算所需要的type即为本身的type
+    * 对于bool，运算所需要的type转换为int类型
+    */
     if (op == SUB)
     {
         expr->genCode();
