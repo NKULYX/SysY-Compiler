@@ -82,6 +82,9 @@ void FunctionDef::genCode()
         params->genCode();
     }
     stmt->genCode();
+    if(this->voidAddRet != nullptr) {
+        voidAddRet->genCode();
+    }
 
     /**
      * Construct control flow graph. You need do set successors and predecessors for each basic block.
@@ -340,8 +343,13 @@ void DeclStmt::genCode()
 void ReturnStmt::genCode()
 {
     BasicBlock *bb = builder->getInsertBB();
-    retValue->genCode();
-    new RetInstruction(retValue->getOperand(), bb);
+    if(retValue != nullptr) {
+        retValue->genCode();
+        new RetInstruction(retValue->getOperand(), bb);
+    }
+    else {
+        new RetInstruction(nullptr, bb);
+    }
 }
 
 void AssignStmt::genCode()
@@ -564,6 +572,10 @@ void FunctionDef::typeCheck(Node** parentToChild)
     if(!funcReturned && !returnType->isVoid()){
         fprintf(stderr, "expected a %s type to return, but no returned value found\n", returnType->toStr().c_str());
         exit(EXIT_FAILURE);
+    }
+    // 如果void类型没写return需要补上
+    if(!funcReturned && returnType->isVoid()) {
+        this->voidAddRet = new ReturnStmt(nullptr);
     }
     returnType = nullptr;
 }
@@ -1464,4 +1476,7 @@ void FunctionDef::output(int level)
         fprintf(yyout, "%*cFuncDefParamsNode NULL\n", level+4, ' ');
     }
     stmt->output(level + 4);
+    if(this->voidAddRet != nullptr) {
+        voidAddRet->output(level + 4);
+    }
 }

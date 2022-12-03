@@ -322,6 +322,7 @@ private:
     SymbolEntry *se;
     FuncDefParamsNode *params;
     StmtNode *stmt;
+    StmtNode* voidAddRet = nullptr;
 public:
     FunctionDef(SymbolEntry *se, FuncDefParamsNode *params, StmtNode *stmt) : se(se), params(params), stmt(stmt){};
     void output(int level);
