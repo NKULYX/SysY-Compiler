@@ -820,7 +820,12 @@ void IfStmt::typeCheck(Node** parentToChild)
         BinaryExpr* newCond = new BinaryExpr(tmpSe, BinaryExpr::NEQ, zeroNode, cond);
         cond = newCond;
     }
-    thenStmt->typeCheck((Node**)&(this->thenStmt));
+    if(thenStmt!=nullptr) {
+        thenStmt->typeCheck((Node**)&(this->thenStmt));
+    }
+    else {
+        thenStmt = new EmptyStmt();
+    }
 }
 
 void IfElseStmt::typeCheck(Node** parentToChild)
@@ -835,14 +840,27 @@ void IfElseStmt::typeCheck(Node** parentToChild)
         BinaryExpr* newCond = new BinaryExpr(tmpSe, BinaryExpr::NEQ, zeroNode, cond);
         cond = newCond;
     }
-    thenStmt->typeCheck((Node**)&(this->thenStmt));
-    elseStmt->typeCheck((Node**)&(this->elseStmt));
+    if(thenStmt!=nullptr) {
+        thenStmt->typeCheck((Node**)&(this->thenStmt));
+    }
+    else {
+        thenStmt = new EmptyStmt();
+    }
+    if(elseStmt!=nullptr){
+        elseStmt->typeCheck((Node**)&(this->elseStmt));
+    }
+    else {
+        elseStmt = new EmptyStmt();
+    }
 }
 
 void CompoundStmt::typeCheck(Node** parentToChild)
 {
     if(stmt!=nullptr){
         stmt->typeCheck(nullptr);
+    }
+    else {
+        stmt = new EmptyStmt();
     }
 }
 
@@ -925,9 +943,14 @@ void WhileStmt::typeCheck(Node** parentToChild)
         BinaryExpr* newCond = new BinaryExpr(tmpSe, BinaryExpr::NEQ, zeroNode, cond);
         cond = newCond;
     }
-    inIteration++;
-    bodyStmt->typeCheck((Node**)&(this->bodyStmt));
-    inIteration--;
+    if(bodyStmt!=nullptr) {
+        inIteration++;
+        bodyStmt->typeCheck((Node**)&(this->bodyStmt));
+        inIteration--;
+    }
+    else {
+        bodyStmt = new EmptyStmt();
+    }
 }
 
 void InitValNode::typeCheck(Node** parentToChild)

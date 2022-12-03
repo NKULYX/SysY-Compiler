@@ -468,6 +468,11 @@ ConstDefList
 // 常量定义
 ConstDef
     :   ID ASSIGN ConstExp {
+            // 首先判断是否重定义
+            if(identifiers->isRedefine($1)) {
+                fprintf(stderr, "identifier %s redefine\n", $1);
+                exit(EXIT_FAILURE);
+            }
             // 此处文法有改动
             // 首先将ID插入符号表中
             Type* type;
@@ -484,7 +489,12 @@ ConstDef
             $$ = new DefNode(new Id(se), dynamic_cast<Node*>($3), true, false);
         }
     // 数组常量的定义
-    |   ID ArrConstIndices ASSIGN ConstInitVal{ 
+    |   ID ArrConstIndices ASSIGN ConstInitVal{
+            // 首先判断是否重定义
+            if(identifiers->isRedefine($1)) {
+                fprintf(stderr, "identifier %s redefine\n", $1);
+                exit(EXIT_FAILURE);
+            }
             // 首先将ID插入符号表中
             Type* type;
             if(currentType->isInt()){
@@ -551,6 +561,11 @@ VarDefList
 // 变量定义
 VarDef
     :   ID {
+            // 首先判断是否重定义
+            if(identifiers->isRedefine($1)) {
+                fprintf(stderr, "identifier %s redefine\n", $1);
+                exit(EXIT_FAILURE);
+            }
             // 首先将ID插入符号表中
             Type* type;
             if(currentType->isInt()){
@@ -565,6 +580,11 @@ VarDef
             $$ = new DefNode(new Id(se), nullptr, false, false);
         }
     |   ID ASSIGN Exp {
+            // 首先判断是否重定义
+            if(identifiers->isRedefine($1)) {
+                fprintf(stderr, "identifier %s redefine\n", $1);
+                exit(EXIT_FAILURE);
+            }
             // 首先将ID插入符号表中
             Type* type;
             if(currentType->isInt()){
@@ -580,6 +600,11 @@ VarDef
         }
     // 数组变量的定义
     |   ID ArrConstIndices {
+            // 首先判断是否重定义
+            if(identifiers->isRedefine($1)) {
+                fprintf(stderr, "identifier %s redefine\n", $1);
+                exit(EXIT_FAILURE);
+            }
             Type* type;
             if(currentType->isInt()){
                 type = new IntArrayType();
@@ -595,6 +620,11 @@ VarDef
             $$ = new DefNode(id, nullptr, false, true);//类型向上转换
         }
     |   ID ArrConstIndices ASSIGN VarInitVal{
+            // 首先判断是否重定义
+            if(identifiers->isRedefine($1)) {
+                fprintf(stderr, "identifier %s redefine\n", $1);
+                exit(EXIT_FAILURE);
+            }
             Type* type;
             if(currentType->isInt()){
                 type = new IntArrayType();

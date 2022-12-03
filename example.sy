@@ -1,11 +1,10 @@
-int main() {
+int a;
+
+int main()
+{
     int a;
-    a = 10;
-    if (+-!!!a) {
-        a = - - -1;
-    }
-    else {
-        a = 0;
-    }
-    return a;
+    a = 1 + 2;
+    if(a < 5)
+        return 1;
+    return 0;
 }

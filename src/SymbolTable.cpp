@@ -131,6 +131,15 @@ SymbolEntry* SymbolTable::lookup(std::string name)
     }
 }
 
+bool SymbolTable::isRedefine(std::string name) {
+    if(symbolTable.find(name)!=symbolTable.end()){
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 // install the entry into current symbol table.
 void SymbolTable::install(std::string name, SymbolEntry* entry)
 {
