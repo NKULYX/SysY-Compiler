@@ -155,6 +155,7 @@ private:
     Type *valueType;
 public:
     PointerType(Type* valueType) : Type(Type::PTR) {this->valueType = valueType;};
+    Type* getValueType() {return this->valueType;};
     std::string toStr();
 };
 
