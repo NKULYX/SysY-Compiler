@@ -59,7 +59,7 @@ PASS: 039_while_if_test1
 PASS: 040_while_if_test2
 PASS: 041_while_if_test3
 PASS: 069_greatest_common_divisor
-FAIL: 100_int_literal	Assemble Error
+PASS: 100_int_literal
 PASS: 102_short_circuit3
 PASS: 1074_itera_sqrt
 FAIL: 1075_max_container	Compile Error
@@ -153,3 +153,9 @@ FAIL: 199_matrix_sub	Compile Error
 FAIL: 200_matrix_mul	Assemble Error
 FAIL: 201_matrix_tran	Assemble Error
 PASS: 202_register_realloc
+FAIL: 35_math	Assemble Error
+FAIL: 36_rotate	Assemble Error
+FAIL: 37_dct	Compile Error
+FAIL: 38_light2d	Assemble Error
+FAIL: 39_fp_params	Compile Error
+Total: 160	Accept: 82	Fail: 78

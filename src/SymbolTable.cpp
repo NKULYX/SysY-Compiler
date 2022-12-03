@@ -20,7 +20,12 @@ ConstantSymbolEntry::ConstantSymbolEntry(Type *type, double value) : SymbolEntry
 std::string ConstantSymbolEntry::toStr()
 {
     std::ostringstream buffer;
-    buffer << value;
+    if(type->isAnyInt()){
+        buffer<<(int)value;
+    }
+    else{
+        buffer << value;
+    }
     return buffer.str();
 }
 
@@ -33,7 +38,12 @@ std::string IdentifierSymbolEntry::toStr()
 {
     if(type==TypeSystem::constIntType||type==TypeSystem::constFloatType){//如果value有，int或float型常量
         std::ostringstream buffer;
+    if(type->isAnyInt()){
+        buffer<<(int)value;
+    }
+    else{
         buffer << value;
+    }
         return buffer.str();
     }
     if(isGlobal()){

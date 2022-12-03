@@ -1,0 +1,8 @@
+62c62
+< FAIL: 100_int_literal	Assemble Error
+---
+> PASS: 100_int_literal
+161c161
+< Total: 160	Accept: 81	Fail: 79
+---
+> Total: 160	Accept: 82	Fail: 78
