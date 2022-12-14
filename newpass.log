@@ -153,9 +153,3 @@ FAIL: 199_matrix_sub	Compile Error
 FAIL: 200_matrix_mul	Assemble Error
 FAIL: 201_matrix_tran	Assemble Error
 PASS: 202_register_realloc
-PASS: 35_math
-FAIL: 36_rotate	Assemble Error
-FAIL: 37_dct	Compile Error
-FAIL: 38_light2d	Assemble Error
-FAIL: 39_fp_params	Compile Error
-Total: 160	Accept: 83	Fail: 77
