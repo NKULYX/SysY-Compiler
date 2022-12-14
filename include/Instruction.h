@@ -4,6 +4,8 @@
 #include "Operand.h"
 #include <vector>
 #include <map>
+#include "AsmBuilder.h"
+#include <sstream>
 
 class BasicBlock;
 
@@ -15,6 +17,7 @@ public:
     BasicBlock *getParent();
     bool isUncond() const {return instType == UNCOND;};
     bool isCond() const {return instType == COND;};
+    bool isAlloc() const {return instType == ALLOCA;};
     bool isRet() const {return instType == RET;};
     void setParent(BasicBlock *);
     void setNext(Instruction *);
@@ -23,6 +26,13 @@ public:
     Instruction *getPrev();
     int getType() {return instType;};
     virtual void output() const = 0;
+    //lab7
+    MachineOperand* genMachineOperand(Operand*);
+    MachineOperand* genMachineReg(int reg);
+    MachineOperand* genMachineVReg();
+    MachineOperand* genMachineImm(int val);
+    MachineOperand* genMachineLabel(int block_no);
+    virtual void genMachineCode(AsmBuilder*) = 0;
 protected:
     unsigned instType;
     unsigned opcode;
@@ -39,6 +49,7 @@ class DummyInstruction : public Instruction
 public:
     DummyInstruction() : Instruction(-1, nullptr) {};
     void output() const {};
+    void genMachineCode(AsmBuilder*) {};
 };
 
 class AllocaInstruction : public Instruction
@@ -47,6 +58,7 @@ public:
     AllocaInstruction(Operand *dst, SymbolEntry *se, BasicBlock *insert_bb = nullptr);
     ~AllocaInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
 private:
     SymbolEntry *se;
 };
@@ -57,6 +69,7 @@ public:
     LoadInstruction(Operand *dst, Operand *src_addr, BasicBlock *insert_bb = nullptr);
     ~LoadInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
 };
 
 class StoreInstruction : public Instruction
@@ -65,6 +78,7 @@ public:
     StoreInstruction(Operand *dst_addr, Operand *src, BasicBlock *insert_bb = nullptr);
     ~StoreInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
 };
 
 class CallInstruction : public Instruction
@@ -75,6 +89,7 @@ public:
     CallInstruction(Operand *dst, std::vector<Operand*> params, IdentifierSymbolEntry* funcse, BasicBlock *insert_bb = nullptr);
     ~CallInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
 };
 
 class BinaryInstruction : public Instruction
@@ -83,6 +98,7 @@ public:
     BinaryInstruction(unsigned opcode, Operand *dst, Operand *src1, Operand *src2, BasicBlock *insert_bb = nullptr);
     ~BinaryInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
     enum {ADD, SUB, MUL, DIV, MOD, AND, OR};
 };
 
@@ -92,6 +108,7 @@ public:
     CmpInstruction(unsigned opcode, Operand *dst, Operand *src1, Operand *src2, BasicBlock *insert_bb = nullptr);
     ~CmpInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
     enum {L, LE, G, GE, E, NE};
 };
 
@@ -103,6 +120,7 @@ public:
     void output() const;
     void setBranch(BasicBlock *);
     BasicBlock *getBranch();
+    void genMachineCode(AsmBuilder*);
 protected:
     BasicBlock *branch;
 };
@@ -118,6 +136,7 @@ public:
     BasicBlock* getTrueBranch();
     void setFalseBranch(BasicBlock*);
     BasicBlock* getFalseBranch();
+    void genMachineCode(AsmBuilder*);
 protected:
     BasicBlock* true_branch;
     BasicBlock* false_branch;
@@ -129,6 +148,7 @@ public:
     RetInstruction(Operand *src, BasicBlock *insert_bb = nullptr);
     ~RetInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
 };
 
 // 符号扩展零填充指令
@@ -139,6 +159,7 @@ public:
     ZextInstruction(Operand *src, Operand *dst, BasicBlock *insert_bb = nullptr);
     ~ZextInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
 };
 
 // 浮点数二元运算指令
@@ -148,6 +169,7 @@ public:
     FBinaryInstruction(unsigned opcode, Operand *dst, Operand *src1, Operand *src2, BasicBlock *insert_bb = nullptr);
     ~FBinaryInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
     enum {ADD, SUB, MUL, DIV, MOD, AND, OR};
 };
 
@@ -158,6 +180,7 @@ public:
     FCmpInstruction(unsigned opcode, Operand *dst, Operand *src1, Operand *src2, BasicBlock *insert_bb = nullptr);
     ~FCmpInstruction();
     void output() const;
+    void genMachineCode(AsmBuilder*);
     enum {L, LE, G, GE, E, NE};
 };
 
@@ -167,6 +190,7 @@ public:
     IntFloatCastInstructionn(unsigned opcode, Operand *src, Operand *dst, BasicBlock *insert_bb = nullptr);
     ~IntFloatCastInstructionn();
     void output() const;
+    void genMachineCode(AsmBuilder*);
     enum {I2F, F2I};
 };
 
