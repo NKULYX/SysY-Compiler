@@ -72,6 +72,18 @@ void BasicBlock::removeSucc(BasicBlock *bb)
     succ.erase(std::find(succ.begin(), succ.end(), bb));
 }
 
+void BasicBlock::genMachineCode(AsmBuilder* builder) 
+{
+    auto cur_func = builder->getFunction();
+    auto cur_block = new MachineBlock(cur_func, no);
+    builder->setBlock(cur_block);
+    for (auto i = head->getNext(); i != head; i = i->getNext())
+    {
+        i->genMachineCode(builder);
+    }
+    cur_func->InsertBlock(cur_block);
+}
+
 void BasicBlock::addPred(BasicBlock *bb)
 {
     pred.push_back(bb);
