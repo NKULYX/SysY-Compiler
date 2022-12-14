@@ -29,6 +29,16 @@ Operand* Node::typeCast(Type* targetType, Operand* operand) {
         // 插入一条符号扩展指令
         new ZextInstruction(operand, retOperand, bb);
     }
+    // 实现 int 到 float 的转换
+    else if(operand->getType()->isInt() && targetType->isFloat()) {
+        // 插入一条类型转化指令
+        new IntFloatCastInstructionn(IntFloatCastInstructionn::I2F, operand, retOperand, bb);
+    }
+    // 实现 float 到 int 的转换
+    else if(operand->getType()->isFloat() && targetType->isInt()) {
+        // 插入一条类型转化指令
+        new IntFloatCastInstructionn(IntFloatCastInstructionn::F2I, operand, retOperand, bb);
+    }
     return retOperand;
 }
 
@@ -181,7 +191,12 @@ void BinaryExpr::genCode()
             opcode = CmpInstruction::NE;
             break;
         }
-        new CmpInstruction(opcode, dst, src1, src2, bb);
+        if(maxType->isFloat()) {
+            new FCmpInstruction(opcode, dst, src1, src2, bb);
+        }
+        else {
+            new CmpInstruction(opcode, dst, src1, src2, bb);
+        }
         if(genBr > 0){
             // 跳转目标block
             BasicBlock* trueBlock, *falseBlock, *mergeBlock;
@@ -217,7 +232,12 @@ void BinaryExpr::genCode()
             opcode = BinaryInstruction::MOD;
             break;
         }
-        new BinaryInstruction(opcode, dst, src1, src2, bb);
+        if(maxType->isFloat()) {
+            new FBinaryInstruction(opcode, dst, src1, src2, bb);
+        }
+        else {
+            new BinaryInstruction(opcode, dst, src1, src2, bb);
+        }
     }
 }
 
@@ -233,10 +253,26 @@ void OneOpExpr::genCode()
     if (op == SUB)
     {
         expr->genCode();
-        Operand *src1 = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, 0));
-        Operand *src2 = typeCast(TypeSystem::intType, expr->getOperand());
-        int opcode = BinaryInstruction::SUB;
-        new BinaryInstruction(opcode, dst, src1, src2, bb);
+        Operand *src1;
+        Operand *src2;
+        if(expr->getSymPtr()->getType()->isBool()) {
+            src1 = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, 0));
+            src2 = typeCast(TypeSystem::intType, expr->getOperand());
+            int opcode = BinaryInstruction::SUB;
+            new BinaryInstruction(opcode, dst, src1, src2, bb);
+        }
+        else if(expr->getSymPtr()->getType()->isInt()){
+            src1 = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, 0));
+            src2 = typeCast(TypeSystem::intType, expr->getOperand());
+            int opcode = BinaryInstruction::SUB;
+            new BinaryInstruction(opcode, dst, src1, src2, bb);
+        }
+        else if(expr->getSymPtr()->getType()->isFloat()) {
+            src1 = new Operand(new ConstantSymbolEntry(TypeSystem::constFloatType, 0));
+            src2 = typeCast(TypeSystem::floatType, expr->getOperand());
+            int opcode = FBinaryInstruction::SUB;
+            new FBinaryInstruction(opcode, dst, src1, src2, bb);
+        }
     }
     else if(op == NOT)
     {
@@ -350,7 +386,8 @@ void ReturnStmt::genCode()
     BasicBlock *bb = builder->getInsertBB();
     if(retValue != nullptr) {
         retValue->genCode();
-        new RetInstruction(retValue->getOperand(), bb);
+        Operand* operand = typeCast(this->retType, retValue->getOperand());
+        new RetInstruction(operand, bb);
     }
     else {
         new RetInstruction(nullptr, bb);
@@ -362,7 +399,7 @@ void AssignStmt::genCode()
     BasicBlock *bb = builder->getInsertBB();
     expr->genCode();
     Operand *addr = dynamic_cast<IdentifierSymbolEntry*>(lval->getSymPtr())->getAddr();
-    Operand *src = expr->getOperand();
+    Operand *src = typeCast(dynamic_cast<PointerType*>(addr->getType())->getValueType(), expr->getOperand());
     /***
      * We haven't implemented array yet, the lval can only be ID. So we just store the result of the `expr` to the addr of the id.
      * If you want to implement array, you have to caculate the address first and then store the result into it.
@@ -499,12 +536,12 @@ void DefNode::genCode()
     if(initVal!=nullptr){
         BasicBlock *bb = builder->getInsertBB();
         initVal->genCode();
-        Operand *src = dynamic_cast<ExprNode *>(initVal)->getOperand();
-    /***
-     * We haven't implemented array yet, the lval can only be ID. So we just store the result of the `expr` to the addr of the id.
-     * If you want to implement array, you have to caculate the address first and then store the result into it.
-     */
-    new StoreInstruction(addr, src, bb);
+        Operand *src = typeCast(se->getType(), dynamic_cast<ExprNode *>(initVal)->getOperand());
+        /***
+         * We haven't implemented array yet, the lval can only be ID. So we just store the result of the `expr` to the addr of the id.
+         * If you want to implement array, you have to caculate the address first and then store the result into it.
+         */
+        new StoreInstruction(addr, src, bb);
     }
 }
 
@@ -540,8 +577,17 @@ void FuncCallNode::genCode()
         new CallInstruction(dst, emptyList, dynamic_cast<IdentifierSymbolEntry*>(funcId->getSymPtr()), bb);
     }
     else{
-        params->genCode();//生成计算各个实参的中间代码
-        new CallInstruction(dst, params->getOperandList(), dynamic_cast<IdentifierSymbolEntry*>(funcId->getSymPtr()), bb);
+        // 生成计算各个实参的中间代码
+        params->genCode();
+        // 完成实参形参之间的类型转换
+        IdentifierSymbolEntry* funcSe = dynamic_cast<IdentifierSymbolEntry*>(funcId->getSymPtr());
+        std::vector<Type*> paramsType = dynamic_cast<FunctionType*>(funcSe->getType())->getParamsType();
+        std::vector<Operand*> passParams = params->getOperandList();
+        std::vector<Operand*> realParams;
+        for(int i = 0; i < passParams.size(); i++) {
+            realParams.push_back(typeCast(paramsType[i], passParams[i]));
+        }
+        new CallInstruction(dst, realParams, dynamic_cast<IdentifierSymbolEntry*>(funcId->getSymPtr()), bb);
     }
 }
 
@@ -913,6 +959,7 @@ void ReturnStmt::typeCheck(Node** parentToChild)
     if(!returnType->isVoid()){
         retValue->typeCheck((Node**)&(retValue));
     }
+    this->retType = returnType;
     funcReturned = true;
 }
 

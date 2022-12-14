@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
+#include <iomanip>
 
 extern FILE* yyout;
 
@@ -19,14 +20,19 @@ ConstantSymbolEntry::ConstantSymbolEntry(Type *type, double value) : SymbolEntry
 
 std::string ConstantSymbolEntry::toStr()
 {
-    std::ostringstream buffer;
-    if(type->isAnyInt()){
-        buffer<<(int)value;
+    // 如果是浮点数 需要转换成 IEEE754格式
+    if(type->isFloat()) {
+        static_assert(sizeof(double) == 8, "double must be 8 bytes");
+        std::stringstream ss;
+        ss << "0x" << std::hex << std::uppercase << std::setfill('0') << std::setw(16) << *reinterpret_cast<uint64_t*>(&value);
+        return ss.str();
     }
-    else{
-        buffer << value;
+    // 整数则可以直接转字符串
+    else {
+        std::ostringstream buffer;
+        buffer << (int)value;
+        return buffer.str();
     }
-    return buffer.str();
 }
 
 IdentifierSymbolEntry::IdentifierSymbolEntry(Type *type, std::string name, int scope) : SymbolEntry(type, SymbolEntry::VARIABLE), name(name)
@@ -36,15 +42,18 @@ IdentifierSymbolEntry::IdentifierSymbolEntry(Type *type, std::string name, int s
 
 std::string IdentifierSymbolEntry::toStr()
 {
-    if(type==TypeSystem::constIntType||type==TypeSystem::constFloatType){//如果value有，int或float型常量
+    // 如果value有，int型常量
+    if(type==TypeSystem::constIntType){
         std::ostringstream buffer;
-    if(type->isAnyInt()){
-        buffer<<(int)value;
-    }
-    else{
-        buffer << value;
-    }
+        buffer << (int)value;
         return buffer.str();
+    }
+    // float型常量
+    if(type==TypeSystem::constFloatType) {
+        static_assert(sizeof(double) == 8, "double must be 8 bytes");
+        std::stringstream ss;
+        ss << "0x" << std::hex << std::uppercase << std::setfill('0') << std::setw(16) << *reinterpret_cast<uint64_t*>(&value);
+        return ss.str();
     }
     if(isGlobal()){
         return "@" + name;
@@ -77,7 +86,7 @@ void IdentifierSymbolEntry::outputFuncDecl()
             fprintf(yyout, "@%s = dso_local global %s %d\n", this->name.c_str(), this->type->toStr().c_str(), (int)value);
         }
         else if(this->type->isFloat()) {
-            fprintf(yyout, "@%s = dso_local global %s %f\n",this->name.c_str(), this->type->toStr().c_str(), value);
+            fprintf(yyout, "@%s = dso_local global %s %s\n",this->name.c_str(), this->type->toStr().c_str(), toStr().c_str());
         }
     }
 }
