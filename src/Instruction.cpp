@@ -676,11 +676,43 @@ void CondBrInstruction::genMachineCode(AsmBuilder* builder)
 
 void RetInstruction::genMachineCode(AsmBuilder* builder)
 {
-    // TODO
-    /* HINT:
-    * 1. Generate mov instruction to save return value in r0
-    * 2. Restore callee saved registers and sp, fp
-    * 3. Generate bx instruction */
+    auto cur_block = builder->getBlock();
+    MachineInstruction* cur_inst = nullptr;
+    //1. Generate mov instruction to save return value in r0
+    if(!operands.empty()){
+        auto src = genMachineOperand(operands[0]);
+        //立即数->寄存器
+        if(src->isImm())
+        {
+            auto internal_reg = genMachineVReg();
+            cur_inst = new LoadMInstruction(cur_block, internal_reg, src);
+            cur_block->InsertInst(cur_inst);
+            src = new MachineOperand(*internal_reg);
+        }
+        auto dst = new MachineOperand(MachineOperand::REG, 0);//r0
+        cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, src, 0);
+        cur_block->InsertInst(cur_inst);
+    }
+    //2. Restore callee saved registers and sp, fp
+    auto cur_func = builder->getFunction();
+    auto sp = new MachineOperand(MachineOperand::REG, 13);
+    //AllocSpace返回栈当前offset
+    int size = cur_func->AllocSpace(0);
+    //尾调用不调整栈帧
+    if(size!=0){
+        auto stackSize = new MachineOperand(MachineOperand::IMM, size);
+        cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, sp, sp, stackSize);
+        cur_block->InsertInst(cur_inst);
+    }
+    std::vector<MachineOperand *> src = cur_func->getSavedRegs();
+    auto fp = new MachineOperand(MachineOperand::REG, 11);
+    src.push_back(fp);
+    cur_inst = new StackMInstruction(cur_block, StackMInstruction::POP, src);
+    cur_block->InsertInst(cur_inst);
+    // 3. Generate bx instruction
+    auto lr = new MachineOperand(MachineOperand::REG, 14);
+    cur_inst = new BranchMInstruction(cur_block, BranchMInstruction::BX, lr);
+    cur_block->InsertInst(cur_inst);
 }
 
 void CallInstruction::genMachineCode(AsmBuilder* builder)

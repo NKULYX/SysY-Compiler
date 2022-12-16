@@ -208,24 +208,52 @@ MovMInstruction::MovMInstruction(MachineBlock* p, int op,
     MachineOperand* dst, MachineOperand* src,
     int cond)
 {
-    // TODO
+    this->parent = p;
+    this->type = MachineInstruction::MOV;
+    this->op = op;
+    this->cond = cond;
+    this->def_list.push_back(dst);
+    this->use_list.push_back(src);
+    dst->setParent(this);
+    src->setParent(this);
 }
 
 void MovMInstruction::output() 
 {
-    // TODO
+    fprintf(yyout, "\tmov ");
+    this->def_list[0]->output();
+    fprintf(yyout, ", ");
+    this->use_list[0]->output();
+    fprintf(yyout, "\n");
 }
 
 BranchMInstruction::BranchMInstruction(MachineBlock* p, int op, 
     MachineOperand* dst, 
     int cond)
 {
-    // TODO
+    this->parent = p;
+    this->type = MachineInstruction::BRANCH;
+    this->op = op;
+    this->cond = cond;
+    this->def_list.push_back(dst);
+    dst->setParent(this);
 }
 
 void BranchMInstruction::output()
 {
-    // TODO
+    switch(op){
+    case B:
+        fprintf(yyout, "\tb ");
+        break;
+    case BL:
+        fprintf(yyout, "\tbl ");
+        break;
+    case BX:
+        fprintf(yyout, "\tbx ");
+        break;
+    }
+    this->def_list[0]->output();
+    fprintf(yyout, "\n");
 }
 
 CmpMInstruction::CmpMInstruction(MachineBlock* p, 
@@ -239,19 +267,37 @@ void CmpMInstruction::output()
 {
     // TODO
     // Jsut for reg alloca test
-    // delete it after test
+    // delete it after tueti
 }
 
-StackMInstrcuton::StackMInstrcuton(MachineBlock* p, int op, 
-    MachineOperand* src,
+StackMInstruction::StackMInstruction(MachineBlock* p, int op, 
+    std::vector<MachineOperand*> src,
     int cond)
 {
-    // TODO
+    this->parent = p;
+    this->type = MachineInstruction::STACK;
+    this->op = op;
+    this->cond = cond;
+    this->use_list = src;
+    for(auto reg : use_list){
+        reg->setParent(this);
+    }
 }
 
-void StackMInstrcuton::output()
+void StackMInstruction::output()
 {
-    // TODO
+    switch(op){
+    case PUSH:
+        fprintf(yyout, "\tpush {");
+        break;
+    case POP:
+        fprintf(yyout, "\tpop {");
+        break;
+    }
+    for(auto reg : use_list){
+        reg->output();
+    }
+    fprintf(yyout, "}\n");
 }
 
 MachineFunction::MachineFunction(MachineUnit* p, SymbolEntry* sym_ptr) 
@@ -259,6 +305,15 @@ MachineFunction::MachineFunction(MachineUnit* p, SymbolEntry* sym_ptr)
     this->parent = p; 
     this->sym_ptr = sym_ptr; 
     this->stack_size = 0;
+};
+
+std::vector<MachineOperand*> MachineFunction::getSavedRegs() 
+{
+    std::vector<MachineOperand*> ret;
+    for(auto no : saved_regs){
+        ret.push_back(new MachineOperand(MachineOperand::REG, no));
+    }
+    return ret;
 };
 
 void MachineBlock::output()
