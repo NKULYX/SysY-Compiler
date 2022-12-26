@@ -109,6 +109,7 @@ public:
 class MovMInstruction : public MachineInstruction
 {
 public:
+    //MVN指令不同的是在传送之前，将被传送的对象先按位取反，再传送到目的寄存器。
     enum opType { MOV, MVN };
     MovMInstruction(MachineBlock* p, int op, 
                 MachineOperand* dst, MachineOperand* src,
@@ -136,12 +137,12 @@ public:
     void output();
 };
 
-class StackMInstrcuton : public MachineInstruction
+class StackMInstruction : public MachineInstruction
 {
 public:
     enum opType { PUSH, POP };
-    StackMInstrcuton(MachineBlock* p, int op, 
-                MachineOperand* src,
+    StackMInstruction(MachineBlock* p, int op, 
+                std::vector<MachineOperand*> src,
                 int cond = MachineInstruction::NONE);
     void output();
 };
@@ -192,6 +193,7 @@ public:
     int AllocSpace(int size) { this->stack_size += size; return this->stack_size; };
     void InsertBlock(MachineBlock* block) { this->block_list.push_back(block); };
     void addSavedRegs(int regno) {saved_regs.insert(regno);};
+    std::vector<MachineOperand*> getSavedRegs();
     void output();
 };
 
