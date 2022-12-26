@@ -213,7 +213,7 @@ void LinearScan::genSpillCode()
         // 2. insert str inst after the def of vreg
         for (auto def : interval->defs){
             MachineBlock* block = def->getParent()->getParent();
-            block->insertBefore(def->getParent(), new StoreMInstruction(block, def, new MachineOperand(MachineOperand::REG, 11), new MachineOperand(MachineOperand::IMM, -interval->disp)));
+            block->insertAfter(def->getParent(), new StoreMInstruction(block, def, new MachineOperand(MachineOperand::REG, 11), new MachineOperand(MachineOperand::IMM, -interval->disp)));
         }
     }
 }
