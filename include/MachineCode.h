@@ -169,6 +169,8 @@ public:
     std::set<MachineOperand*>& getLiveOut() {return live_out;};
     std::vector<MachineBlock*>& getPreds() {return pred;};
     std::vector<MachineBlock*>& getSuccs() {return succ;};
+    void insertBefore(MachineInstruction* at, MachineInstruction* src);
+    void insertAfter(MachineInstruction* at, MachineInstruction* src);
     void output();
 };
 

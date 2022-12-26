@@ -539,10 +539,15 @@ MachineOperand* Instruction::genMachineOperand(Operand* ope)
     else if(se->isVariable())
     {
         auto id_se = dynamic_cast<IdentifierSymbolEntry*>(se);
-        if(id_se->isGlobal())
+        Type* type = id_se->getType();
+        if(type==TypeSystem::constIntType){
+            //TODO: add array manipulation here
+            //TODO: add float manipulation here
+            mope = new MachineOperand(MachineOperand::IMM, id_se->value);
+        }
+        else{
             mope = new MachineOperand(id_se->toStr().c_str());
-        else
-            exit(0);
+        }
     }
     return mope;
 }
@@ -624,7 +629,49 @@ void LoadInstruction::genMachineCode(AsmBuilder* builder)
 
 void StoreInstruction::genMachineCode(AsmBuilder* builder)
 {
-    // TODO
+    auto cur_block = builder->getBlock();
+    MachineInstruction* cur_inst = nullptr;
+    //如果src为常数，需要先load进来
+    auto src = genMachineOperand(operands[1]);
+    if(src->isImm()){
+        auto internal_reg = genMachineVReg();
+        cur_inst = new LoadMInstruction(cur_block, internal_reg, src);
+        cur_block->InsertInst(cur_inst);
+        src = new MachineOperand(*internal_reg);
+    }
+    // store global operand
+    if(operands[0]->getEntry()->isVariable()
+    && dynamic_cast<IdentifierSymbolEntry*>(operands[0]->getEntry())->isGlobal())
+    {
+        auto internal_reg1 = genMachineVReg();
+        auto internal_reg2 = new MachineOperand(*internal_reg1);
+        auto dst = genMachineOperand(operands[0]);
+        // example: store r0, addr_a
+        cur_inst = new StoreMInstruction(cur_block, internal_reg1, dst);
+        cur_block->InsertInst(cur_inst);
+        // example: store r1, [r0]
+        cur_inst = new StoreMInstruction(cur_block, src, internal_reg2);
+        cur_block->InsertInst(cur_inst);
+    }
+    // store local operand
+    else if(operands[0]->getEntry()->isTemporary()
+    && operands[0]->getDef()
+    && operands[0]->getDef()->isAlloc())
+    {
+        // example: store r1, [r0, #4]
+        auto dst1 = genMachineReg(11);
+        auto dst2 = genMachineImm(dynamic_cast<TemporarySymbolEntry*>(operands[0]->getEntry())->getOffset());
+        cur_inst = new StoreMInstruction(cur_block, src, dst1, dst2);
+        cur_block->InsertInst(cur_inst);
+    }
+    // store operand from temporary variable
+    else
+    {
+        // example: store r1, [r0]
+        auto dst = genMachineOperand(operands[0]);
+        cur_inst = new StoreMInstruction(cur_block, src, dst);
+        cur_block->InsertInst(cur_inst);
+    }
 }
 
 void BinaryInstruction::genMachineCode(AsmBuilder* builder)
@@ -652,6 +699,21 @@ void BinaryInstruction::genMachineCode(AsmBuilder* builder)
     {
     case ADD:
         cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, dst, src1, src2);
+        break;
+    case SUB:
+        cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::SUB, dst, src1, src2);
+        break;
+    case MUL:
+        cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::MUL, dst, src1, src2);
+        break;
+    case DIV:
+        cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::DIV, dst, src1, src2);
+        break;
+    case AND:
+        cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::AND, dst, src1, src2);
+        break;
+    case OR:
+        cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::OR, dst, src1, src2);
         break;
     default:
         break;
@@ -704,15 +766,7 @@ void RetInstruction::genMachineCode(AsmBuilder* builder)
         cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, sp, sp, stackSize);
         cur_block->InsertInst(cur_inst);
     }
-    std::vector<MachineOperand *> src = cur_func->getSavedRegs();
-    auto fp = new MachineOperand(MachineOperand::REG, 11);
-    src.push_back(fp);
-    cur_inst = new StackMInstruction(cur_block, StackMInstruction::POP, src);
-    cur_block->InsertInst(cur_inst);
-    // 3. Generate bx instruction
-    auto lr = new MachineOperand(MachineOperand::REG, 14);
-    cur_inst = new BranchMInstruction(cur_block, BranchMInstruction::BX, lr);
-    cur_block->InsertInst(cur_inst);
+    //接下来的工作放到MachineCode.cpp: void MachineFunction::output()完成
 }
 
 void CallInstruction::genMachineCode(AsmBuilder* builder)

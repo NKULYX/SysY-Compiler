@@ -124,25 +124,36 @@ BinaryMInstruction::BinaryMInstruction(
 
 void BinaryMInstruction::output() 
 {
-    // TODO: 
-    // Complete other instructions
     switch (this->op)
     {
     case BinaryMInstruction::ADD:
         fprintf(yyout, "\tadd ");
-        this->PrintCond();
-        this->def_list[0]->output();
-        fprintf(yyout, ", ");
-        this->use_list[0]->output();
-        fprintf(yyout, ", ");
-        this->use_list[1]->output();
-        fprintf(yyout, "\n");
         break;
     case BinaryMInstruction::SUB:
+        fprintf(yyout, "\tsub ");
+        break;
+    case BinaryMInstruction::MUL:
+        fprintf(yyout, "\tmul ");
+        break;
+    case BinaryMInstruction::DIV:
+        fprintf(yyout, "\tsdiv ");
+        break;
+    case BinaryMInstruction::AND:
+        fprintf(yyout, "\tand ");
+        break;
+    case BinaryMInstruction::OR:
+        fprintf(yyout, "\tor ");
         break;
     default:
         break;
     }
+    this->PrintCond();
+    this->def_list[0]->output();
+    fprintf(yyout, ", ");
+    this->use_list[0]->output();
+    fprintf(yyout, ", ");
+    this->use_list[1]->output();
+    fprintf(yyout, "\n");
 }
 
 LoadMInstruction::LoadMInstruction(MachineBlock* p,
@@ -196,12 +207,40 @@ StoreMInstruction::StoreMInstruction(MachineBlock* p,
     MachineOperand* src1, MachineOperand* src2, MachineOperand* src3, 
     int cond)
 {
-    // TODO
+    this->parent = p;
+    this->type = MachineInstruction::STORE;
+    this->op = -1;
+    this->cond = cond;
+    this->use_list.push_back(src1);
+    this->use_list.push_back(src2);
+    if (src3)
+        this->use_list.push_back(src3);
+    src1->setParent(this);
+    src2->setParent(this);
+    if (src3)
+        src3->setParent(this);
 }
 
 void StoreMInstruction::output()
 {
-    // TODO
+    fprintf(yyout, "\tstr ");
+    this->use_list[0]->output();
+    fprintf(yyout, ", ");
+
+    // Load address
+    if(this->use_list[1]->isReg()||this->use_list[1]->isVReg())
+        fprintf(yyout, "[");
+
+    this->use_list[1]->output();
+    if( this->use_list.size() > 2 )
+    {
+        fprintf(yyout, ", ");
+        this->use_list[2]->output();
+    }
+
+    if(this->use_list[1]->isReg()||this->use_list[1]->isVReg())
+        fprintf(yyout, "]");
+    fprintf(yyout, "\n");
 }
 
 MovMInstruction::MovMInstruction(MachineBlock* p, int op, 
@@ -248,7 +287,7 @@ void BranchMInstruction::output()
     case BL:
         fprintf(yyout, "\tbl ");
         break;
-    case BX:
+    case BX://弃用
         fprintf(yyout, "\tbx ");
         break;
     }
@@ -323,22 +362,49 @@ void MachineBlock::output()
         iter->output();
 }
 
+void MachineBlock::insertBefore(MachineInstruction* at, MachineInstruction* src)
+{
+    std::vector<MachineInstruction*>::iterator pos = find(inst_list.begin(), inst_list.end(), at);
+    inst_list.insert(pos, src);
+}
+
+void MachineBlock::insertAfter(MachineInstruction* at, MachineInstruction* src)
+{
+    std::vector<MachineInstruction*>::iterator pos = find(inst_list.begin(), inst_list.end(), at);
+    ++pos;
+    inst_list.insert(pos, src);
+}
+
 void MachineFunction::output()
 {
     const char *func_name = this->sym_ptr->toStr().c_str() + 1;
     fprintf(yyout, "\t.global %s\n", func_name);
     fprintf(yyout, "\t.type %s , %%function\n", func_name);
     fprintf(yyout, "%s:\n", func_name);
-    // TODO
-    /* Hint:
-    *  1. Save fp
-    *  2. fp = sp
-    *  3. Save callee saved register
-    *  4. Allocate stack space for local variable */
-    
+    //3. Save callee saved register
+    fprintf(yyout, "\tpush {");
+    for(auto reg : getSavedRegs()){
+        reg->output();
+        fprintf(yyout, ", ");
+    }
+    //1. Save fp
+    fprintf(yyout, "fp}\n");
+    //2. fp = sp
+    fprintf(yyout, "\tmov fp, sp\n");
+    //4. Allocate stack space for local variable
+    fprintf(yyout, "\tsub sp, sp, #%d\n", stack_size);
     // Traverse all the block in block_list to print assembly code.
     for(auto iter : block_list)
         iter->output();
+    //恢复saved registers和fp
+    fprintf(yyout, "\tpop {");
+    for(auto reg : getSavedRegs()){
+        reg->output();
+        fprintf(yyout, ", ");
+    }
+    fprintf(yyout, "fp}\n");
+    // 3. Generate bx instruction
+    fprintf(yyout, "\tbx lr\n");
 }
 
 void MachineUnit::PrintGlobalDecl()
