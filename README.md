@@ -1,3 +1,10 @@
+
+<p align="center">
+    <img src="https://api.codiga.io/project/35279/score/svg" alt="Code Quality Score"/>
+    <img src="https://api.codiga.io/project/35279/status/svg" alt="Code Grade"/>
+</p>
+
+
 # 2022lab5-Skeleton
 For 2022Fall NKUCS Course - Principle of Compilers Lab5
 
