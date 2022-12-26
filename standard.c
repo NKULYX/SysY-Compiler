@@ -1,6 +1,6 @@
 int main(){
-    // int a = 10;
+    int a = 10;
     // float b = 1.0;
     // float c = 123.45;
-    return 12138;
+    return a;
 }

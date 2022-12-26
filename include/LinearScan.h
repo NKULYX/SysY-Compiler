@@ -32,6 +32,7 @@ private:
     std::vector<int> regs;
     std::map<MachineOperand *, std::set<MachineOperand *>> du_chains;
     std::vector<Interval*> intervals;
+    std::vector<Interval*> active;
     static bool compareStart(Interval*a, Interval*b);
     void expireOldIntervals(Interval *interval);
     void spillAtInterval(Interval *interval);
@@ -40,6 +41,10 @@ private:
     bool linearScanRegisterAllocation();
     void modifyCode();
     void genSpillCode();
+    //比较函数1：用于确定可释放的active interval
+    bool victimComp(Interval* active, Interval* candidate){return active->end < candidate->start;}
+    //比较函数2：用于确定插入active数组的位置
+    bool insertComp(Interval* first, Interval* second){return first->end < second->end;}
 public:
     LinearScan(MachineUnit *unit);
     void allocateRegisters();
