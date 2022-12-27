@@ -695,6 +695,16 @@ void BinaryInstruction::genMachineCode(AsmBuilder* builder)
         cur_block->InsertInst(cur_inst);
         src1 = new MachineOperand(*internal_reg);
     }
+    if(opcode == MUL)
+    {
+        if(src2->isImm())
+        {
+            auto internal_reg = genMachineVReg();
+            cur_inst = new LoadMInstruction(cur_block, internal_reg, src2);
+            cur_block->InsertInst(cur_inst);
+            src2 = new MachineOperand(*internal_reg);
+        }
+    }
     switch (opcode)
     {
     case ADD:
@@ -715,6 +725,7 @@ void BinaryInstruction::genMachineCode(AsmBuilder* builder)
     case OR:
         cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::OR, dst, src1, src2);
         break;
+    //TODO: CMP
     default:
         break;
     }
@@ -755,23 +766,31 @@ void RetInstruction::genMachineCode(AsmBuilder* builder)
         cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, src, 0);
         cur_block->InsertInst(cur_inst);
     }
-    //2. Restore callee saved registers and sp, fp
-    auto cur_func = builder->getFunction();
-    auto sp = new MachineOperand(MachineOperand::REG, 13);
-    //AllocSpace返回栈当前offset
-    int size = cur_func->AllocSpace(0);
-    //尾调用不调整栈帧
-    if(size!=0){
-        auto stackSize = new MachineOperand(MachineOperand::IMM, size);
-        cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, sp, sp, stackSize);
-        cur_block->InsertInst(cur_inst);
-    }
     //接下来的工作放到MachineCode.cpp: void MachineFunction::output()完成
 }
 
 void CallInstruction::genMachineCode(AsmBuilder* builder)
 {
-    // TODO
+    auto cur_block = builder->getBlock();
+    MachineInstruction* cur_inst = nullptr;
+    std::vector<MachineOperand*> additional_args;
+    for(unsigned int i = 1;i < operands.size();i++){
+        //左起前4个参数通过r0-r3传递
+        if(i<=4){
+            auto dst = new MachineOperand(MachineOperand::REG, i-1);//r0-r3
+            cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, genMachineOperand(operands[i]));
+            cur_block->InsertInst(cur_inst);
+        }
+        else{
+            additional_args.push_back(genMachineOperand(operands[i]));
+        }
+    }
+    if(!additional_args.empty()){
+        cur_inst = new StackMInstruction(cur_block, StackMInstruction::PUSH, additional_args);
+        cur_block->InsertInst(cur_inst);
+    }
+    cur_inst = new BranchMInstruction(cur_block, BranchMInstruction::BL, new MachineOperand(funcSE->getName()));
+    cur_block->InsertInst(cur_inst);
 }
 
 

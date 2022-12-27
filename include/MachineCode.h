@@ -31,10 +31,11 @@ private:
     int val;  // value of immediate number
     int reg_no; // register no
     std::string label; // address label
+    bool is_funct; //用于判断是否函数
 public:
     enum { IMM, VREG, REG, LABEL };
     MachineOperand(int tp, int val);
-    MachineOperand(std::string label);
+    MachineOperand(std::string label, bool is_func = false);
     bool operator == (const MachineOperand&) const;
     bool operator < (const MachineOperand&) const;
     bool isImm() { return this->type == IMM; }; 

@@ -99,6 +99,7 @@ public:
     // You can add any function you need here.
     void outputFuncDecl();
     bool isLibFunc();
+    std::string getName() const {return name;};
     //对外暴露所有实际值
     //实际值不区分int和float，实际类型需要根据符号表中的type判断
     double value;

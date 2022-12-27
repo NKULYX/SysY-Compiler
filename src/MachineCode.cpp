@@ -10,10 +10,11 @@ MachineOperand::MachineOperand(int tp, int val)
         this->reg_no = val;
 }
 
-MachineOperand::MachineOperand(std::string label)
+MachineOperand::MachineOperand(std::string label, bool is_func)
 {
     this->type = MachineOperand::LABEL;
     this->label = label;
+    is_funct = is_func;
 }
 
 bool MachineOperand::operator==(const MachineOperand&a) const
@@ -83,7 +84,7 @@ void MachineOperand::output()
         PrintReg();
         break;
     case LABEL:
-        if (this->label.substr(0, 2) == ".L")
+        if (this->label.substr(0, 2) == ".L" || is_funct)
             fprintf(yyout, "%s", this->label.c_str());
         else
             fprintf(yyout, "addr_%s", this->label.c_str());
@@ -392,10 +393,16 @@ void MachineFunction::output()
     //2. fp = sp
     fprintf(yyout, "\tmov fp, sp\n");
     //4. Allocate stack space for local variable
-    fprintf(yyout, "\tsub sp, sp, #%d\n", stack_size);
+    if(stack_size!=0){
+        fprintf(yyout, "\tsub sp, sp, #%d\n", stack_size);
+    }
     // Traverse all the block in block_list to print assembly code.
     for(auto iter : block_list)
         iter->output();
+    //2. Restore callee saved registers and sp, fp
+    if(stack_size!=0){
+        fprintf(yyout, "\tadd sp, sp, #%d\n", stack_size);
+    }
     //恢复saved registers和fp
     fprintf(yyout, "\tpop {");
     for(auto reg : getSavedRegs()){
@@ -404,7 +411,7 @@ void MachineFunction::output()
     }
     fprintf(yyout, "fp}\n");
     // 3. Generate bx instruction
-    fprintf(yyout, "\tbx lr\n");
+    fprintf(yyout, "\tbx lr\n\n");
 }
 
 void MachineUnit::PrintGlobalDecl()
