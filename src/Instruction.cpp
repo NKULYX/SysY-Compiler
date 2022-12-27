@@ -789,7 +789,7 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
         cur_inst = new StackMInstruction(cur_block, StackMInstruction::PUSH, additional_args);
         cur_block->InsertInst(cur_inst);
     }
-    cur_inst = new BranchMInstruction(cur_block, BranchMInstruction::BL, new MachineOperand(funcSE->getName()));
+    cur_inst = new BranchMInstruction(cur_block, BranchMInstruction::BL, new MachineOperand(funcSE->getName(), true));
     cur_block->InsertInst(cur_inst);
 }
 
