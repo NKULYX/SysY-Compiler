@@ -161,12 +161,13 @@ void LinearScan::computeLiveIntervals()
 
 bool LinearScan::linearScanRegisterAllocation()
 {
+    bool retValue = true;
     for(auto &interval : intervals){
         expireOldIntervals(interval);
         //判断 active 列表中 interval 的数目和可用的物理寄存器数目是否相等
         if(active.size()==regs.size()){//溢出
             spillAtInterval(interval);
-            return false;
+            retValue = false;
         }
         else{//当前有可用于分配的物理寄存器
             interval->rreg = regs[regs.size()-1];//为 unhandled interval 分配物理寄存器
@@ -174,9 +175,9 @@ bool LinearScan::linearScanRegisterAllocation()
             //再按照活跃区间结束位置，将其插入到 active 列表中
             std::vector<Interval*>::iterator insertPos = std::lower_bound(active.begin(), active.end(), interval, insertComp);
             active.insert(insertPos, interval);//按照unhandled interval活跃区间结束位置，将其插入到 active 列表中
-            return true;
         }
     }
+    return retValue;
 }
 
 void LinearScan::modifyCode()
