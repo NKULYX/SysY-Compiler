@@ -1,5 +1,5 @@
 int gcd(int m, int n) {
-    return n;
+    return 1;
 }
 
 int main() {

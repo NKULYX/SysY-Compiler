@@ -90,3 +90,12 @@ void Function::genMachineCode(AsmBuilder* builder)
     cur_unit->InsertFunc(cur_func);
 
 }
+
+int Function::getParamId(Operand *param) {
+    int i = 0;
+    for(auto p : params_list){
+        if(p == param) return i;
+        i++;
+    }
+    return -1;
+}

@@ -1,6 +1,7 @@
 #include "Instruction.h"
 #include "BasicBlock.h"
 #include <iostream>
+#include <cassert>
 #include "Function.h"
 #include "Type.h"
 extern FILE* yyout;
@@ -540,13 +541,22 @@ MachineOperand* Instruction::genMachineOperand(Operand* ope)
     {
         auto id_se = dynamic_cast<IdentifierSymbolEntry*>(se);
         Type* type = id_se->getType();
-        if(type==TypeSystem::constIntType){
-            //TODO: add array manipulation here
-            //TODO: add float manipulation here
-            mope = new MachineOperand(MachineOperand::IMM, id_se->value);
+        // 如果是函数参数
+        if(id_se->isParam()) {
+            auto param_id = this->parent->getParent()->getParamId(ope);
+            if(param_id >= 0 && param_id <= 3) {
+                mope = new MachineOperand(MachineOperand::REG, param_id);
+            }
         }
-        else{
-            mope = new MachineOperand(id_se->toStr().c_str());
+        else {
+            if(type==TypeSystem::constIntType){
+                //TODO: add array manipulation here
+                //TODO: add float manipulation here
+                mope = new MachineOperand(MachineOperand::IMM, id_se->value);
+            }
+            else{
+                mope = new MachineOperand(id_se->toStr().c_str());
+            }
         }
     }
     return mope;
