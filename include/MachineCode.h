@@ -2,6 +2,7 @@
 #define __MACHINECODE_H__
 #include <vector>
 #include <set>
+#include <queue>
 #include <string>
 #include <algorithm>
 #include <fstream>
@@ -67,7 +68,7 @@ protected:
     void addUse(MachineOperand* ope) { use_list.push_back(ope); };
     // Print execution code after printing opcode
     void PrintCond();
-    enum instType { BINARY, LOAD, STORE, MOV, BRANCH, CMP, STACK };
+    enum instType { BINARY, LOAD, STORE, MOV, BRANCH, CMP, STACK, ZEXT};
 public:
     enum condType { EQ, NE, LT, LE , GT, GE, NONE };
     virtual void output() = 0;
@@ -148,6 +149,15 @@ public:
     void output();
 };
 
+class ZextMInstruction : public MachineInstruction
+{
+public:
+    ZextMInstruction(MachineBlock* p,
+                MachineOperand* dst, MachineOperand* src,
+                int cond = MachineInstruction::NONE);
+    void output();
+};
+
 class MachineBlock
 {
 private:
@@ -157,6 +167,7 @@ private:
     std::vector<MachineInstruction*> inst_list;
     std::set<MachineOperand*> live_in;
     std::set<MachineOperand*> live_out;
+    int current_branch_cond = MachineInstruction::NONE;
 public:
     std::vector<MachineInstruction*>& getInsts() {return inst_list;};
     std::vector<MachineInstruction*>::iterator begin() { return inst_list.begin(); };
@@ -172,6 +183,8 @@ public:
     std::vector<MachineBlock*>& getSuccs() {return succ;};
     void insertBefore(MachineInstruction* at, MachineInstruction* src);
     void insertAfter(MachineInstruction* at, MachineInstruction* src);
+    void setCurrentBranchCond(int cond) {this->current_branch_cond = cond;};
+    int getCurrentBranchCond() {return this->current_branch_cond;};
     void output();
 };
 

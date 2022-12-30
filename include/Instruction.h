@@ -109,7 +109,7 @@ public:
     ~CmpInstruction();
     void output() const;
     void genMachineCode(AsmBuilder*);
-    enum {L, LE, G, GE, E, NE};
+    enum {E, NE, L, LE, G, GE};
 };
 
 // unconditional branch

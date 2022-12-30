@@ -96,10 +96,6 @@ void FunctionDef::genCode()
         voidAddRet->genCode();
     }
 
-    /**
-     * Construct control flow graph. You need do set successors and predecessors for each basic block.
-     * Todo
-    */
     // 遍历Function中所有的BasicBlock，在各个BasicBlock之间建立控制流关系
     for (auto block = func->begin(); block != func->end(); block++) {
         // 清除ret之后的全部指令
@@ -664,8 +660,12 @@ void BinaryExpr::typeCheck(Node** parentToChild)
         }
     }
     // 推断父节点类型
-    // bool型一律按float处理
-    // TODO：增加bool类型处理?
+    if(this->op >= AND && this->op <= NEQ) {
+        this->setType(TypeSystem::boolType);
+    }
+    else {
+        this->setType(TypeSystem::getMaxType(realTypeLeft, realTypeRight));
+    }
     // if(realTypeLeft->isBool() && realTypeRight->isBool()){
     //     //别忘了两边一边是bool一边是int/float的情况
     // }

@@ -1,9 +1,9 @@
-int gcd(int m, int n) {
-    return 1;
+int f(int a, int b, int c, int d, int e) {
+    return a + b + c + d + e;
 }
 
 int main() {
-    int a = 100, b = 48;
-    int ans = gcd(a, b);
-    return ans;
+    int a = 1, b = 2, c = 3, d = 4, e = 5;
+    int res = f(a, b, c, d, e);
+    return res;
 }

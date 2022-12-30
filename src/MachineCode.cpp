@@ -95,11 +95,25 @@ void MachineOperand::output()
 
 void MachineInstruction::PrintCond()
 {
-    // TODO
     switch (cond)
     {
+    case EQ:
+        fprintf(yyout, "eq");
+        break;
+    case NE:
+        fprintf(yyout, "ne");
+        break;
     case LT:
         fprintf(yyout, "lt");
+        break;
+    case LE:
+        fprintf(yyout, "le");
+        break;
+    case GT:
+        fprintf(yyout, "gt");
+        break;
+    case GE:
+        fprintf(yyout, "ge");
         break;
     default:
         break;
@@ -260,7 +274,9 @@ MovMInstruction::MovMInstruction(MachineBlock* p, int op,
 
 void MovMInstruction::output() 
 {
-    fprintf(yyout, "\tmov ");
+    fprintf(yyout, "\tmov");
+    PrintCond();
+    fprintf(yyout, " ");
     this->def_list[0]->output();
     fprintf(yyout, ", ");
     this->use_list[0]->output();
@@ -283,7 +299,9 @@ void BranchMInstruction::output()
 {
     switch(op){
     case B:
-        fprintf(yyout, "\tb ");
+        fprintf(yyout, "\tb");
+        PrintCond();
+        fprintf(yyout, " ");
         break;
     case BL:
         fprintf(yyout, "\tbl ");
@@ -300,14 +318,22 @@ CmpMInstruction::CmpMInstruction(MachineBlock* p,
     MachineOperand* src1, MachineOperand* src2, 
     int cond)
 {
-    // TODO
+    this->parent = p;
+    this->type = MachineInstruction::CMP;
+    this->cond = cond;
+    this->use_list.push_back(src1);
+    this->use_list.push_back(src2);
+    src1->setParent(this);
+    src2->setParent(this);
 }
 
 void CmpMInstruction::output()
 {
-    // TODO
-    // Jsut for reg alloca test
-    // delete it after tueti
+    fprintf(yyout, "\tcmp ");
+    this->use_list[0]->output();
+    fprintf(yyout, ", ");
+    this->use_list[1]->output();
+    fprintf(yyout, "\n");
 }
 
 StackMInstruction::StackMInstruction(MachineBlock* p, int op, 
@@ -358,6 +384,9 @@ std::vector<MachineOperand*> MachineFunction::getSavedRegs()
 
 void MachineBlock::output()
 {
+    // 如果是一个空块则直接返回
+    if(this->inst_list.size() == 0)
+        return;
     fprintf(yyout, ".L%d:\n", this->no);
     for(auto iter : inst_list)
         iter->output();
@@ -389,7 +418,7 @@ void MachineFunction::output()
         fprintf(yyout, ", ");
     }
     //1. Save fp
-    fprintf(yyout, "fp}\n");
+    fprintf(yyout, "fp, lr}\n");
     //2. fp = sp
     fprintf(yyout, "\tmov fp, sp\n");
     //4. Allocate stack space for local variable
@@ -397,8 +426,25 @@ void MachineFunction::output()
         fprintf(yyout, "\tsub sp, sp, #%d\n", stack_size);
     }
     // Traverse all the block in block_list to print assembly code.
-    for(auto iter : block_list)
-        iter->output();
+//    for(auto iter : block_list)
+//        iter->output();
+    std::queue<MachineBlock*> q;
+    std::set<MachineBlock*> v;
+    q.push(block_list[0]);
+    v.insert(block_list[0]);
+    while(!q.empty()) {
+        MachineBlock* cur = q.front();
+        q.pop();
+        cur->output();
+        for(auto iter : cur->getSuccs()) {
+            if(v.find(iter) == v.end()) {
+                q.push(iter);
+                v.insert(iter);
+            }
+        }
+    }
+    // output label .LEND
+    fprintf(yyout, ".L%s_END:\n", this->sym_ptr->toStr().erase(0,1).c_str());
     //2. Restore callee saved registers and sp, fp
     if(stack_size!=0){
         fprintf(yyout, "\tadd sp, sp, #%d\n", stack_size);
@@ -409,7 +455,7 @@ void MachineFunction::output()
         reg->output();
         fprintf(yyout, ", ");
     }
-    fprintf(yyout, "fp}\n");
+    fprintf(yyout, "fp, lr}\n");
     // 3. Generate bx instruction
     fprintf(yyout, "\tbx lr\n\n");
 }
@@ -433,4 +479,22 @@ void MachineUnit::output()
     PrintGlobalDecl();
     for(auto iter : func_list)
         iter->output();
+}
+
+ZextMInstruction::ZextMInstruction(MachineBlock *p, MachineOperand *dst, MachineOperand *src, int cond) {
+    this->parent = p;
+    this->type = MachineInstruction::ZEXT;
+    this->cond = cond;
+    this->def_list.push_back(dst);
+    this->use_list.push_back(src);
+    dst->setParent(this);
+    src->setParent(this);
+}
+
+void ZextMInstruction::output() {
+    fprintf(yyout, "\tuxtb ");
+    def_list[0]->output();
+    fprintf(yyout, ", ");
+    use_list[0]->output();
+    fprintf(yyout, "\n");
 }

@@ -1,9 +1,7 @@
-int gcd(int m, int n) {
-    return n;
-}
+//test global var define
+int a = 3;
+int b = 5;
 
-int main() {
-    int a = 100, b = 48;
-    int ans = gcd(a, b);
-    return ans;
+int main(){
+    return a + b;
 }

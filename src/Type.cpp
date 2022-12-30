@@ -18,8 +18,8 @@ Type* TypeSystem::constBoolType = &commonConstBool;
 Type* TypeSystem::voidType = &commonVoid;
 
 Type* TypeSystem::getMaxType(Type* type1, Type* type2){
-    if(type1->isFloat() || type2->isFloat()) return floatType;
-    if(type1->isInt() || type2->isInt()) return intType;
+    if(type1->isAnyFloat() || type2->isAnyFloat()) return floatType;
+    if(type1->isAnyInt() || type2->isAnyInt()) return intType;
     else return boolType;
 }
 
