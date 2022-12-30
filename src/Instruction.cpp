@@ -630,6 +630,11 @@ void LoadInstruction::genMachineCode(AsmBuilder* builder)
         auto src2 = genMachineImm(dynamic_cast<TemporarySymbolEntry*>(operands[1]->getEntry())->getOffset());
         cur_inst = new LoadMInstruction(cur_block, dst, src1, src2);
         cur_block->InsertInst(cur_inst);
+        // 如果是函数参数 则保留其偏移量方便后续调整
+        // 如果偏移量为正值则说明其在栈底之上 为保留参数
+        if(dynamic_cast<TemporarySymbolEntry*>(operands[1]->getEntry())->getOffset() >= 0) {
+            cur_block->getParent()->insertSavedParamsOffset(src2);
+        }
     }
     // Load operand from temporary variable
     else
@@ -652,7 +657,7 @@ void StoreInstruction::genMachineCode(AsmBuilder* builder)
         if(id_se->isParam()) {
             int param_id = this->getParent()->getParent()->getParamId(operands[1]);
             if(param_id >= 4) {
-                int offset = 4 * (param_id - 2);
+                int offset = 4 * (param_id - 4);
                 dynamic_cast<TemporarySymbolEntry*>(operands[0]->getEntry())->setOffset(offset);
                 return;
             }

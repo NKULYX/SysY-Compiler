@@ -1,5 +1,6 @@
 #ifndef __MACHINECODE_H__
 #define __MACHINECODE_H__
+#include <utility>
 #include <vector>
 #include <set>
 #include <queue>
@@ -43,6 +44,7 @@ public:
     bool isReg() { return this->type == REG; };
     bool isVReg() { return this->type == VREG; };
     bool isLabel() { return this->type == LABEL; };
+    void setVal(int in_val) {this->val = in_val;};
     int getVal() {return this->val; };
     int getReg() {return this->reg_no; };
     void setReg(int regno) {this->type = REG; this->reg_no = regno;};
@@ -185,6 +187,7 @@ public:
     void insertAfter(MachineInstruction* at, MachineInstruction* src);
     void setCurrentBranchCond(int cond) {this->current_branch_cond = cond;};
     int getCurrentBranchCond() {return this->current_branch_cond;};
+    MachineFunction* getParent() {return this->parent;}
     void output();
 };
 
@@ -195,6 +198,7 @@ private:
     std::vector<MachineBlock*> block_list;
     int stack_size;
     std::set<int> saved_regs;
+    std::vector<MachineOperand*> saved_params_offset;
     SymbolEntry* sym_ptr;
 public:
     std::vector<MachineBlock*>& getBlocks() {return block_list;};
@@ -210,6 +214,7 @@ public:
     void InsertBlock(MachineBlock* block) { this->block_list.push_back(block); };
     void addSavedRegs(int regno) {saved_regs.insert(regno);};
     std::vector<MachineOperand*> getSavedRegs();
+    void insertSavedParamsOffset(MachineOperand* offset) {saved_params_offset.push_back(offset);};
     void output();
 };
 

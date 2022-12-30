@@ -360,10 +360,34 @@ void StackMInstruction::output()
         fprintf(yyout, "\tpop {");
         break;
     }
+    bool is_first = true;
     for(auto reg : use_list){
+        if(!is_first)
+            fprintf(yyout, ", ");
+        else
+            is_first = false;
         reg->output();
     }
     fprintf(yyout, "}\n");
+}
+
+
+ZextMInstruction::ZextMInstruction(MachineBlock *p, MachineOperand *dst, MachineOperand *src, int cond) {
+    this->parent = p;
+    this->type = MachineInstruction::ZEXT;
+    this->cond = cond;
+    this->def_list.push_back(dst);
+    this->use_list.push_back(src);
+    dst->setParent(this);
+    src->setParent(this);
+}
+
+void ZextMInstruction::output() {
+    fprintf(yyout, "\tuxtb ");
+    def_list[0]->output();
+    fprintf(yyout, ", ");
+    use_list[0]->output();
+    fprintf(yyout, "\n");
 }
 
 MachineFunction::MachineFunction(MachineUnit* p, SymbolEntry* sym_ptr) 
@@ -419,6 +443,10 @@ void MachineFunction::output()
     }
     //1. Save fp
     fprintf(yyout, "fp, lr}\n");
+    // 调整 additional_args 中的偏移
+    for(auto param : this->saved_params_offset) {
+        param->setVal(4 * (this->saved_regs.size() + 2) + param->getVal());
+    }
     //2. fp = sp
     fprintf(yyout, "\tmov fp, sp\n");
     //4. Allocate stack space for local variable
@@ -481,20 +509,3 @@ void MachineUnit::output()
         iter->output();
 }
 
-ZextMInstruction::ZextMInstruction(MachineBlock *p, MachineOperand *dst, MachineOperand *src, int cond) {
-    this->parent = p;
-    this->type = MachineInstruction::ZEXT;
-    this->cond = cond;
-    this->def_list.push_back(dst);
-    this->use_list.push_back(src);
-    dst->setParent(this);
-    src->setParent(this);
-}
-
-void ZextMInstruction::output() {
-    fprintf(yyout, "\tuxtb ");
-    def_list[0]->output();
-    fprintf(yyout, ", ");
-    use_list[0]->output();
-    fprintf(yyout, "\n");
-}
