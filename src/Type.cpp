@@ -24,10 +24,10 @@ Type* TypeSystem::getMaxType(Type* type1, Type* type2){
 }
 
 bool TypeSystem::needCast(Type* src, Type* target) {
-    if(src->isInt() && target->isInt()) {
+    if(src->isAnyInt() && target->isAnyInt()) {
         return false;
     }
-    if(src->isFloat() && target->isFloat()) {
+    if(src->isAnyFloat() && target->isAnyFloat()) {
         return false;
     }
     if(src->isBool() && target->isBool()) {
