@@ -60,7 +60,7 @@ PASS: 040_while_if_test2
 PASS: 041_while_if_test3
 PASS: 069_greatest_common_divisor
 PASS: 100_int_literal
-PASS: 102_short_circuit3
+FAIL: 102_short_circuit3	Wrong Answer
 PASS: 1074_itera_sqrt
 FAIL: 1075_max_container	Compile Error
 PASS: 1076_int_factor_sum
@@ -136,20 +136,26 @@ FAIL: 103_long_func	Compile Error
 FAIL: 104_long_array	Assemble Error
 FAIL: 105_long_array2	Compile Error
 FAIL: 106_long_code	Compile Error
-FAIL: 107_long_code2	Assemble Error
+FAIL: 107_long_code2	Compile Timeout
 FAIL: 108_many_params	Compile Error
 FAIL: 109_many_params2	Compile Error
-PASS: 110_many_params3
-PASS: 111_many_globals
+FAIL: 110_many_params3	Compile Error
+FAIL: 111_many_globals	Compile Error
 FAIL: 112_many_locals	Compile Error
 PASS: 113_many_locals2
 PASS: 114_register_alloc
 FAIL: 115_nested_calls	Compile Error
 PASS: 116_nested_calls2
-FAIL: 117_nested_loops	Assemble Error
+FAIL: 117_nested_loops	Compile Error
 FAIL: 196_float	Compile Error
 FAIL: 198_matrix_add	Compile Error
 FAIL: 199_matrix_sub	Compile Error
 FAIL: 200_matrix_mul	Assemble Error
 FAIL: 201_matrix_tran	Assemble Error
 PASS: 202_register_realloc
+FAIL: 35_math	Assemble Error
+FAIL: 36_rotate	Assemble Error
+FAIL: 37_dct	Compile Error
+FAIL: 38_light2d	Assemble Error
+FAIL: 39_fp_params	Compile Error
+Total: 160	Accept: 79	Fail: 81

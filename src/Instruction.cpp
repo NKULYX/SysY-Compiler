@@ -6,7 +6,7 @@
 #include "Type.h"
 extern FILE* yyout;
 
-bool assignFuncCallResult = false;
+//bool assignFuncCallResult = false;
 
 Instruction::Instruction(unsigned instType, BasicBlock *insert_bb)
 {
@@ -667,15 +667,7 @@ void StoreInstruction::genMachineCode(AsmBuilder* builder)
             }
         }
     }
-    // 如果是函数返回值的赋值语句
-    MachineOperand* src;
-    if(assignFuncCallResult) {
-        src = genMachineReg(0);
-        assignFuncCallResult = false;
-    }
-    else {
-        src = genMachineOperand(operands[1]);
-    }
+    MachineOperand* src = genMachineOperand(operands[1]);
     //如果src为常数，需要先load进来
     if(src->isImm()){
         auto internal_reg = genMachineVReg();
@@ -690,8 +682,8 @@ void StoreInstruction::genMachineCode(AsmBuilder* builder)
         auto internal_reg1 = genMachineVReg();
         auto internal_reg2 = new MachineOperand(*internal_reg1);
         auto dst = genMachineOperand(operands[0]);
-        // example: store r0, addr_a
-        cur_inst = new StoreMInstruction(cur_block, internal_reg1, dst);
+        // example: load r0, addr_a
+        cur_inst = new LoadMInstruction(cur_block, internal_reg1, dst);
         cur_block->InsertInst(cur_inst);
         // example: store r1, [r0]
         cur_inst = new StoreMInstruction(cur_block, src, internal_reg2);
@@ -739,7 +731,16 @@ void BinaryInstruction::genMachineCode(AsmBuilder* builder)
         cur_block->InsertInst(cur_inst);
         src1 = new MachineOperand(*internal_reg);
     }
-    if(opcode == MUL)
+    if(opcode == MUL || opcode == DIV || opcode == MOD)
+    {
+        if(src2->isImm())
+        {
+            auto internal_reg = genMachineVReg();
+            cur_inst = new LoadMInstruction(cur_block, internal_reg, src2);
+            cur_block->InsertInst(cur_inst);
+            src2 = new MachineOperand(*internal_reg);
+        }
+    }
     {
         if(src2->isImm())
         {
@@ -878,10 +879,6 @@ void RetInstruction::genMachineCode(AsmBuilder* builder)
 
 void CallInstruction::genMachineCode(AsmBuilder* builder)
 {
-    // 首先判断当前调用的函数是否有返回值
-    if(dynamic_cast<FunctionType*>(this->funcSE->getType())->getRetType() != TypeSystem::voidType) {
-        assignFuncCallResult = true;
-    }
     auto cur_block = builder->getBlock();
     MachineInstruction* cur_inst = nullptr;
     std::vector<MachineOperand*> additional_args;
@@ -904,6 +901,13 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
     }
     cur_inst = new BranchMInstruction(cur_block, BranchMInstruction::BL, new MachineOperand(funcSE->getName(), true));
     cur_block->InsertInst(cur_inst);
+    // 对于有返回值的函数调用 需要提供一条从mov r0, dst的指令
+    if(dynamic_cast<FunctionType*>(this->funcSE->getType())->getRetType() != TypeSystem::voidType) {
+        auto dst = genMachineOperand(operands[0]);
+        auto src = new MachineOperand(MachineOperand::REG, 0);//r0
+        cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, src);
+        cur_block->InsertInst(cur_inst);
+    }
     // 恢复栈帧 调整sp
     if(!additional_args.empty()){
         auto src1 = genMachineReg(13);

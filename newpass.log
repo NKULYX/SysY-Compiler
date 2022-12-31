@@ -8,7 +8,7 @@ FAIL: 06_func_ret_val2	Compile Error
 FAIL: 07_expr_test	Compile Error
 FAIL: 08_cond_test	Execute Timeout
 PASS: 000_main
-FAIL: 001_var_defn	Assemble Error
+PASS: 001_var_defn
 PASS: 003_var_defn3
 PASS: 008_const_var_defn
 PASS: 009_const_var_defn2
@@ -23,64 +23,64 @@ PASS: 020_mul
 PASS: 021_mulc
 PASS: 022_div
 PASS: 023_divc
-FAIL: 024_mod	Assemble Error
-FAIL: 025_rem	Compile Error
-FAIL: 026_if	Assemble Error
-FAIL: 027_if2	Assemble Error
+PASS: 024_mod
+PASS: 025_rem
+PASS: 026_if
+PASS: 027_if2
 PASS: 043_op_priority1
 PASS: 044_op_priority2
 PASS: 045_op_priority3
-FAIL: 046_op_priority4	Assemble Error
-FAIL: 047_op_priority5	Assemble Error
-FAIL: 048_stmt_expr	Assemble Error
+PASS: 046_op_priority4
+PASS: 047_op_priority5
+PASS: 048_stmt_expr
 PASS: 049_unary_op
-FAIL: 050_unary_op2	Assemble Error
-FAIL: 051_logi_assign	Assemble Error
+PASS: 050_unary_op2
+PASS: 051_logi_assign
 PASS: 054_hex_defn
 PASS: 055_hex_oct_add
-FAIL: 056_assign_complex_expr	Compile Error
-FAIL: 057_if_complex_expr	Compile Error
+PASS: 056_assign_complex_expr
+PASS: 057_if_complex_expr
 PASS: 095_empty_stmt
-FAIL: 099_skip_spaces	Compile Error
-FAIL: 1068_accumulate	Assemble Error
-FAIL: 1070_multi	Assemble Error
-FAIL: 1072_enum	Assemble Error
-FAIL: 1073_exchange_value	Assemble Error
-FAIL: 012_func_defn	Assemble Error
-FAIL: 013_var_defn_func	Assemble Error
-FAIL: 028_if_test1	Assemble Error
-FAIL: 029_if_test2	Assemble Error
-FAIL: 030_if_test3	Assemble Error
-FAIL: 031_if_test4	Assemble Error
-FAIL: 032_if_test5	Assemble Error
-FAIL: 035_while_test2	Assemble Error
-FAIL: 036_while_test3	Assemble Error
-FAIL: 039_while_if_test1	Assemble Error
-FAIL: 040_while_if_test2	Assemble Error
-FAIL: 041_while_if_test3	Assemble Error
-FAIL: 069_greatest_common_divisor	Compile Error
-FAIL: 100_int_literal	Assemble Error
-FAIL: 102_short_circuit3	Assemble Error
-FAIL: 1074_itera_sqrt	Assemble Error
+FAIL: 099_skip_spaces	Assemble Error
+PASS: 1068_accumulate
+PASS: 1070_multi
+PASS: 1072_enum
+PASS: 1073_exchange_value
+PASS: 012_func_defn
+PASS: 013_var_defn_func
+PASS: 028_if_test1
+PASS: 029_if_test2
+PASS: 030_if_test3
+PASS: 031_if_test4
+PASS: 032_if_test5
+PASS: 035_while_test2
+PASS: 036_while_test3
+PASS: 039_while_if_test1
+PASS: 040_while_if_test2
+PASS: 041_while_if_test3
+PASS: 069_greatest_common_divisor
+PASS: 100_int_literal
+PASS: 102_short_circuit3
+PASS: 1074_itera_sqrt
 FAIL: 1075_max_container	Compile Error
-FAIL: 1076_int_factor_sum	Compile Error
-FAIL: 1078_decbinoct	Compile Error
-FAIL: 1080_lcm	Compile Error
-FAIL: 1083_enc_dec	Assemble Error
-FAIL: 002_var_defn2	Assemble Error
-FAIL: 060_scope	Assemble Error
-FAIL: 096_side_effect	Assemble Error
-FAIL: 101_scope2	Assemble Error
+PASS: 1076_int_factor_sum
+PASS: 1078_decbinoct
+PASS: 1080_lcm
+PASS: 1083_enc_dec
+PASS: 002_var_defn2
+PASS: 060_scope
+PASS: 096_side_effect
+PASS: 101_scope2
 PASS: 037_break
 PASS: 038_continue
 PASS: 052_comment1
 PASS: 053_comment2
 FAIL: 090_int_io	Compile Error
-FAIL: 033_while_if	Assemble Error
-FAIL: 034_while_test1	Assemble Error
-FAIL: 082_reverse_output	Assemble Error
-FAIL: 087_gcd	Compile Error
-FAIL: 088_hanoi	Assemble Error
+PASS: 033_while_if
+PASS: 034_while_test1
+PASS: 082_reverse_output
+PASS: 087_gcd
+PASS: 088_hanoi
 PASS: 004_arr_defn
 PASS: 005_arr_defn2
 FAIL: 006_arr_defn3	Compile Error
@@ -97,8 +97,8 @@ FAIL: 071_exchange_array	Compile Error
 FAIL: 073_backpack	Compile Error
 FAIL: 074_matrix_add	Compile Error
 FAIL: 075_matrix_sub	Compile Error
-FAIL: 076_matrix_mul	Compile Error
-FAIL: 077_matrix_tran	Compile Error
+FAIL: 076_matrix_mul	Assemble Error
+FAIL: 077_matrix_tran	Assemble Error
 FAIL: 078_big_int_mul	Compile Error
 FAIL: 081_exgcd	Compile Error
 FAIL: 083_brainfk	Compile Error
@@ -116,13 +116,13 @@ FAIL: 1071_max_subsequence_sum	Assemble Error
 FAIL: 1077_unique_path	Assemble Error
 FAIL: 1081_jump_game	Assemble Error
 FAIL: 1082_int_split	Compile Error
-FAIL: 1084_palindrome_number	Compile Error
+FAIL: 1084_palindrome_number	Assemble Error
 FAIL: 1086_bin_search	Assemble Error
 FAIL: 1088_array_concat	Compile Error
 FAIL: 1090_insert_order	Compile Error
 FAIL: 1091_line_search	Assemble Error
-FAIL: 058_short_circuit	Assemble Error
-FAIL: 059_short_circuit2	Assemble Error
+PASS: 058_short_circuit
+PASS: 059_short_circuit2
 FAIL: 063_sort_test3	Compile Error
 FAIL: 065_sort_test5	Compile Error
 FAIL: 067_sort_test7	Assemble Error
@@ -133,7 +133,7 @@ FAIL: 084_expr_eval	Compile Error
 FAIL: 097_var_name	Compile Error
 FAIL: 098_chaos_token	Compile Error
 FAIL: 103_long_func	Compile Error
-FAIL: 104_long_array	Compile Error
+FAIL: 104_long_array	Assemble Error
 FAIL: 105_long_array2	Compile Error
 FAIL: 106_long_code	Compile Error
 FAIL: 107_long_code2	Compile Timeout
@@ -142,20 +142,20 @@ FAIL: 109_many_params2	Compile Error
 FAIL: 110_many_params3	Compile Error
 FAIL: 111_many_globals	Compile Error
 FAIL: 112_many_locals	Compile Error
-FAIL: 113_many_locals2	Assemble Error
-FAIL: 114_register_alloc	Assemble Error
+PASS: 113_many_locals2
+PASS: 114_register_alloc
 FAIL: 115_nested_calls	Compile Error
-FAIL: 116_nested_calls2	Compile Error
-FAIL: 117_nested_loops	Compile Error
+PASS: 116_nested_calls2
+FAIL: 117_nested_loops	Assemble Error
 FAIL: 196_float	Compile Error
 FAIL: 198_matrix_add	Compile Error
 FAIL: 199_matrix_sub	Compile Error
-FAIL: 200_matrix_mul	Compile Error
-FAIL: 201_matrix_tran	Compile Error
-FAIL: 202_register_realloc	Assemble Error
-FAIL: 35_math	Compile Error
-FAIL: 36_rotate	Assemble Error
+FAIL: 200_matrix_mul	Assemble Error
+FAIL: 201_matrix_tran	Assemble Error
+PASS: 202_register_realloc
+FAIL: 35_math	Assemble Error
+FAIL: 36_rotate	Compile Timeout
 FAIL: 37_dct	Compile Error
-FAIL: 38_light2d	Compile Error
+FAIL: 38_light2d	Assemble Error
 FAIL: 39_fp_params	Compile Error
-Total: 160	Accept: 29	Fail: 131
+Total: 160	Accept: 80	Fail: 80
