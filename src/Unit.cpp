@@ -1,4 +1,5 @@
 #include "Unit.h"
+#include "Type.h"
 
 void Unit::insertFunc(Function *f)
 {
@@ -38,10 +39,8 @@ void Unit::genMachineCode(MachineUnit* munit)
     builder->setUnit(munit);
     // 设置全局变量
     for(auto decl : declare_func){
-        if(!decl->isLibFunc()){
-            if(!decl->isConstant()) {
-                munit->insertGlobalVar(decl);
-            }
+        if(!decl->isLibFunc() && !decl->getType()->isConst()) {
+            munit->insertGlobalVar(decl);
         }
     }
     for (auto &func : func_list)
