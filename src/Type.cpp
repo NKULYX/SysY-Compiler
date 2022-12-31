@@ -86,6 +86,7 @@ std::string FunctionType::toStr()
 
 void IntArrayType::pushBackDimension(int dim)
 {
+    size *= dim;
     dimensions.push_back(dim);
 }
 
