@@ -29,6 +29,7 @@ public:
     bool isConstFloatArray() const {return kind == CONST_FLOAT_ARRAY;}
     bool isArray() const {return kind == INT_ARRAY || kind == FLOAT_ARRAY || 
                             kind == CONST_FLOAT_ARRAY || kind == CONST_INT_ARRAY;}
+    bool isPointer() const {return kind == PTR;};
     //ATTENTION: FUNC excluded
     // bool isAnyInt() const {return kind == INT || kind == CONST_INT || kind == INT_ARRAY || kind == CONST_INT_ARRAY;}
     bool isAnyInt() const {return kind == INT || kind == INT_ARRAY || kind == CONST_INT_ARRAY;}

@@ -538,7 +538,16 @@ MachineOperand* Instruction::genMachineOperand(Operand* ope)
     if(se->isConstant())
         mope = new MachineOperand(MachineOperand::IMM, dynamic_cast<ConstantSymbolEntry*>(se)->getValue());
     else if(se->isTemporary())
-        mope = new MachineOperand(MachineOperand::VREG, dynamic_cast<TemporarySymbolEntry*>(se)->getLabel());
+    {
+        if(se->getType()->isPointer()) {
+            if(dynamic_cast<PointerType*>(se->getType())->getValueType()->isArray()) {
+                mope = new MachineOperand(MachineOperand::IMM, dynamic_cast<TemporarySymbolEntry*>(se)->getOffset());
+            }
+        }
+        else {
+            mope = new MachineOperand(MachineOperand::VREG, dynamic_cast<TemporarySymbolEntry*>(se)->getLabel());
+        }
+    }
     else if(se->isVariable())
     {
         auto id_se = dynamic_cast<IdentifierSymbolEntry*>(se);
@@ -704,9 +713,21 @@ void StoreInstruction::genMachineCode(AsmBuilder* builder)
     else
     {
         // example: store r1, [r0]
-        auto dst = genMachineOperand(operands[0]);
-        cur_inst = new StoreMInstruction(cur_block, src, dst);
-        cur_block->InsertInst(cur_inst);
+        if(operands[0]->getEntry()->getType()->isArray()){
+            auto dst_addr = genMachineVReg();
+            auto fp = genMachineReg(11);
+            auto offset = genMachineOperand(operands[0]);
+            cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, dst_addr, fp, offset);
+            cur_block->InsertInst(cur_inst);
+
+            cur_inst = new StoreMInstruction(cur_block, src, dst_addr);
+            cur_block->InsertInst(cur_inst);
+        }
+        else{
+            auto dst = genMachineOperand(operands[0]);
+            cur_inst = new StoreMInstruction(cur_block, src, dst);
+            cur_block->InsertInst(cur_inst);
+        }
     }
 }
 
@@ -732,15 +753,6 @@ void BinaryInstruction::genMachineCode(AsmBuilder* builder)
         src1 = new MachineOperand(*internal_reg);
     }
     if(opcode == MUL || opcode == DIV || opcode == MOD)
-    {
-        if(src2->isImm())
-        {
-            auto internal_reg = genMachineVReg();
-            cur_inst = new LoadMInstruction(cur_block, internal_reg, src2);
-            cur_block->InsertInst(cur_inst);
-            src2 = new MachineOperand(*internal_reg);
-        }
-    }
     {
         if(src2->isImm())
         {

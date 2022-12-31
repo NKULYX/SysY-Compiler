@@ -93,9 +93,8 @@ class StmtNode : public Node
 
 class ExprStmtNode : public StmtNode
 {//注意：该类由ExprStmt与ArrayIndices共享，二者的行为完全一致
-private:
-    std::vector<ExprNode*> exprList;
 public:
+    std::vector<ExprNode*> exprList;
     ExprStmtNode(){};
     void addNext(ExprNode* next);
     void output(int level);
@@ -113,6 +112,7 @@ public:
     SymbolEntry* getSymbolEntry() {return symbolEntry;}
     bool isArray();     //必须配合indices!=nullptr使用（a[]的情况）
     void addIndices(ExprStmtNode* idx) {indices = idx;}
+    ExprStmtNode* getIndices() {return indices;};
     void output(int level);
     void typeCheck(Node** parentToChild);
     void genCode();

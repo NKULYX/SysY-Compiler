@@ -400,7 +400,38 @@ void AssignStmt::genCode()
      * We haven't implemented array yet, the lval can only be ID. So we just store the result of the `expr` to the addr of the id.
      * If you want to implement array, you have to caculate the address first and then store the result into it.
      */
-    new StoreInstruction(addr, src, bb);
+    if(lval->getType()->isArray()) {
+        ExprStmtNode* indices = dynamic_cast<Id*>(lval)->getIndices();
+        indices->genCode();
+        Operand* offset = indices->exprList[0]->getOperand();
+        std::vector<int> dimensions;
+        if(lval->getType()->isIntArray()){
+            dimensions = dynamic_cast<IntArrayType*>(lval->getType())->getDimensions();
+        }
+        else{
+            dimensions = dynamic_cast<FloatArrayType*>(lval->getType())->getDimensions();
+        }
+        for(unsigned int i = 1; i < indices->exprList.size(); i++) {
+            Operand* dim_i = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, dimensions[i]));
+            TemporarySymbolEntry* se1 = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            Operand* offset1 = new Operand(se1);
+            new BinaryInstruction(BinaryInstruction::MUL, offset1, offset, dim_i, bb);  //offset1 = offset * dimensions[i]
+            TemporarySymbolEntry* se2 = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            offset = new Operand(se2);
+            new BinaryInstruction(BinaryInstruction::ADD, offset, offset1, indices->exprList[i]->getOperand(), bb); //offset = offset1 + indices[i]
+        }
+        TemporarySymbolEntry* se1 = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+        Operand* offset1 = new Operand(se1);
+        Operand* align = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, 4));
+        new BinaryInstruction(BinaryInstruction::MUL, offset1, offset, align, bb);  //offset1 = offset * 4
+        TemporarySymbolEntry* se2 = new TemporarySymbolEntry(lval->getType(), SymbolTable::getLabel());
+        Operand* offset_final = new Operand(se2);
+        new BinaryInstruction(BinaryInstruction::ADD, offset_final, offset1, addr, bb);  //offset_final = offset1 + addr
+        new StoreInstruction(offset_final, src, bb);
+    }
+    else{
+        new StoreInstruction(addr, src, bb);
+    }
 }
 
 void WhileStmt::genCode()
@@ -531,13 +562,13 @@ void DefNode::genCode()
     //add array instructions here
     if(initVal!=nullptr){
         BasicBlock *bb = builder->getInsertBB();
-        initVal->genCode();
         if(!se->getType()->isArray()){
+            initVal->genCode();
             Operand *src = typeCast(se->getType(), dynamic_cast<ExprNode *>(initVal)->getOperand());
             new StoreInstruction(addr, src, bb);
         }
         else{
-            InitValNode* init = dynamic_cast<InitValNode *>(initVal);
+            
         }
         /***
          * We haven't implemented array yet, the lval can only be ID. So we just store the result of the `expr` to the addr of the id.
@@ -870,7 +901,9 @@ void Id::typeCheck(Node** parentToChild)
     if(isArray() && indices!=nullptr){
         indices->typeCheck(nullptr);
         // 检查indices下的exprList(私有域)中的每个exprNode的类型，若不为自然数则报错
-        if(((IdentifierSymbolEntry*)getSymPtr())->arrayDimension.empty()){
+        // if(((IdentifierSymbolEntry*)getSymPtr())->arrayDimension.empty()){
+        if((getType()->isIntArray() && dynamic_cast<IntArrayType*>(getType())->getDimensions().empty()) ||
+            (getType()->isFloatArray() && dynamic_cast<FloatArrayType*>(getType())->getDimensions().empty())){
             indices->initDimInSymTable((IdentifierSymbolEntry*)getSymPtr());
         }
         // 读取常量数组 这个不打算做了
@@ -1338,11 +1371,24 @@ void ExprStmtNode::initDimInSymTable(IdentifierSymbolEntry* se)
         }
         // 字面值常量，值存在ConstantSymbolEntry中
         if(expr->getSymPtr()->isConstant()){
-            se->arrayDimension.push_back((int)((ConstantSymbolEntry*)(expr->getSymPtr()))->getValue());
+            // se->arrayDimension.push_back((int)((ConstantSymbolEntry*)(expr->getSymPtr()))->getValue());
+            if(se->getType()->isIntArray()){
+                dynamic_cast<IntArrayType*>(se->getType())->pushBackDimension((int)((ConstantSymbolEntry*)(expr->getSymPtr()))->getValue());
+            }
+            else{
+                dynamic_cast<FloatArrayType*>(se->getType())->pushBackDimension((int)((ConstantSymbolEntry*)(expr->getSymPtr()))->getValue());
+            
+            }
         }
         // 常量表达式，值存在IdentifierSymbolEntry中
         else if(expr->getType()->isConst()){
-            se->arrayDimension.push_back((int)((IdentifierSymbolEntry*)(expr->getSymPtr()))->value);
+            // se->arrayDimension.push_back((int)((IdentifierSymbolEntry*)(expr->getSymPtr()))->value);
+            if(se->getType()->isIntArray()){
+                dynamic_cast<IntArrayType*>(se->getType())->pushBackDimension((int)((IdentifierSymbolEntry*)(expr->getSymPtr()))->value);
+            }
+            else{
+                dynamic_cast<FloatArrayType*>(se->getType())->pushBackDimension((int)((IdentifierSymbolEntry*)(expr->getSymPtr()))->value);
+            }
         }
     }
 }
