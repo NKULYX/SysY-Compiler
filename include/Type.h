@@ -8,10 +8,10 @@ class Type
 private:
     int kind;
     bool is_const;
-    int size;
 protected:
     // enum {INT, FLOAT, CONST_INT, CONST_FLOAT, VOID, BOOL, FUNC, INT_ARRAY, FLOAT_ARRAY, CONST_INT_ARRAY, CONST_FLOAT_ARRAY, PTR};
     enum {INT, FLOAT, VOID, BOOL, FUNC, INT_ARRAY, FLOAT_ARRAY, CONST_INT_ARRAY, CONST_FLOAT_ARRAY, PTR};
+    int size;
 public:
     explicit Type(int kind, bool is_const = false, int size = 0) : kind(kind), is_const(is_const), size(size){};
     virtual ~Type() {};
@@ -106,7 +106,7 @@ class IntArrayType : public Type
 private:
     std::vector<int> dimensions;
 public:
-    IntArrayType() : Type(Type::INT_ARRAY){};
+    IntArrayType() : Type(Type::INT_ARRAY){size = 4;};
     void pushBackDimension(int);
     std::vector<int> getDimensions();
     std::string toStr();
@@ -117,7 +117,7 @@ class FloatArrayType : public Type
 private:
     std::vector<int> dimensions;
 public:
-    FloatArrayType() : Type(Type::FLOAT_ARRAY){};
+    FloatArrayType() : Type(Type::FLOAT_ARRAY){size = 4;};
     void pushBackDimension(int);
     std::vector<int> getDimensions();
     std::string toStr();
@@ -128,7 +128,7 @@ class ConstIntArrayType : public Type
 private:
     std::vector<int> dimensions;
 public:
-    ConstIntArrayType() : Type(Type::CONST_INT_ARRAY){};
+    ConstIntArrayType() : Type(Type::CONST_INT_ARRAY){size = 4;};
     void pushBackDimension(int);
     std::vector<int> getDimensions();
     std::string toStr();
@@ -139,7 +139,7 @@ class ConstFloatArrayType : public Type
 private:
     std::vector<int> dimensions;
 public:
-    ConstFloatArrayType() : Type(Type::CONST_FLOAT_ARRAY){};
+    ConstFloatArrayType() : Type(Type::CONST_FLOAT_ARRAY){size = 4;};
     void pushBackDimension(int);
     std::vector<int> getDimensions();
     std::string toStr();
