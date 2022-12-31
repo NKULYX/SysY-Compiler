@@ -1,4 +1,5 @@
 #include "MachineCode.h"
+#include "Type.h"
 extern FILE* yyout;
 
 MachineOperand::MachineOperand(int tp, int val)
@@ -488,10 +489,21 @@ void MachineFunction::output()
     fprintf(yyout, "\tbx lr\n\n");
 }
 
+// TODO: 浮点数全局变量声明 数组全局变量声明
 void MachineUnit::PrintGlobalDecl()
 {
-    // TODO:
-    // You need to print global variable/const declarition code;
+    fprintf(yyout, "\t.data\n");
+    for(auto var : global_var_list) {
+        fprintf(yyout, "\t.global %s\n", var->toStr().erase(0,1).c_str());
+        fprintf(yyout, "\t.align 4\n");
+        fprintf(yyout,"\t.size %s, %d\n", var->toStr().erase(0,1).c_str(), var->getType()->getSize());
+        fprintf(yyout,"%s:\n", var->toStr().erase(0,1).c_str());
+        if(var->getType()->isInt()) {
+            fprintf(yyout, "\t.word %d\n", int(var->value));
+        } else {
+
+        }
+    }
 }
 
 void MachineUnit::output()
@@ -507,5 +519,16 @@ void MachineUnit::output()
     PrintGlobalDecl();
     for(auto iter : func_list)
         iter->output();
+    PrintGlobal();
 }
 
+void MachineUnit::insertGlobalVar(IdentifierSymbolEntry *sym_ptr) {
+    global_var_list.push_back(sym_ptr);
+}
+
+void MachineUnit::PrintGlobal() {
+    for (auto sym_ptr: global_var_list) {
+        fprintf(yyout, "addr_%s:\n", sym_ptr->toStr().erase(0,1).c_str());
+        fprintf(yyout, "\t.word %s\n", sym_ptr->toStr().erase(0,1).c_str());
+    }
+}

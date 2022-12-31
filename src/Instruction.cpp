@@ -553,6 +553,10 @@ MachineOperand* Instruction::genMachineOperand(Operand* ope)
 
             }
         }
+        // 如果是全局变量
+        else if(id_se->isGlobal()) {
+            mope = new MachineOperand(id_se->toStr().erase(0,1).c_str());
+        }
         else {
             if(type==TypeSystem::constIntType){
                 //TODO: add array manipulation here

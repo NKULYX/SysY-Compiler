@@ -36,6 +36,14 @@ void Unit::genMachineCode(MachineUnit* munit)
 {
     AsmBuilder* builder = new AsmBuilder();
     builder->setUnit(munit);
+    // 设置全局变量
+    for(auto decl : declare_func){
+        if(!decl->isLibFunc()){
+            if(!decl->isConstant()) {
+                munit->insertGlobalVar(decl);
+            }
+        }
+    }
     for (auto &func : func_list)
         func->genMachineCode(builder);
 }

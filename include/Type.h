@@ -8,11 +8,12 @@ class Type
 private:
     int kind;
     bool is_const;
+    int size;
 protected:
     // enum {INT, FLOAT, CONST_INT, CONST_FLOAT, VOID, BOOL, FUNC, INT_ARRAY, FLOAT_ARRAY, CONST_INT_ARRAY, CONST_FLOAT_ARRAY, PTR};
     enum {INT, FLOAT, VOID, BOOL, FUNC, INT_ARRAY, FLOAT_ARRAY, CONST_INT_ARRAY, CONST_FLOAT_ARRAY, PTR};
 public:
-    Type(int kind, bool is_const = false) : kind(kind), is_const(is_const) {};
+    explicit Type(int kind, bool is_const = false, int size = 0) : kind(kind), is_const(is_const), size(size){};
     virtual ~Type() {};
     virtual std::string toStr() = 0;
     bool isInt() const {return kind == INT;};
@@ -36,23 +37,20 @@ public:
     bool isAnyFloat() const {return kind == FLOAT || kind == FLOAT_ARRAY || kind == CONST_FLOAT_ARRAY;}
     bool calculatable() const {return isAnyInt()||isAnyFloat() || isBool();}//不是void其实就行
     bool isConst() const {return is_const || kind == CONST_INT_ARRAY || kind == CONST_FLOAT_ARRAY;}
+    int getSize() const {return this->size;}
 };
 
 class IntType : public Type
 {
-private:
-    int size;
 public:
-    IntType(int size, bool is_const = false) : Type(Type::INT, is_const), size(size){};
+    IntType(int size, bool is_const = false) : Type(Type::INT, is_const, size) {};
     std::string toStr();
 };
 
 class FloatType : public Type
 {
-private:
-    int size;
 public:
-    FloatType(int size, bool is_const = false) : Type(Type::FLOAT, is_const), size(size){};
+    FloatType(int size, bool is_const = false) : Type(Type::FLOAT, is_const, size){};
     std::string toStr();
 };
 
@@ -76,10 +74,8 @@ public:
 
 class BoolType : public Type
 {
-private:
-    int size;
 public:
-    BoolType(int size, bool is_const = false) : Type(Type::BOOL, is_const), size(size){};
+    BoolType(int size, bool is_const = false) : Type(Type::BOOL, is_const, size){};
     std::string toStr();
 };
 

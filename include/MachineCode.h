@@ -222,12 +222,15 @@ class MachineUnit
 {
 private:
     std::vector<MachineFunction*> func_list;
+    std::vector<IdentifierSymbolEntry*> global_var_list;
     void PrintGlobalDecl();
+    void PrintGlobal();
 public:
     std::vector<MachineFunction*>& getFuncs() {return func_list;};
     std::vector<MachineFunction*>::iterator begin() { return func_list.begin(); };
     std::vector<MachineFunction*>::iterator end() { return func_list.end(); };
     void InsertFunc(MachineFunction* func) { func_list.push_back(func);};
+    void insertGlobalVar(IdentifierSymbolEntry* sym_ptr);
     void output();
 };
 
