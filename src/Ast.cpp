@@ -532,12 +532,17 @@ void DefNode::genCode()
     if(initVal!=nullptr){
         BasicBlock *bb = builder->getInsertBB();
         initVal->genCode();
-        Operand *src = typeCast(se->getType(), dynamic_cast<ExprNode *>(initVal)->getOperand());
+        if(!se->getType()->isArray()){
+            Operand *src = typeCast(se->getType(), dynamic_cast<ExprNode *>(initVal)->getOperand());
+            new StoreInstruction(addr, src, bb);
+        }
+        else{
+            InitValNode* init = dynamic_cast<InitValNode *>(initVal);
+        }
         /***
          * We haven't implemented array yet, the lval can only be ID. So we just store the result of the `expr` to the addr of the id.
          * If you want to implement array, you have to caculate the address first and then store the result into it.
          */
-        new StoreInstruction(addr, src, bb);
     }
 }
 
