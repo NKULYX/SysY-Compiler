@@ -853,6 +853,12 @@ void Constant::typeCheck(Node** parentToChild){}
 void Id::typeCheck(Node** parentToChild)
 {
     // 如果是一个普通变量就什么也不做
+    // 如果是一个常量
+    if(symbolEntry->getType()->isConst() && parentToChild != nullptr) {
+        ConstantSymbolEntry* newConst = new ConstantSymbolEntry(symbolEntry->getType(), dynamic_cast<IdentifierSymbolEntry*>(symbolEntry)->value);
+        Constant* newNode = new Constant(newConst);
+        *parentToChild = newNode;
+    }
     // 如果是数组 要看看维度信息有没有初始化
     // 由于在语法解析阶段已经判断了标识符先定义再使用
     // 所以如果维度信息还未初始化则说明当前是数组定义阶段

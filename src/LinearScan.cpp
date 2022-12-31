@@ -165,7 +165,7 @@ bool LinearScan::linearScanRegisterAllocation()
     for(auto &interval : intervals){
         expireOldIntervals(interval);
         //判断 active 列表中 interval 的数目和可用的物理寄存器数目是否相等
-        if(active.size()==regs.size()){//溢出
+        if(regs.size() == 0){//溢出
             spillAtInterval(interval);
             retValue = false;
         }

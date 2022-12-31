@@ -67,10 +67,10 @@ int main(int argc, char *argv[])
     }
     yyparse();
     ast.typeCheck();
-//    if(dump_ast)
+    if(dump_ast)
         ast.output();
     ast.genCode(&unit);
-//    if(dump_ir)
+    if(dump_ir)
         unit.output();
     unit.genMachineCode(&mUnit);
     LinearScan linearScan(&mUnit);
