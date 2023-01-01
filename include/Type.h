@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 
+class TypeSystem;
+
 class Type
 {
 private:

@@ -7,6 +7,7 @@
 #include "Unit.h"
 #include "Instruction.h"
 #include "IRBuilder.h"
+#include "ArrayUtil.h"
 
 extern FILE *yyout;
 int Node::counter = 0;
@@ -529,7 +530,33 @@ void BreakStmt::genCode()
 
 void InitValNode::genCode()
 {
-    // Todo
+    ArrayUtil::incCurrentDim();
+    // 如果是叶子节点 则需要通过 store 进行赋值
+    if(isLeaf()) {
+        // 先对 leafNode genCode
+        leafNode->genCode();
+        // 从leafNode中获取初始值
+        Operand* src = leafNode->getOperand();
+        int offset = ArrayUtil::getCurrentOffset() * 4;
+        Operand* offset_operand = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, offset));
+        Operand* final_offset = new Operand(new TemporarySymbolEntry(ArrayUtil::getArrayType(), SymbolTable::getLabel()));
+        Operand* addr = ArrayUtil::getArrayAddr();
+        // 计算最终地址偏移
+        new BinaryInstruction(BinaryInstruction::ADD, final_offset, offset_operand, addr, builder->getInsertBB());
+        // 插入 store 指令
+        new StoreInstruction(final_offset, src, builder->getInsertBB());
+    }
+    // 如果不是叶子节点 则递归
+    else {
+        int currentDim = ArrayUtil::getcurrentArrayDim();
+        int nextDimSize = ArrayUtil::getDimSize(currentDim + 1);
+        int currentOffset = ArrayUtil::getCurrentOffset();
+        for(int i = 0; i < innerList.size(); i++) {
+            ArrayUtil::setCurrentOffset(currentOffset + i * nextDimSize);
+            innerList[i]->genCode();
+        }
+    }
+    ArrayUtil::decCurrentDim();
 }
 
 void DefNode::genCode()
@@ -568,7 +595,10 @@ void DefNode::genCode()
             new StoreInstruction(addr, src, bb);
         }
         else{
-            
+            ArrayUtil::init();
+            ArrayUtil::setArrayType(se->getType());
+            ArrayUtil::setArrayAddr(addr);
+            initVal->genCode();
         }
         /***
          * We haven't implemented array yet, the lval can only be ID. So we just store the result of the `expr` to the addr of the id.
@@ -1063,7 +1093,19 @@ void WhileStmt::typeCheck(Node** parentToChild)
 
 void InitValNode::typeCheck(Node** parentToChild)
 {
-    
+    // 首先判断是否到叶节点
+    if(isLeaf()) {
+        // 如果叶节点有初始值
+        if(this->leafNode != nullptr) {
+            this->leafNode->typeCheck((Node**)&(this->leafNode));
+        }
+    }
+    // 如果不是叶节点则需要递归
+    else {
+        for(auto & child : innerList){
+            child->typeCheck((Node**)&child);
+        }
+    }
 }
 
 // TODO: 这段代码逻辑太乱了，需要重构
