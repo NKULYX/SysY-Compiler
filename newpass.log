@@ -102,7 +102,7 @@ FAIL: 077_matrix_tran	Compile Error
 FAIL: 078_big_int_mul	Wrong Answer
 FAIL: 081_exgcd	Compile Error
 FAIL: 083_brainfk	Compile Error
-FAIL: 085_dijkstra	Compile Timeout
+PASS: 085_dijkstra
 FAIL: 086_full_conn	Compile Error
 FAIL: 089_hidden_var	Compile Error
 FAIL: 091_kmp	Compile Error
@@ -140,13 +140,13 @@ FAIL: 107_long_code2	Compile Timeout
 FAIL: 108_many_params	Compile Error
 FAIL: 109_many_params2	Compile Error
 FAIL: 110_many_params3	Compile Error
-FAIL: 111_many_globals	Compile Timeout
+FAIL: 111_many_globals	Compile Error
 FAIL: 112_many_locals	Wrong Answer
 PASS: 113_many_locals2
 PASS: 114_register_alloc
-FAIL: 115_nested_calls	Compile Timeout
+FAIL: 115_nested_calls	Compile Error
 PASS: 116_nested_calls2
-FAIL: 117_nested_loops	Compile Error
+FAIL: 117_nested_loops	Assemble Error
 FAIL: 196_float	Compile Error
 FAIL: 198_matrix_add	Compile Error
 FAIL: 199_matrix_sub	Compile Error
@@ -158,4 +158,4 @@ FAIL: 36_rotate	Assemble Error
 FAIL: 37_dct	Compile Error
 FAIL: 38_light2d	Compile Error
 FAIL: 39_fp_params	Compile Error
-Total: 160	Accept: 90	Fail: 70
+Total: 160	Accept: 91	Fail: 69

@@ -1,4 +1,20 @@
-143c143
-< FAIL: 111_many_globals	Compile Error
+105c105
+< FAIL: 085_dijkstra	Compile Timeout
 ---
-> FAIL: 111_many_globals	Compile Timeout
+> PASS: 085_dijkstra
+143c143
+< FAIL: 111_many_globals	Compile Timeout
+---
+> FAIL: 111_many_globals	Compile Error
+147c147
+< FAIL: 115_nested_calls	Compile Timeout
+---
+> FAIL: 115_nested_calls	Compile Error
+149c149
+< FAIL: 117_nested_loops	Compile Error
+---
+> FAIL: 117_nested_loops	Assemble Error
+161c161
+< Total: 160	Accept: 90	Fail: 70
+---
+> Total: 160	Accept: 91	Fail: 69
