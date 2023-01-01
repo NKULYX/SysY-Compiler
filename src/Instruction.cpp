@@ -622,15 +622,21 @@ void LoadInstruction::genMachineCode(AsmBuilder* builder)
     && dynamic_cast<IdentifierSymbolEntry*>(operands[1]->getEntry())->isGlobal())
     {
         auto dst = genMachineOperand(operands[0]);
-        auto internal_reg1 = genMachineVReg();
-        auto internal_reg2 = new MachineOperand(*internal_reg1);
         auto src = genMachineOperand(operands[1]);
-        // example: load r0, addr_a
-        cur_inst = new LoadMInstruction(cur_block, internal_reg1, src);
-        cur_block->InsertInst(cur_inst);
-        // example: load r1, [r0]
-        cur_inst = new LoadMInstruction(cur_block, dst, internal_reg2);
-        cur_block->InsertInst(cur_inst);
+        if(operands[0]->getType()->isArray()){
+            cur_inst = new LoadMInstruction(cur_block, dst, src);
+            cur_block->InsertInst(cur_inst);
+        }
+        else{
+            auto internal_reg1 = genMachineVReg();
+            auto internal_reg2 = new MachineOperand(*internal_reg1);
+            // example: load r0, addr_a
+            cur_inst = new LoadMInstruction(cur_block, internal_reg1, src);
+            cur_block->InsertInst(cur_inst);
+            // example: load r1, [r0]
+            cur_inst = new LoadMInstruction(cur_block, dst, internal_reg2);
+            cur_block->InsertInst(cur_inst);
+        }
     }
     // Load local operand
     else if(operands[1]->getEntry()->isTemporary()
@@ -652,11 +658,33 @@ void LoadInstruction::genMachineCode(AsmBuilder* builder)
     // Load operand from temporary variable
     else
     {
-        // example: load r1, [r0]
-        auto dst = genMachineOperand(operands[0]);
-        auto src = genMachineOperand(operands[1]);
-        cur_inst = new LoadMInstruction(cur_block, dst, src);
-        cur_block->InsertInst(cur_inst);
+        if(operands[0]->getEntry()->getType()->isArray()){
+            //如果是全局数组，不需要将offset与fp相加
+            if(dynamic_cast<TemporarySymbolEntry*>(operands[1]->getEntry())->getGlobalArray()){
+                auto dst = genMachineOperand(operands[0]);
+                auto src_addr = genMachineOperand(operands[1]);
+                cur_inst = new LoadMInstruction(cur_block, dst, src_addr);
+                cur_block->InsertInst(cur_inst);
+            }
+            else{
+                auto src_addr = genMachineVReg();
+                auto fp = genMachineReg(11);
+                auto offset = genMachineOperand(operands[1]);
+                auto dst = genMachineOperand(operands[0]);
+                cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, src_addr, fp, offset);
+                cur_block->InsertInst(cur_inst);
+
+                cur_inst = new LoadMInstruction(cur_block, dst, src_addr);
+                cur_block->InsertInst(cur_inst);
+            }
+        }
+        else{
+            // example: load r1, [r0]
+            auto dst = genMachineOperand(operands[0]);
+            auto src = genMachineOperand(operands[1]);
+            cur_inst = new LoadMInstruction(cur_block, dst, src);
+            cur_block->InsertInst(cur_inst);
+        }
     }
 }
 
@@ -714,14 +742,22 @@ void StoreInstruction::genMachineCode(AsmBuilder* builder)
     {
         // example: store r1, [r0]
         if(operands[0]->getEntry()->getType()->isArray()){
-            auto dst_addr = genMachineVReg();
-            auto fp = genMachineReg(11);
-            auto offset = genMachineOperand(operands[0]);
-            cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, dst_addr, fp, offset);
-            cur_block->InsertInst(cur_inst);
+            //如果是全局数组访问，不需要将offset与fp相加（丑）
+            if(dynamic_cast<TemporarySymbolEntry*>(operands[0]->getEntry())->getGlobalArray()){
+                auto dst_addr = genMachineOperand(operands[0]);
+                cur_inst = new StoreMInstruction(cur_block, src, dst_addr);
+                cur_block->InsertInst(cur_inst);
+            }
+            else{
+                auto dst_addr = genMachineVReg();
+                auto fp = genMachineReg(11);
+                auto offset = genMachineOperand(operands[0]);
+                cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, dst_addr, fp, offset);
+                cur_block->InsertInst(cur_inst);
 
-            cur_inst = new StoreMInstruction(cur_block, src, dst_addr);
-            cur_block->InsertInst(cur_inst);
+                cur_inst = new StoreMInstruction(cur_block, src, dst_addr);
+                cur_block->InsertInst(cur_inst);
+            }
         }
         else{
             auto dst = genMachineOperand(operands[0]);

@@ -167,6 +167,7 @@ bool LinearScan::linearScanRegisterAllocation()
         //判断 active 列表中 interval 的数目和可用的物理寄存器数目是否相等
         if(regs.size() == 0){//溢出
             spillAtInterval(interval);
+            // printf("%d\t%d\n", interval->start, interval->end);
             retValue = false;
         }
         else{//当前有可用于分配的物理寄存器

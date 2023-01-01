@@ -103,6 +103,7 @@ bool IdentifierSymbolEntry::isLibFunc()
 TemporarySymbolEntry::TemporarySymbolEntry(Type *type, int label) : SymbolEntry(type, SymbolEntry::TEMPORARY)
 {
     this->label = label;
+    isGlobalArray = false;
 }
 
 std::string TemporarySymbolEntry::toStr()

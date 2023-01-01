@@ -298,13 +298,51 @@ void Constant::genCode()
 
 void Id::genCode()
 {
-    if(getType()->isConst()){
+    if(getType()->isConst() && !getType()->isArray()){
         return;
     }
     BasicBlock *bb = builder->getInsertBB();
     Operand *addr = dynamic_cast<IdentifierSymbolEntry*>(symbolEntry)->getAddr();
     dst = new Operand(new TemporarySymbolEntry(dst->getType(), SymbolTable::getLabel()));
-    new LoadInstruction(dst, addr, bb);
+    if(getType()->isArray()){
+        indices->genCode();
+        Operand* offset = indices->exprList[0]->getOperand();
+        std::vector<int> dimensions;
+        if(getType()->isIntArray()){
+            dimensions = dynamic_cast<IntArrayType*>(getType())->getDimensions();
+        }
+        else{
+            dimensions = dynamic_cast<FloatArrayType*>(getType())->getDimensions();
+        }
+        for(unsigned int i = 1; i < indices->exprList.size(); i++) {
+            Operand* dim_i = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, dimensions[i]));
+            TemporarySymbolEntry* se1 = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            Operand* offset1 = new Operand(se1);
+            new BinaryInstruction(BinaryInstruction::MUL, offset1, offset, dim_i, bb);  //offset1 = offset * dimensions[i]
+            TemporarySymbolEntry* se2 = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            offset = new Operand(se2);
+            new BinaryInstruction(BinaryInstruction::ADD, offset, offset1, indices->exprList[i]->getOperand(), bb); //offset = offset1 + indices[i]
+        }
+        TemporarySymbolEntry* se1 = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+        Operand* offset1 = new Operand(se1);
+        Operand* align = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, 4));
+        new BinaryInstruction(BinaryInstruction::MUL, offset1, offset, align, bb);  //offset1 = offset * 4
+        TemporarySymbolEntry* se2 = new TemporarySymbolEntry(getType(), SymbolTable::getLabel());
+        Operand* offset_final = new Operand(se2);
+        // 全局变量地址标签不能直接参与运算，需要先load
+        if(dynamic_cast<IdentifierSymbolEntry*>(getSymbolEntry())->isGlobal()){
+            TemporarySymbolEntry* se3 = new TemporarySymbolEntry(getType(), SymbolTable::getLabel());
+            Operand* new_addr = new Operand(se3);
+            new LoadInstruction(new_addr, addr, bb);
+            addr = new_addr;
+            se2->setGlobalArray();
+        }
+        new BinaryInstruction(BinaryInstruction::ADD, offset_final, offset1, addr, bb);  //offset_final = offset1 + addr
+        new LoadInstruction(dst, offset_final, bb);
+    }
+    else{
+        new LoadInstruction(dst, addr, bb);
+    }
 }
 
 void IfStmt::genCode()
@@ -427,6 +465,14 @@ void AssignStmt::genCode()
         new BinaryInstruction(BinaryInstruction::MUL, offset1, offset, align, bb);  //offset1 = offset * 4
         TemporarySymbolEntry* se2 = new TemporarySymbolEntry(lval->getType(), SymbolTable::getLabel());
         Operand* offset_final = new Operand(se2);
+        // 全局变量地址标签不能直接参与运算，需要先load
+        if(dynamic_cast<IdentifierSymbolEntry*>(dynamic_cast<Id*>(lval)->getSymbolEntry())->isGlobal()){
+            TemporarySymbolEntry* se3 = new TemporarySymbolEntry(lval->getType(), SymbolTable::getLabel());
+            Operand* new_addr = new Operand(se3);
+            new LoadInstruction(new_addr, addr, bb);
+            addr = new_addr;
+            se2->setGlobalArray();
+        }
         new BinaryInstruction(BinaryInstruction::ADD, offset_final, offset1, addr, bb);  //offset_final = offset1 + addr
         new StoreInstruction(offset_final, src, bb);
     }
@@ -1205,11 +1251,11 @@ void FuncCallNode::typeCheck(Node** parentToChild)
             exit(EXIT_FAILURE);
         }
         // 检查数组是否匹配
-        if((!needType->isArray() && giveType->isArray())
-         ||(needType->isArray() && !giveType->isArray())){
-            fprintf(stderr, "function %s call params type is not consistent\n",this->funcId->getSymPtr()->toStr().c_str());
-            exit(EXIT_FAILURE);
-        }
+        // if((!needType->isArray() && giveType->isArray())
+        //  ||(needType->isArray() && !giveType->isArray())){
+        //     fprintf(stderr, "function %s call params type is not consistent\n",this->funcId->getSymPtr()->toStr().c_str());
+        //     exit(EXIT_FAILURE);
+        // }
         //TODO: 检查数组维度是否匹配
         if(needType->isArray() && giveType->isArray()){
 

@@ -1,16 +1,4 @@
-63c63
-< FAIL: 102_short_circuit3	Wrong Answer
+143c143
+< FAIL: 111_many_globals	Compile Error
 ---
-> PASS: 102_short_circuit3
-149c149
-< FAIL: 117_nested_loops	Compile Error
----
-> FAIL: 117_nested_loops	Assemble Error
-157c157
-< FAIL: 36_rotate	Assemble Error
----
-> FAIL: 36_rotate	Compile Timeout
-161c161
-< Total: 160	Accept: 79	Fail: 81
----
-> Total: 160	Accept: 80	Fail: 80
+> FAIL: 111_many_globals	Compile Timeout
