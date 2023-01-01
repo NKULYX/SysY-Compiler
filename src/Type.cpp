@@ -102,6 +102,7 @@ std::string IntArrayType::toStr()
 
 void FloatArrayType::pushBackDimension(int dim)
 {
+    size *= dim;
     dimensions.push_back(dim);
 }
 
@@ -116,6 +117,7 @@ std::string FloatArrayType::toStr()
 }
 void ConstIntArrayType::pushBackDimension(int dim)
 {
+    size *= dim;
     dimensions.push_back(dim);
 }
 
@@ -131,6 +133,7 @@ std::string ConstIntArrayType::toStr()
 
 void ConstFloatArrayType::pushBackDimension(int dim)
 {
+    size *= dim;
     dimensions.push_back(dim);
 }
 

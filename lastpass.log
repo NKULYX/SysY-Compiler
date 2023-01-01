@@ -83,8 +83,8 @@ PASS: 087_gcd
 PASS: 088_hanoi
 PASS: 004_arr_defn
 PASS: 005_arr_defn2
-FAIL: 006_arr_defn3	Wrong Answer
-FAIL: 007_arr_defn4	Wrong Answer
+PASS: 006_arr_defn3
+PASS: 007_arr_defn4
 FAIL: 011_const_array_defn	Compile Error
 FAIL: 042_arr_expr_len	Compile Error
 FAIL: 061_sort_test1	Compile Error
@@ -93,16 +93,16 @@ FAIL: 064_sort_test4	Compile Error
 FAIL: 066_sort_test6	Compile Error
 PASS: 068_genealogical_tree
 FAIL: 070_multiplication_puzzle	Compile Error
-FAIL: 071_exchange_array	Wrong Answer
+PASS: 071_exchange_array
 FAIL: 073_backpack	Compile Error
 FAIL: 074_matrix_add	Compile Error
 FAIL: 075_matrix_sub	Compile Error
 FAIL: 076_matrix_mul	Compile Error
 FAIL: 077_matrix_tran	Compile Error
-FAIL: 078_big_int_mul	Wrong Answer
+PASS: 078_big_int_mul
 FAIL: 081_exgcd	Compile Error
 FAIL: 083_brainfk	Compile Error
-FAIL: 085_dijkstra	Compile Timeout
+PASS: 085_dijkstra
 FAIL: 086_full_conn	Compile Error
 FAIL: 089_hidden_var	Compile Error
 FAIL: 091_kmp	Compile Error
@@ -130,21 +130,21 @@ PASS: 072_percolation
 FAIL: 079_calculator	Compile Error
 FAIL: 080_color	Compile Error
 FAIL: 084_expr_eval	Compile Error
-FAIL: 097_var_name	Wrong Answer
+PASS: 097_var_name
 FAIL: 098_chaos_token	Compile Error
 FAIL: 103_long_func	Compile Error
 FAIL: 104_long_array	Assemble Error
-PASS: 105_long_array2
+FAIL: 105_long_array2	Compile Timeout
 FAIL: 106_long_code	Compile Error
 FAIL: 107_long_code2	Compile Timeout
 FAIL: 108_many_params	Compile Error
 FAIL: 109_many_params2	Compile Error
 FAIL: 110_many_params3	Compile Error
-FAIL: 111_many_globals	Compile Timeout
-FAIL: 112_many_locals	Wrong Answer
+FAIL: 111_many_globals	Compile Error
+PASS: 112_many_locals
 PASS: 113_many_locals2
 PASS: 114_register_alloc
-FAIL: 115_nested_calls	Compile Timeout
+FAIL: 115_nested_calls	Compile Error
 PASS: 116_nested_calls2
 FAIL: 117_nested_loops	Compile Error
 FAIL: 196_float	Compile Error
@@ -158,4 +158,4 @@ FAIL: 36_rotate	Assemble Error
 FAIL: 37_dct	Compile Error
 FAIL: 38_light2d	Compile Error
 FAIL: 39_fp_params	Compile Error
-Total: 160	Accept: 90	Fail: 70
+Total: 160	Accept: 96	Fail: 64

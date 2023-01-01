@@ -1,20 +1,22 @@
-105c105
-< FAIL: 085_dijkstra	Compile Timeout
+88,89c88,89
+< FAIL: 011_const_array_defn	Compile Error
+< FAIL: 042_arr_expr_len	Compile Error
 ---
-> PASS: 085_dijkstra
-143c143
-< FAIL: 111_many_globals	Compile Timeout
+> PASS: 011_const_array_defn
+> PASS: 042_arr_expr_len
+95c95
+< FAIL: 070_multiplication_puzzle	Compile Error
 ---
-> FAIL: 111_many_globals	Compile Error
-147c147
-< FAIL: 115_nested_calls	Compile Timeout
+> PASS: 070_multiplication_puzzle
+107c107
+< FAIL: 089_hidden_var	Compile Error
 ---
-> FAIL: 115_nested_calls	Compile Error
-149c149
-< FAIL: 117_nested_loops	Compile Error
+> PASS: 089_hidden_var
+135c135
+< FAIL: 103_long_func	Compile Error
 ---
-> FAIL: 117_nested_loops	Assemble Error
+> FAIL: 103_long_func	Compile Timeout
 161c161
-< Total: 160	Accept: 90	Fail: 70
+< Total: 160	Accept: 96	Fail: 64
 ---
-> Total: 160	Accept: 91	Fail: 69
+> Total: 160	Accept: 100	Fail: 60

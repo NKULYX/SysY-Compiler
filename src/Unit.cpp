@@ -39,7 +39,7 @@ void Unit::genMachineCode(MachineUnit* munit)
     builder->setUnit(munit);
     // 设置全局变量
     for(auto decl : declare_func){
-        if(!decl->isLibFunc() && !decl->getType()->isConst()) {
+        if((!decl->isLibFunc() && !decl->getType()->isConst()) || decl->getType()->isArray()) {
             munit->insertGlobalVar(decl);
         }
     }
