@@ -140,7 +140,7 @@ FAIL: 107_long_code2	Compile Timeout
 FAIL: 108_many_params	Compile Error
 FAIL: 109_many_params2	Compile Error
 FAIL: 110_many_params3	Compile Error
-FAIL: 111_many_globals	Compile Error
+FAIL: 111_many_globals	Compile Timeout
 FAIL: 112_many_locals	Wrong Answer
 PASS: 113_many_locals2
 PASS: 114_register_alloc

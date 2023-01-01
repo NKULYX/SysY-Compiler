@@ -162,6 +162,10 @@ void LinearScan::computeLiveIntervals()
 bool LinearScan::linearScanRegisterAllocation()
 {
     bool retValue = true;
+    active.clear();
+    regs.clear();
+    for (int i = 4; i < 11; i++)
+        regs.push_back(i);
     for(auto &interval : intervals){
         expireOldIntervals(interval);
         //判断 active 列表中 interval 的数目和可用的物理寄存器数目是否相等
