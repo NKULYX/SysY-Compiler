@@ -494,14 +494,19 @@ void MachineUnit::PrintGlobalDecl()
 {
     fprintf(yyout, "\t.data\n");
     for(auto var : global_var_list) {
-        fprintf(yyout, "\t.global %s\n", var->toStr().erase(0,1).c_str());
-        fprintf(yyout, "\t.align 4\n");
-        fprintf(yyout,"\t.size %s, %d\n", var->toStr().erase(0,1).c_str(), var->getType()->getSize());
-        fprintf(yyout,"%s:\n", var->toStr().erase(0,1).c_str());
-        if(var->getType()->isInt()) {
-            fprintf(yyout, "\t.word %d\n", int(var->value));
-        } else {
+        if(var->getType()->isArray()) {
+            fprintf(yyout, "\t.comm\t%s,%d,4\n", var->toStr().erase(0,1).c_str(), var->getType()->getSize());
+        }
+        else {
+            fprintf(yyout, "\t.global %s\n", var->toStr().erase(0,1).c_str());
+            fprintf(yyout, "\t.align 4\n");
+            fprintf(yyout,"\t.size %s, %d\n", var->toStr().erase(0,1).c_str(), var->getType()->getSize());
+            fprintf(yyout,"%s:\n", var->toStr().erase(0,1).c_str());
+            if(var->getType()->isInt()) {
+                fprintf(yyout, "\t.word %d\n", int(var->value));
+            } else {
 
+            }
         }
     }
 }

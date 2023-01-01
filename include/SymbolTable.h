@@ -132,6 +132,7 @@ class TemporarySymbolEntry : public SymbolEntry
 private:
     int stack_offset;
     int label;
+    bool isGlobalArray;
 public:
     TemporarySymbolEntry(Type *type, int label);
     virtual ~TemporarySymbolEntry() {};
@@ -139,6 +140,8 @@ public:
     int getLabel() const {return label;};
     void setOffset(int offset) { this->stack_offset = offset; };
     int getOffset() { return this->stack_offset; };
+    void setGlobalArray() {isGlobalArray = true;};
+    bool getGlobalArray() {return isGlobalArray;};
     // You can add any function you need here.
 };
 
