@@ -60,7 +60,7 @@ PASS: 040_while_if_test2
 PASS: 041_while_if_test3
 PASS: 069_greatest_common_divisor
 PASS: 100_int_literal
-FAIL: 102_short_circuit3	Wrong Answer
+PASS: 102_short_circuit3
 PASS: 1074_itera_sqrt
 FAIL: 1075_max_container	Compile Error
 PASS: 1076_int_factor_sum
@@ -146,7 +146,7 @@ PASS: 113_many_locals2
 PASS: 114_register_alloc
 FAIL: 115_nested_calls	Compile Error
 PASS: 116_nested_calls2
-FAIL: 117_nested_loops	Compile Error
+FAIL: 117_nested_loops	Assemble Error
 FAIL: 196_float	Compile Error
 FAIL: 198_matrix_add	Compile Error
 FAIL: 199_matrix_sub	Compile Error
@@ -154,8 +154,8 @@ FAIL: 200_matrix_mul	Assemble Error
 FAIL: 201_matrix_tran	Assemble Error
 PASS: 202_register_realloc
 FAIL: 35_math	Assemble Error
-FAIL: 36_rotate	Assemble Error
+FAIL: 36_rotate	Compile Timeout
 FAIL: 37_dct	Compile Error
 FAIL: 38_light2d	Assemble Error
 FAIL: 39_fp_params	Compile Error
-Total: 160	Accept: 79	Fail: 81
+Total: 160	Accept: 80	Fail: 80

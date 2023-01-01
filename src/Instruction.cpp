@@ -652,11 +652,24 @@ void LoadInstruction::genMachineCode(AsmBuilder* builder)
     // Load operand from temporary variable
     else
     {
-        // example: load r1, [r0]
-        auto dst = genMachineOperand(operands[0]);
-        auto src = genMachineOperand(operands[1]);
-        cur_inst = new LoadMInstruction(cur_block, dst, src);
-        cur_block->InsertInst(cur_inst);
+        if(operands[0]->getEntry()->getType()->isArray()){
+            auto src_addr = genMachineVReg();
+            auto fp = genMachineReg(11);
+            auto offset = genMachineOperand(operands[1]);
+            auto dst = genMachineOperand(operands[0]);
+            cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, src_addr, fp, offset);
+            cur_block->InsertInst(cur_inst);
+
+            cur_inst = new LoadMInstruction(cur_block, dst, src_addr);
+            cur_block->InsertInst(cur_inst);
+        }
+        else{
+            // example: load r1, [r0]
+            auto dst = genMachineOperand(operands[0]);
+            auto src = genMachineOperand(operands[1]);
+            cur_inst = new LoadMInstruction(cur_block, dst, src);
+            cur_block->InsertInst(cur_inst);
+        }
     }
 }
 

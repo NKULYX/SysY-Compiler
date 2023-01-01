@@ -1,16 +1,78 @@
-63c63
-< FAIL: 102_short_circuit3	Wrong Answer
+44c44
+< FAIL: 099_skip_spaces	Assemble Error
 ---
-> PASS: 102_short_circuit3
+> PASS: 099_skip_spaces
+86,87c86,87
+< FAIL: 006_arr_defn3	Compile Error
+< FAIL: 007_arr_defn4	Compile Error
+---
+> FAIL: 006_arr_defn3	Wrong Answer
+> FAIL: 007_arr_defn4	Wrong Answer
+96c96
+< FAIL: 071_exchange_array	Compile Error
+---
+> FAIL: 071_exchange_array	Wrong Answer
+100,101c100,101
+< FAIL: 076_matrix_mul	Assemble Error
+< FAIL: 077_matrix_tran	Assemble Error
+---
+> FAIL: 076_matrix_mul	Compile Error
+> FAIL: 077_matrix_tran	Compile Error
+106c106
+< FAIL: 086_full_conn	Assemble Error
+---
+> FAIL: 086_full_conn	Compile Error
+112c112
+< FAIL: 1066_go_upstairs	Assemble Error
+---
+> PASS: 1066_go_upstairs
+115,117c115,117
+< FAIL: 1071_max_subsequence_sum	Assemble Error
+< FAIL: 1077_unique_path	Assemble Error
+< FAIL: 1081_jump_game	Assemble Error
+---
+> FAIL: 1071_max_subsequence_sum	Compile Error
+> PASS: 1077_unique_path
+> FAIL: 1081_jump_game	Compile Error
+119,120c119,120
+< FAIL: 1084_palindrome_number	Assemble Error
+< FAIL: 1086_bin_search	Assemble Error
+---
+> PASS: 1084_palindrome_number
+> PASS: 1086_bin_search
+123c123
+< FAIL: 1091_line_search	Assemble Error
+---
+> PASS: 1091_line_search
+137c137
+< FAIL: 105_long_array2	Compile Error
+---
+> FAIL: 105_long_array2	Assemble Error
+143,144c143,144
+< FAIL: 111_many_globals	Compile Error
+< FAIL: 112_many_locals	Compile Error
+---
+> FAIL: 111_many_globals	Compile Timeout
+> FAIL: 112_many_locals	Wrong Answer
 149c149
-< FAIL: 117_nested_loops	Compile Error
+< FAIL: 117_nested_loops	Assemble Error
 ---
-> FAIL: 117_nested_loops	Assemble Error
+> FAIL: 117_nested_loops	Compile Error
+153,154c153,154
+< FAIL: 200_matrix_mul	Assemble Error
+< FAIL: 201_matrix_tran	Assemble Error
+---
+> FAIL: 200_matrix_mul	Compile Error
+> FAIL: 201_matrix_tran	Compile Error
 157c157
-< FAIL: 36_rotate	Assemble Error
+< FAIL: 36_rotate	Compile Timeout
 ---
-> FAIL: 36_rotate	Compile Timeout
+> FAIL: 36_rotate	Assemble Error
+159c159
+< FAIL: 38_light2d	Assemble Error
+---
+> FAIL: 38_light2d	Compile Error
 161c161
-< Total: 160	Accept: 79	Fail: 81
+< Total: 160	Accept: 80	Fail: 80
 ---
-> Total: 160	Accept: 80	Fail: 80
+> Total: 160	Accept: 86	Fail: 74

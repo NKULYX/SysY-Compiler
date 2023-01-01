@@ -297,13 +297,43 @@ void Constant::genCode()
 
 void Id::genCode()
 {
-    if(getType()->isConst()){
+    if(getType()->isConst() && !getType()->isArray()){
         return;
     }
     BasicBlock *bb = builder->getInsertBB();
     Operand *addr = dynamic_cast<IdentifierSymbolEntry*>(symbolEntry)->getAddr();
     dst = new Operand(new TemporarySymbolEntry(dst->getType(), SymbolTable::getLabel()));
-    new LoadInstruction(dst, addr, bb);
+    if(getType()->isArray()){
+        indices->genCode();
+        Operand* offset = indices->exprList[0]->getOperand();
+        std::vector<int> dimensions;
+        if(getType()->isIntArray()){
+            dimensions = dynamic_cast<IntArrayType*>(getType())->getDimensions();
+        }
+        else{
+            dimensions = dynamic_cast<FloatArrayType*>(getType())->getDimensions();
+        }
+        for(unsigned int i = 1; i < indices->exprList.size(); i++) {
+            Operand* dim_i = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, dimensions[i]));
+            TemporarySymbolEntry* se1 = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            Operand* offset1 = new Operand(se1);
+            new BinaryInstruction(BinaryInstruction::MUL, offset1, offset, dim_i, bb);  //offset1 = offset * dimensions[i]
+            TemporarySymbolEntry* se2 = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            offset = new Operand(se2);
+            new BinaryInstruction(BinaryInstruction::ADD, offset, offset1, indices->exprList[i]->getOperand(), bb); //offset = offset1 + indices[i]
+        }
+        TemporarySymbolEntry* se1 = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+        Operand* offset1 = new Operand(se1);
+        Operand* align = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, 4));
+        new BinaryInstruction(BinaryInstruction::MUL, offset1, offset, align, bb);  //offset1 = offset * 4
+        TemporarySymbolEntry* se2 = new TemporarySymbolEntry(getType(), SymbolTable::getLabel());
+        Operand* offset_final = new Operand(se2);
+        new BinaryInstruction(BinaryInstruction::ADD, offset_final, offset1, addr, bb);  //offset_final = offset1 + addr
+        new LoadInstruction(dst, offset_final, bb);
+    }
+    else{
+        new LoadInstruction(dst, addr, bb);
+    }
 }
 
 void IfStmt::genCode()
