@@ -730,7 +730,7 @@ void FunctionDef::typeCheck(Node** parentToChild)
         exit(EXIT_FAILURE);
     }
     // 如果void类型没写return需要补上
-    if(!funcReturned && returnType->isVoid()) {
+    if(returnType->isVoid()) {
         this->voidAddRet = new ReturnStmt(nullptr);
     }
     returnType = nullptr;

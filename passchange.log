@@ -1,22 +1,12 @@
-88,89c88,89
-< FAIL: 011_const_array_defn	Compile Error
-< FAIL: 042_arr_expr_len	Compile Error
+110c110
+< FAIL: 093_n_queens	Assemble Error
 ---
-> PASS: 011_const_array_defn
-> PASS: 042_arr_expr_len
-95c95
-< FAIL: 070_multiplication_puzzle	Compile Error
+> PASS: 093_n_queens
+128c128
+< FAIL: 067_sort_test7	Assemble Error
 ---
-> PASS: 070_multiplication_puzzle
-107c107
-< FAIL: 089_hidden_var	Compile Error
----
-> PASS: 089_hidden_var
-135c135
-< FAIL: 103_long_func	Compile Error
----
-> FAIL: 103_long_func	Compile Timeout
+> FAIL: 067_sort_test7	Wrong Answer
 161c161
-< Total: 160	Accept: 96	Fail: 64
+< Total: 160	Accept: 100	Fail: 60
 ---
-> Total: 160	Accept: 100	Fail: 60
+> Total: 160	Accept: 101	Fail: 59
