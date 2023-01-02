@@ -959,6 +959,10 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
             if(operands[i]->getEntry()->getType()->isIntArray()){
                 isPointer = dynamic_cast<IntArrayType*>(operands[i]->getEntry()->getType())->getPointer();
                 dynamic_cast<IntArrayType*>(operands[i]->getEntry()->getType())->setPointer(false);
+                //如果第一维为-1，表明其为指针，传参时需要注意不加fp
+                if(dynamic_cast<IntArrayType*>(operands[i]->getEntry()->getType())->getDimensions()[0]==-1){
+                    isPointer = false;
+                }
             }
             //必须保证是局部数组，而且不是传进来的参数
             if(isPointer && !dynamic_cast<TemporarySymbolEntry*>(operands[i]->getEntry())->getGlobalArray()){
