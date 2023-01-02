@@ -426,8 +426,11 @@ void MachineBlock::insertBefore(MachineInstruction* at, MachineInstruction* src)
 void MachineBlock::insertAfter(MachineInstruction* at, MachineInstruction* src)
 {
     std::vector<MachineInstruction*>::iterator pos = find(inst_list.begin(), inst_list.end(), at);
-    ++pos;
-    inst_list.insert(pos, src);
+    // 如果是最后一条
+    if(pos == inst_list.end())
+        inst_list.push_back(src);
+    else
+        inst_list.insert(pos+1, src);
 }
 
 void MachineFunction::output()
@@ -497,7 +500,23 @@ void MachineUnit::PrintGlobalDecl()
     fprintf(yyout, "\t.data\n");
     for(auto var : global_var_list) {
         if(var->getType()->isArray()) {
-            fprintf(yyout, "\t.comm\t%s,%d,4\n", var->toStr().erase(0,1).c_str(), var->getType()->getSize());
+            if(var->arrayValues.empty()) {
+                fprintf(yyout, "\t.comm\t%s,%d,4\n", var->toStr().erase(0,1).c_str(), var->getType()->getSize());
+            }
+            else {
+                fprintf(yyout, "\t.global %s\n", var->toStr().erase(0,1).c_str());
+                fprintf(yyout, "\t.align 4\n");
+                fprintf(yyout,"\t.size %s, %d\n", var->toStr().erase(0,1).c_str(), var->getType()->getSize());
+                fprintf(yyout,"%s:\n", var->toStr().erase(0,1).c_str());
+                if(var->getType()->isIntArray() || var->getType()->isConstIntArray()) {
+                    for (auto value: var->arrayValues) {
+                        fprintf(yyout, "\t.word %d\n", int(value));
+                    }
+                }
+                else {
+
+                }
+            }
         }
         else {
             fprintf(yyout, "\t.global %s\n", var->toStr().erase(0,1).c_str());

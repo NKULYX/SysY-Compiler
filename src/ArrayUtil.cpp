@@ -6,6 +6,7 @@ std::vector<int> ArrayUtil::arrayDims;
 int ArrayUtil::currentArrayDim;
 Operand* ArrayUtil::arrayAddr;
 int ArrayUtil::currentOffset;
+std::vector<ExprNode*> ArrayUtil::initVals;
 
 void ArrayUtil::init() {
     currentArrayType = nullptr;
@@ -13,6 +14,7 @@ void ArrayUtil::init() {
     currentArrayDim = -1;
     arrayAddr = nullptr;
     currentOffset = 0;
+    initVals.clear();
 };
 
 void ArrayUtil::setArrayType(Type* type) {
@@ -57,11 +59,11 @@ Type* ArrayUtil::getElementType() {
     }
 }
 
-void ArrayUtil::setcurrentArrayDim(int dim) {
+void ArrayUtil::setCurrentArrayDim(int dim) {
     currentArrayDim = dim;
 };
 
-int ArrayUtil::getcurrentArrayDim() {
+int ArrayUtil::getCurrentArrayDim() {
     return currentArrayDim;
 };
 
@@ -85,10 +87,38 @@ Operand* ArrayUtil::getArrayAddr() {
     return arrayAddr;
 };
 
-void ArrayUtil::setCurrentOffset(int offset) {
-    currentOffset = offset;
+void ArrayUtil::incCurrentOffset() {
+    currentOffset++;
 };
 
 int ArrayUtil::getCurrentOffset() {
     return currentOffset;
+};
+
+int ArrayUtil::getCurrentDimCapacity() {
+    int capacity = 1;
+    for(int i = currentArrayDim; i < int(arrayDims.size()); i++) {
+        capacity *= arrayDims[i];
+    }
+    return capacity;
+};
+
+void ArrayUtil::insertInitVal(ExprNode *val) {
+    initVals.push_back(val);
+};
+
+void ArrayUtil::paddingInitVal(int size) {
+    int padding = getCurrentDimCapacity();
+    while(size++ < arrayDims[currentArrayDim] || initVals.size() % padding != 0) {
+        if(getElementType()->isInt()) {
+            initVals.push_back(new Constant(new ConstantSymbolEntry(TypeSystem::constIntType, 0)));
+        }
+        else {
+            initVals.push_back(new Constant(new ConstantSymbolEntry(TypeSystem::constFloatType, 0)));
+        }
+    }
+};
+
+std::vector<ExprNode *> &ArrayUtil::getInitVals() {
+    return initVals;
 };

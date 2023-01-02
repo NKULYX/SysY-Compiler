@@ -192,6 +192,8 @@ public:
     void output(int level);
     void typeCheck(Node** parentToChild);
     void genCode();
+    std::vector<InitValNode*> getInnerList() {return innerList;};
+    ExprNode* getLeafNode() {return leafNode;};
 };
 
 class DefNode : public StmtNode

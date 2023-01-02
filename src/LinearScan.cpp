@@ -210,7 +210,7 @@ void LinearScan::genSpillCode()
          * The vreg should be spilled to memory.
          * 1. insert ldr inst before the use of vreg
          * 2. insert str inst after the def of vreg
-         */ 
+         */
         // The vreg should be spilled to memory.
         interval->disp = func->AllocSpace(4);//正数！
         // 1. insert ldr inst before the use of vreg

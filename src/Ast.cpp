@@ -314,8 +314,14 @@ void Id::genCode()
         if(getType()->isIntArray()){
             dimensions = dynamic_cast<IntArrayType*>(getType())->getDimensions();
         }
-        else{
+        else if(getType()->isConstIntArray()) {
+            dimensions = dynamic_cast<ConstIntArrayType*>(getType())->getDimensions();
+        }
+        else if(getType()->isFloatArray()){
             dimensions = dynamic_cast<FloatArrayType*>(getType())->getDimensions();
+        }
+        else {
+            dimensions = dynamic_cast<ConstFloatArrayType*>(getType())->getDimensions();
         }
         //如果是函数参数传入的数组指针，其最后一个维度为-1
         //此时需要生成新的load指令获取其地址
@@ -621,12 +627,9 @@ void BreakStmt::genCode()
 
 void InitValNode::genCode()
 {
-    ArrayUtil::incCurrentDim();
-    // 如果是叶子节点 则需要通过 store 进行赋值
-    if(isLeaf()) {
-        // 先对 leafNode genCode
-        leafNode->genCode();
-        // 从leafNode中获取初始值
+    // 如果是个叶节点
+    if(this->leafNode != nullptr) {
+        this->leafNode->genCode();
         Operand* src = leafNode->getOperand();
         int offset = ArrayUtil::getCurrentOffset() * 4;
         Operand* offset_operand = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, offset));
@@ -637,17 +640,11 @@ void InitValNode::genCode()
         // 插入 store 指令
         new StoreInstruction(final_offset, src, builder->getInsertBB());
     }
-    // 如果不是叶子节点 则递归
-    else {
-        int currentDim = ArrayUtil::getcurrentArrayDim();
-        int nextDimSize = ArrayUtil::getDimSize(currentDim + 1);
-        int currentOffset = ArrayUtil::getCurrentOffset();
-        for(unsigned int i = 0; i < innerList.size(); i++) {
-            ArrayUtil::setCurrentOffset(currentOffset + i * nextDimSize);
-            innerList[i]->genCode();
-        }
+    // 经过 typecheck 之后 数组初始化值已经被全部展平
+    for(auto child : innerList) {
+        child->genCode();
+        ArrayUtil::incCurrentOffset();
     }
-    ArrayUtil::decCurrentDim();
 }
 
 void DefNode::genCode()
@@ -782,7 +779,7 @@ void FunctionDef::typeCheck(Node** parentToChild)
         exit(EXIT_FAILURE);
     }
     // 如果void类型没写return需要补上
-    if(!funcReturned && returnType->isVoid()) {
+    if(returnType->isVoid()) {
         this->voidAddRet = new ReturnStmt(nullptr);
     }
     returnType = nullptr;
@@ -1014,8 +1011,8 @@ void Constant::typeCheck(Node** parentToChild){}
 void Id::typeCheck(Node** parentToChild)
 {
     // 如果是一个普通变量就什么也不做
-    // 如果是一个常量
-    if(symbolEntry->getType()->isConst() && parentToChild != nullptr) {
+    // 如果是一个普通常量
+    if(!isArray() && symbolEntry->getType()->isConst() && parentToChild != nullptr) {
         ConstantSymbolEntry* newConst = new ConstantSymbolEntry(symbolEntry->getType(), dynamic_cast<IdentifierSymbolEntry*>(symbolEntry)->value);
         Constant* newNode = new Constant(newConst);
         *parentToChild = newNode;
@@ -1028,10 +1025,11 @@ void Id::typeCheck(Node** parentToChild)
         // 检查indices下的exprList(私有域)中的每个exprNode的类型，若不为自然数则报错
         // if(((IdentifierSymbolEntry*)getSymPtr())->arrayDimension.empty()){
         if((getType()->isIntArray() && dynamic_cast<IntArrayType*>(getType())->getDimensions().empty()) ||
-            (getType()->isFloatArray() && dynamic_cast<FloatArrayType*>(getType())->getDimensions().empty())){
+            (getType()->isConstIntArray() && dynamic_cast<ConstIntArrayType*>(getType())->getDimensions().empty()) ||
+            (getType()->isFloatArray() && dynamic_cast<FloatArrayType*>(getType())->getDimensions().empty()) ||
+            (getType()->isConstFloatArray() && dynamic_cast<ConstFloatArrayType*>(getType())->getDimensions().empty())){
             // (getType()->isIntArray() && dynamic_cast<IntArrayType*>(getType())->getDimensions().back()==-1)){
-                indices->initDimInSymTable((IdentifierSymbolEntry*)getSymPtr());
-                // dynamic_cast<IntArrayType*>(getType())->getDimensions()[0]==-2;//防止第二次进入分支
+            indices->initDimInSymTable((IdentifierSymbolEntry*)getSymPtr());
         }
         // 读取常量数组 这个不打算做了
         else if(getType()->isConst()){
@@ -1195,19 +1193,26 @@ void WhileStmt::typeCheck(Node** parentToChild)
 
 void InitValNode::typeCheck(Node** parentToChild)
 {
-    // 首先判断是否到叶节点
-    if(isLeaf()) {
-        // 如果叶节点有初始值
-        if(this->leafNode != nullptr) {
-            this->leafNode->typeCheck((Node**)&(this->leafNode));
-        }
+    ArrayUtil::incCurrentDim();
+    bool padding = true;
+    if(this->leafNode != nullptr) {
+        this->leafNode->typeCheck((Node**)&(this->leafNode));
+        ArrayUtil::insertInitVal(this->leafNode);
+        padding = false;
+
     }
-    // 如果不是叶节点则需要递归
-    else {
-        for(auto & child : innerList){
-            child->typeCheck((Node**)&child);
-        }
+    // 首先对 innerList 进行递归
+    int size = 0;
+    for(auto & child : innerList){
+        child->typeCheck((Node**)&child);
+        size++;
     }
+//    int padding = currentDimSize - (int)innerList.size();
+    // 然后对当前维度进行填充
+    if(padding) {
+        ArrayUtil::paddingInitVal(size);
+    }
+    ArrayUtil::decCurrentDim();
 }
 
 // TODO: 这段代码逻辑太乱了，需要重构
@@ -1218,7 +1223,23 @@ void DefNode::typeCheck(Node** parentToChild)
     if(initVal==nullptr){
         return;
     }
-    initVal->typeCheck((Node**)&(initVal));
+
+    if(id->getType()->isArray()) {
+        ArrayUtil::init();
+        ArrayUtil::setArrayType(id->getType());
+        initVal->typeCheck((Node**)&(initVal));
+        this->initVal = new InitValNode(dynamic_cast<InitValNode*>(this->initVal)->isConst());
+        std::vector<ExprNode*> initList = ArrayUtil::getInitVals();
+        for(auto & child : initList){
+            InitValNode* newNode = new InitValNode(dynamic_cast<InitValNode*>(this->initVal)->isConst());
+            newNode->setLeafNode(child);
+            dynamic_cast<InitValNode*>(this->initVal)->addNext(newNode);
+        }
+    }
+    else {
+        initVal->typeCheck((Node**)&(initVal));
+    }
+
 
     if(!id->getType()->isArray()){//不是数组时，右边可能出现函数：int a = f();
         if(((ExprNode*)initVal)->getType()->isFunc() && 
@@ -1244,7 +1265,12 @@ void DefNode::typeCheck(Node** parentToChild)
         // 接下来就是常量计算的工作了
         // 数组初始化值 暂时不打算做了
         if(id->getType()->isArray()){
-            //TODO: initialize elements in symbol table
+            IdentifierSymbolEntry* se = (IdentifierSymbolEntry*)id->getSymPtr();
+            for(auto val : dynamic_cast<InitValNode*>(initVal)->getInnerList()) {
+                ExprNode* leafNode = val->getLeafNode();
+                double value= ((ConstantSymbolEntry*)((ExprNode*)leafNode)->getSymPtr())->getValue();
+                se->arrayValues.push_back(value);
+            }
         }
         // 常量初始化值
         else{
@@ -1257,12 +1283,23 @@ void DefNode::typeCheck(Node** parentToChild)
         // 对于初始化值不为空的，要进行初始化赋值
         if(initVal != nullptr) {
             // 只允许使用常量对全局变量进行赋值
-            if(!((ExprNode*)initVal)->getType()->isConst()) {
-                fprintf(stderr, "not allow to initialize global variable with not const value\n");
-                exit(EXIT_FAILURE);
-            }
+//            if(!((ExprNode*)initVal)->getType()->isConst()) {
+//                fprintf(stderr, "not allow to initialize global variable with not const value\n");
+//                exit(EXIT_FAILURE);
+//            }
             IdentifierSymbolEntry* se = (IdentifierSymbolEntry*)id->getSymPtr();
-            se->value = ((ConstantSymbolEntry*)((ExprNode*)initVal)->getSymPtr())->getValue();
+            if(!se->getType()->isArray()) {
+                se->value = ((ConstantSymbolEntry*)((ExprNode*)initVal)->getSymPtr())->getValue();
+            }
+            else {
+                if(se->arrayValues.empty()) {
+                    for(auto val : dynamic_cast<InitValNode*>(initVal)->getInnerList()) {
+                        ExprNode* leafNode = val->getLeafNode();
+                        double value= ((ConstantSymbolEntry*)((ExprNode*)leafNode)->getSymPtr())->getValue();
+                        se->arrayValues.push_back(value);
+                    }
+                }
+            }
         }
     }
 }
@@ -1519,9 +1556,14 @@ void ExprStmtNode::initDimInSymTable(IdentifierSymbolEntry* se)
             if(se->getType()->isIntArray()){
                 dynamic_cast<IntArrayType*>(se->getType())->pushBackDimension((int)((ConstantSymbolEntry*)(expr->getSymPtr()))->getValue());
             }
-            else{
+            else if(se->getType()->isConstIntArray()) {
+                dynamic_cast<ConstIntArrayType*>(se->getType())->pushBackDimension((int)((ConstantSymbolEntry*)(expr->getSymPtr()))->getValue());
+            }
+            else if(se->getType()->isFloatArray()){
                 dynamic_cast<FloatArrayType*>(se->getType())->pushBackDimension((int)((ConstantSymbolEntry*)(expr->getSymPtr()))->getValue());
-            
+            }
+            else {
+                dynamic_cast<ConstFloatArrayType*>(se->getType())->pushBackDimension((int)((ConstantSymbolEntry*)(expr->getSymPtr()))->getValue());
             }
         }
         // 常量表达式，值存在IdentifierSymbolEntry中
