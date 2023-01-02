@@ -305,8 +305,11 @@ void Id::genCode()
     Operand *addr = dynamic_cast<IdentifierSymbolEntry*>(symbolEntry)->getAddr();
     dst = new Operand(new TemporarySymbolEntry(dst->getType(), SymbolTable::getLabel()));
     if(getType()->isArray()){
-        indices->genCode();
-        Operand* offset = indices->exprList[0]->getOperand();
+        Operand* offset = nullptr;
+        if(indices!=nullptr){
+            indices->genCode();
+            offset = indices->exprList[0]->getOperand();
+        }
         std::vector<int> dimensions;
         if(getType()->isIntArray()){
             dimensions = dynamic_cast<IntArrayType*>(getType())->getDimensions();
@@ -320,7 +323,16 @@ void Id::genCode()
         else {
             dimensions = dynamic_cast<ConstFloatArrayType*>(getType())->getDimensions();
         }
-        for(unsigned int i = 1; i < indices->exprList.size(); i++) {
+        //如果是函数参数传入的数组指针，其最后一个维度为-1
+        //此时需要生成新的load指令获取其地址
+        if(dimensions[0]==-1){
+            // printf("%d\n", dimensions[1]);
+            TemporarySymbolEntry* se = new TemporarySymbolEntry(getType(), SymbolTable::getLabel());
+            Operand* new_addr = new Operand(se);
+            new LoadInstruction(new_addr, addr, bb);
+            addr = new_addr;
+        }
+        for(unsigned int i = 1; indices!=nullptr && i < indices->exprList.size(); i++) {
             Operand* dim_i = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, dimensions[i]));
             TemporarySymbolEntry* se1 = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
             Operand* offset1 = new Operand(se1);
@@ -329,10 +341,24 @@ void Id::genCode()
             offset = new Operand(se2);
             new BinaryInstruction(BinaryInstruction::ADD, offset, offset1, indices->exprList[i]->getOperand(), bb); //offset = offset1 + indices[i]
         }
-        TemporarySymbolEntry* se1 = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
-        Operand* offset1 = new Operand(se1);
-        Operand* align = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, 4));
-        new BinaryInstruction(BinaryInstruction::MUL, offset1, offset, align, bb);  //offset1 = offset * 4
+        //索引维度<总维度，需要再乘一次最后的维度
+        if(indices!=nullptr && indices->exprList.size()<dimensions.size()){
+            Operand* dim_i = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, dimensions[indices->exprList.size()]));
+            TemporarySymbolEntry* se1 = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            Operand* offset1 = new Operand(se1);
+            new BinaryInstruction(BinaryInstruction::MUL, offset1, offset, dim_i, bb);  //offset1 = offset * dimensions[i]
+            offset = offset1;
+        }
+        Operand* offset1 = nullptr;
+        if(indices!=nullptr){
+            TemporarySymbolEntry* se1 = new TemporarySymbolEntry(TypeSystem::intType, SymbolTable::getLabel());
+            offset1 = new Operand(se1);
+            Operand* align = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, 4));
+            new BinaryInstruction(BinaryInstruction::MUL, offset1, offset, align, bb);  //offset1 = offset * 4
+        }
+        else{
+            offset1 = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, 0));
+        }
         TemporarySymbolEntry* se2 = new TemporarySymbolEntry(getType(), SymbolTable::getLabel());
         Operand* offset_final = new Operand(se2);
         // 全局变量地址标签不能直接参与运算，需要先load
@@ -342,9 +368,20 @@ void Id::genCode()
             new LoadInstruction(new_addr, addr, bb);
             addr = new_addr;
             se2->setGlobalArray();
+            dynamic_cast<TemporarySymbolEntry*>(dst->getEntry())->setGlobalArray();
         }
-        new BinaryInstruction(BinaryInstruction::ADD, offset_final, offset1, addr, bb);  //offset_final = offset1 + addr
-        new LoadInstruction(dst, offset_final, bb);
+        if(indices!=nullptr && indices->exprList.size()==dimensions.size()){
+            new BinaryInstruction(BinaryInstruction::ADD, offset_final, offset1, addr, bb);  //offset_final = offset1 + addr
+            // printf("%s\n", getSymbolEntry()->toStr().c_str());
+            new LoadInstruction(dst, offset_final, bb);
+        }
+        else{
+            //为区分数组指针和数组值，需要置位dst的type中的pointer
+            if(dst->getType()->isIntArray()){
+                dynamic_cast<IntArrayType*>(dst->getType())->setPointer(true);
+            }
+            new BinaryInstruction(BinaryInstruction::ADD, dst, offset1, addr, bb); 
+        }
     }
     else{
         new LoadInstruction(dst, addr, bb);
@@ -455,6 +492,14 @@ void AssignStmt::genCode()
         }
         else{
             dimensions = dynamic_cast<FloatArrayType*>(lval->getType())->getDimensions();
+        }
+        //如果是函数参数传入的数组指针，其最后一个维度为-1
+        //此时需要生成新的load指令获取其地址
+        if(dimensions[dimensions.size()-1]==-1){
+            TemporarySymbolEntry* se = new TemporarySymbolEntry(lval->getType(), SymbolTable::getLabel());
+            Operand* new_addr = new Operand(se);
+            new LoadInstruction(new_addr, addr, bb);
+            addr = new_addr;
         }
         for(unsigned int i = 1; i < indices->exprList.size(); i++) {
             Operand* dim_i = new Operand(new ConstantSymbolEntry(TypeSystem::constIntType, dimensions[i]));
@@ -719,6 +764,10 @@ void Ast::typeCheck()
  */
 void FunctionDef::typeCheck(Node** parentToChild)
 {
+    // 首先调用参数的typeCheck
+    if(params != nullptr) {
+        params->typeCheck((Node**)&(params));
+    }
     // 获取函数的返回值类型
     returnType = ((FunctionType*)se->getType())->getRetType();
     // 判断函数是否返回
@@ -979,6 +1028,7 @@ void Id::typeCheck(Node** parentToChild)
             (getType()->isConstIntArray() && dynamic_cast<ConstIntArrayType*>(getType())->getDimensions().empty()) ||
             (getType()->isFloatArray() && dynamic_cast<FloatArrayType*>(getType())->getDimensions().empty()) ||
             (getType()->isConstFloatArray() && dynamic_cast<ConstFloatArrayType*>(getType())->getDimensions().empty())){
+            // (getType()->isIntArray() && dynamic_cast<IntArrayType*>(getType())->getDimensions().back()==-1)){
             indices->initDimInSymTable((IdentifierSymbolEntry*)getSymPtr());
         }
         // 读取常量数组 这个不打算做了
@@ -1096,7 +1146,12 @@ void AssignStmt::typeCheck(Node** parentToChild)
     }
 }
 
-void FuncDefParamsNode::typeCheck(Node** parentToChild){}
+void FuncDefParamsNode::typeCheck(Node** parentToChild){
+    for(auto param : paramsList) {
+        // 由于不需要进行节点替换 直接传nullptr
+        param->typeCheck(nullptr);
+    }
+}
 
 void ContinueStmt::typeCheck(Node** parentToChild)
 {

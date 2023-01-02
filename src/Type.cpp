@@ -86,7 +86,12 @@ std::string FunctionType::toStr()
 
 void IntArrayType::pushBackDimension(int dim)
 {
-    size *= dim;
+    if(dim>0){
+        size *= dim;
+    }
+    else{//指针类型
+        size = 4;
+    }
     dimensions.push_back(dim);
 }
 
@@ -102,7 +107,12 @@ std::string IntArrayType::toStr()
 
 void FloatArrayType::pushBackDimension(int dim)
 {
-    size *= dim;
+    if(dim>0){
+        size *= dim;
+    }
+    else{//指针类型
+        size = 4;
+    }
     dimensions.push_back(dim);
 }
 
@@ -117,7 +127,12 @@ std::string FloatArrayType::toStr()
 }
 void ConstIntArrayType::pushBackDimension(int dim)
 {
-    size *= dim;
+    if(dim>0){
+        size *= dim;
+    }
+    else{//指针类型
+        size = 4;
+    }
     dimensions.push_back(dim);
 }
 
@@ -133,7 +148,12 @@ std::string ConstIntArrayType::toStr()
 
 void ConstFloatArrayType::pushBackDimension(int dim)
 {
-    size *= dim;
+    if(dim>0){
+        size *= dim;
+    }
+    else{//指针类型
+        size = 4;
+    }
     dimensions.push_back(dim);
 }
 

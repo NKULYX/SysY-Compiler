@@ -62,7 +62,7 @@ PASS: 069_greatest_common_divisor
 PASS: 100_int_literal
 PASS: 102_short_circuit3
 PASS: 1074_itera_sqrt
-FAIL: 1075_max_container	Compile Error
+PASS: 1075_max_container
 PASS: 1076_int_factor_sum
 PASS: 1078_decbinoct
 PASS: 1080_lcm
@@ -95,31 +95,31 @@ PASS: 068_genealogical_tree
 PASS: 070_multiplication_puzzle
 PASS: 071_exchange_array
 FAIL: 073_backpack	Compile Error
-FAIL: 074_matrix_add	Compile Error
-FAIL: 075_matrix_sub	Compile Error
-FAIL: 076_matrix_mul	Compile Error
-FAIL: 077_matrix_tran	Compile Error
-PASS: 078_big_int_mul
-FAIL: 081_exgcd	Compile Error
-FAIL: 083_brainfk	Compile Error
+PASS: 074_matrix_add
+PASS: 075_matrix_sub
+PASS: 076_matrix_mul
+PASS: 077_matrix_tran
+FAIL: 078_big_int_mul	Compile Error
+FAIL: 081_exgcd	Wrong Answer
+PASS: 083_brainfk
 PASS: 085_dijkstra
-FAIL: 086_full_conn	Compile Error
-PASS: 089_hidden_var
-FAIL: 091_kmp	Compile Error
-FAIL: 092_max_flow	Compile Error
-PASS: 093_n_queens
+FAIL: 086_full_conn	Assemble Error
+FAIL: 089_hidden_var	Compile Error
+FAIL: 091_kmp	Assemble Error
+FAIL: 092_max_flow	Assemble Error
+FAIL: 093_n_queens	Assemble Error
 FAIL: 094_substr	Compile Error
 PASS: 1066_go_upstairs
-FAIL: 1067_remove_duplicate_element	Compile Error
-FAIL: 1069_last_word_length	Compile Error
-FAIL: 1071_max_subsequence_sum	Compile Error
+PASS: 1067_remove_duplicate_element
+PASS: 1069_last_word_length
+PASS: 1071_max_subsequence_sum
 PASS: 1077_unique_path
-FAIL: 1081_jump_game	Compile Error
-FAIL: 1082_int_split	Compile Error
+PASS: 1081_jump_game
+PASS: 1082_int_split
 PASS: 1084_palindrome_number
 PASS: 1086_bin_search
-FAIL: 1088_array_concat	Compile Error
-FAIL: 1090_insert_order	Compile Error
+PASS: 1088_array_concat
+PASS: 1090_insert_order
 PASS: 1091_line_search
 PASS: 058_short_circuit
 PASS: 059_short_circuit2
@@ -137,7 +137,7 @@ FAIL: 104_long_array	Assemble Error
 FAIL: 105_long_array2	Compile Timeout
 FAIL: 106_long_code	Compile Error
 FAIL: 107_long_code2	Compile Timeout
-FAIL: 108_many_params	Compile Error
+FAIL: 108_many_params	Assemble Error
 FAIL: 109_many_params2	Compile Error
 PASS: 110_many_params3
 PASS: 111_many_globals

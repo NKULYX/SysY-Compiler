@@ -97,14 +97,14 @@ PASS: 071_exchange_array
 FAIL: 073_backpack	Compile Error
 FAIL: 074_matrix_add	Compile Error
 FAIL: 075_matrix_sub	Compile Error
-FAIL: 076_matrix_mul	Compile Error
-FAIL: 077_matrix_tran	Compile Error
-PASS: 078_big_int_mul
-FAIL: 081_exgcd	Compile Error
+FAIL: 076_matrix_mul	Wrong Answer
+FAIL: 077_matrix_tran	Wrong Answer
+FAIL: 078_big_int_mul	Compile Error
+FAIL: 081_exgcd	Wrong Answer
 FAIL: 083_brainfk	Compile Error
 PASS: 085_dijkstra
-FAIL: 086_full_conn	Compile Error
-PASS: 089_hidden_var
+FAIL: 086_full_conn	Wrong Answer
+FAIL: 089_hidden_var	Compile Error
 FAIL: 091_kmp	Compile Error
 FAIL: 092_max_flow	Compile Error
 PASS: 093_n_queens
@@ -112,9 +112,9 @@ FAIL: 094_substr	Compile Error
 PASS: 1066_go_upstairs
 FAIL: 1067_remove_duplicate_element	Compile Error
 FAIL: 1069_last_word_length	Compile Error
-FAIL: 1071_max_subsequence_sum	Compile Error
+FAIL: 1071_max_subsequence_sum	Wrong Answer
 PASS: 1077_unique_path
-FAIL: 1081_jump_game	Compile Error
+PASS: 1081_jump_game
 FAIL: 1082_int_split	Compile Error
 PASS: 1084_palindrome_number
 PASS: 1086_bin_search
@@ -155,7 +155,7 @@ FAIL: 201_matrix_tran	Compile Error
 PASS: 202_register_realloc
 FAIL: 35_math	Assemble Error
 FAIL: 36_rotate	Assemble Error
-FAIL: 37_dct	Compile Error
-FAIL: 38_light2d	Compile Error
+FAIL: 37_dct	Assemble Error
+FAIL: 38_light2d	Assemble Error
 FAIL: 39_fp_params	Compile Error
 Total: 160	Accept: 105	Fail: 55

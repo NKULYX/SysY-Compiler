@@ -1,0 +1,80 @@
+65c65
+< FAIL: 1075_max_container	Compile Error
+---
+> PASS: 1075_max_container
+90,93c90,93
+< FAIL: 061_sort_test1	Compile Error
+< FAIL: 062_sort_test2	Compile Error
+< FAIL: 064_sort_test4	Compile Error
+< FAIL: 066_sort_test6	Compile Error
+---
+> PASS: 061_sort_test1
+> PASS: 062_sort_test2
+> PASS: 064_sort_test4
+> PASS: 066_sort_test6
+98,101c98,101
+< FAIL: 074_matrix_add	Compile Error
+< FAIL: 075_matrix_sub	Compile Error
+< FAIL: 076_matrix_mul	Wrong Answer
+< FAIL: 077_matrix_tran	Wrong Answer
+---
+> PASS: 074_matrix_add
+> PASS: 075_matrix_sub
+> PASS: 076_matrix_mul
+> PASS: 077_matrix_tran
+104c104
+< FAIL: 083_brainfk	Compile Error
+---
+> PASS: 083_brainfk
+106c106
+< FAIL: 086_full_conn	Wrong Answer
+---
+> FAIL: 086_full_conn	Assemble Error
+108,109c108,109
+< FAIL: 091_kmp	Compile Error
+< FAIL: 092_max_flow	Compile Error
+---
+> FAIL: 091_kmp	Assemble Error
+> FAIL: 092_max_flow	Assemble Error
+113,115c113,115
+< FAIL: 1067_remove_duplicate_element	Compile Error
+< FAIL: 1069_last_word_length	Compile Error
+< FAIL: 1071_max_subsequence_sum	Wrong Answer
+---
+> PASS: 1067_remove_duplicate_element
+> PASS: 1069_last_word_length
+> PASS: 1071_max_subsequence_sum
+118c118
+< FAIL: 1082_int_split	Compile Error
+---
+> PASS: 1082_int_split
+121,122c121,122
+< FAIL: 1088_array_concat	Compile Error
+< FAIL: 1090_insert_order	Compile Error
+---
+> PASS: 1088_array_concat
+> PASS: 1090_insert_order
+126,127c126,127
+< FAIL: 063_sort_test3	Compile Error
+< FAIL: 065_sort_test5	Compile Error
+---
+> FAIL: 063_sort_test3	Wrong Answer
+> FAIL: 065_sort_test5	Wrong Answer
+130c130
+< FAIL: 079_calculator	Compile Error
+---
+> FAIL: 079_calculator	Compile Timeout
+138c138
+< FAIL: 106_long_code	Compile Error
+---
+> FAIL: 106_long_code	Assemble Error
+140c140
+< FAIL: 108_many_params	Compile Error
+---
+> FAIL: 108_many_params	Assemble Error
+160,161c160,161
+< FAIL: 39_fp_params	Compile Error
+< Total: 160	Accept: 96	Fail: 64
+---
+> FAIL: 39_fp_params	Compile Timeout
+> Total: 160	Accept: 112	Fail: 48
