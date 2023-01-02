@@ -107,7 +107,7 @@ FAIL: 086_full_conn	Compile Error
 PASS: 089_hidden_var
 FAIL: 091_kmp	Compile Error
 FAIL: 092_max_flow	Compile Error
-FAIL: 093_n_queens	Assemble Error
+PASS: 093_n_queens
 FAIL: 094_substr	Compile Error
 PASS: 1066_go_upstairs
 FAIL: 1067_remove_duplicate_element	Compile Error
@@ -125,10 +125,10 @@ PASS: 058_short_circuit
 PASS: 059_short_circuit2
 FAIL: 063_sort_test3	Compile Error
 FAIL: 065_sort_test5	Compile Error
-FAIL: 067_sort_test7	Assemble Error
+FAIL: 067_sort_test7	Wrong Answer
 PASS: 072_percolation
 FAIL: 079_calculator	Compile Error
-FAIL: 080_color	Compile Error
+FAIL: 080_color	Assemble Error
 FAIL: 084_expr_eval	Compile Error
 PASS: 097_var_name
 FAIL: 098_chaos_token	Compile Error
@@ -139,14 +139,14 @@ FAIL: 106_long_code	Compile Error
 FAIL: 107_long_code2	Compile Timeout
 FAIL: 108_many_params	Compile Error
 FAIL: 109_many_params2	Compile Error
-FAIL: 110_many_params3	Compile Error
-FAIL: 111_many_globals	Compile Error
+PASS: 110_many_params3
+PASS: 111_many_globals
 PASS: 112_many_locals
 PASS: 113_many_locals2
 PASS: 114_register_alloc
-FAIL: 115_nested_calls	Compile Error
+PASS: 115_nested_calls
 PASS: 116_nested_calls2
-FAIL: 117_nested_loops	Compile Error
+PASS: 117_nested_loops
 FAIL: 196_float	Compile Error
 FAIL: 198_matrix_add	Compile Error
 FAIL: 199_matrix_sub	Compile Error
@@ -158,4 +158,4 @@ FAIL: 36_rotate	Assemble Error
 FAIL: 37_dct	Compile Error
 FAIL: 38_light2d	Compile Error
 FAIL: 39_fp_params	Compile Error
-Total: 160	Accept: 100	Fail: 60
+Total: 160	Accept: 105	Fail: 55

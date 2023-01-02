@@ -944,8 +944,12 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
     if(!additional_args.empty()){
         // 参数需要逆序压栈
         std::reverse(additional_args.begin(), additional_args.end());
-        cur_inst = new StackMInstruction(cur_block, StackMInstruction::PUSH, additional_args);
-        cur_block->InsertInst(cur_inst);
+        for(auto arg : additional_args) {
+            std::vector<MachineOperand*> tmp;
+            tmp.push_back(arg);
+            cur_inst = new StackMInstruction(cur_block, StackMInstruction::PUSH, tmp);
+            cur_block->InsertInst(cur_inst);
+        }
     }
     cur_inst = new BranchMInstruction(cur_block, BranchMInstruction::BL, new MachineOperand(funcSE->getName(), true));
     cur_block->InsertInst(cur_inst);
