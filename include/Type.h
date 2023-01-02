@@ -108,11 +108,14 @@ class IntArrayType : public Type
 {
 private:
     std::vector<int> dimensions;
+    bool isPointer;
 public:
-    IntArrayType() : Type(Type::INT_ARRAY){size = 4;};
+    IntArrayType() : Type(Type::INT_ARRAY){size = 4; isPointer = false;};
     void pushBackDimension(int);
     std::vector<int> getDimensions();
     std::string toStr();
+    void setPointer(bool value){isPointer = value;};
+    bool getPointer() {return isPointer;};
 };
 
 class FloatArrayType : public Type

@@ -54,7 +54,7 @@ void LinearScan::makeDuChains()
                     du_chains[def].insert(uses.begin(), uses.end());
                     auto &kill = lva.getAllUses()[*def];
                     std::set<MachineOperand *> res;
-                    set_difference(uses.begin(), uses.end(), kill.begin(), kill.end(), inserter(res, res.end()));
+                    std::set_difference(uses.begin(), uses.end(), kill.begin(), kill.end(), std::inserter(res, res.end()));
                     liveVar[*def] = res;
                 }
             }
@@ -178,8 +178,10 @@ bool LinearScan::linearScanRegisterAllocation()
             interval->rreg = regs[regs.size()-1];//为 unhandled interval 分配物理寄存器
             regs.pop_back();
             //再按照活跃区间结束位置，将其插入到 active 列表中
-            std::vector<Interval*>::iterator insertPos = std::lower_bound(active.begin(), active.end(), interval, insertComp);
-            active.insert(insertPos, interval);//按照unhandled interval活跃区间结束位置，将其插入到 active 列表中
+            // std::vector<Interval*>::iterator insertPos = std::lower_bound(active.begin(), active.end(), interval, insertComp);
+            // active.insert(insertPos, interval);//按照unhandled interval活跃区间结束位置，将其插入到 active 列表中
+            active.push_back(interval);
+            sort(active.begin(), active.end(), insertComp);
         }
     }
     return retValue;
@@ -214,23 +216,28 @@ void LinearScan::genSpillCode()
         // 1. insert ldr inst before the use of vreg
         for (auto use : interval->uses){
             MachineBlock* block = use->getParent()->getParent();
-            block->insertBefore(use->getParent(), new LoadMInstruction(block, use, new MachineOperand(MachineOperand::REG, 11), new MachineOperand(MachineOperand::IMM, -interval->disp)));
+            block->insertBefore(use->getParent(), new LoadMInstruction(block, new MachineOperand(*use), new MachineOperand(MachineOperand::REG, 11), new MachineOperand(MachineOperand::IMM, -interval->disp)));
         }
         // 2. insert str inst after the def of vreg
         for (auto def : interval->defs){
             MachineBlock* block = def->getParent()->getParent();
-            block->insertAfter(def->getParent(), new StoreMInstruction(block, def, new MachineOperand(MachineOperand::REG, 11), new MachineOperand(MachineOperand::IMM, -interval->disp)));
+            block->insertAfter(def->getParent(), new StoreMInstruction(block, new MachineOperand(*def), new MachineOperand(MachineOperand::REG, 11), new MachineOperand(MachineOperand::IMM, -interval->disp)));
         }
     }
 }
 
 void LinearScan::expireOldIntervals(Interval *interval)
 {
-    std::vector<Interval*>::iterator top = std::lower_bound(active.begin(), active.end(), interval, victimComp);
-    for(std::vector<Interval*>::iterator it = active.begin(); it != top;++it){
+    // std::vector<Interval*>::iterator top = std::lower_bound(active.begin(), active.end(), interval, victimComp);
+    for(std::vector<Interval*>::iterator it = active.begin(); it != active.end(); ){
+        if(!victimComp(*it, interval)){
+            return;
+        }
         regs.push_back((*it)->rreg);//释放寄存器
+        it = active.erase(find(active.begin(), active.end(), *it));//注意此处的迭代方式
+        sort(regs.begin(), regs.end());
     }
-    active.erase(active.begin(),top);//删除结束早于interval开始的所有区间
+    // active.erase(active.begin(),top);//删除结束早于interval开始的所有区间
 }
 
 void LinearScan::spillAtInterval(Interval *interval)
@@ -241,9 +248,11 @@ void LinearScan::spillAtInterval(Interval *interval)
     else{// active 列表中的 interval 结束时间更晚
         active[active.size()-1]->spill = true;//置位其spill标志位
         interval->rreg = active[active.size()-1]->rreg;//将其占用的寄存器分配给 unhandled interval
-        active.pop_back();
-        std::vector<Interval*>::iterator insertPos = std::lower_bound(active.begin(), active.end(), interval, insertComp);
-        active.insert(insertPos, interval);//按照unhandled interval活跃区间结束位置，将其插入到 active 列表中
+        // active.pop_back();
+        // std::vector<Interval*>::iterator insertPos = std::lower_bound(active.begin(), active.end(), interval, insertComp);
+        // active.insert(insertPos, interval);//按照unhandled interval活跃区间结束位置，将其插入到 active 列表中
+        active.push_back(interval);
+        sort(active.begin(), active.end(), insertComp);
     }
 }
 

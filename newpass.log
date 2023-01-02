@@ -62,7 +62,7 @@ PASS: 069_greatest_common_divisor
 PASS: 100_int_literal
 PASS: 102_short_circuit3
 PASS: 1074_itera_sqrt
-FAIL: 1075_max_container	Compile Error
+PASS: 1075_max_container
 PASS: 1076_int_factor_sum
 PASS: 1078_decbinoct
 PASS: 1080_lcm
@@ -83,79 +83,79 @@ PASS: 087_gcd
 PASS: 088_hanoi
 PASS: 004_arr_defn
 PASS: 005_arr_defn2
-FAIL: 006_arr_defn3	Wrong Answer
-FAIL: 007_arr_defn4	Wrong Answer
+FAIL: 006_arr_defn3	Compile Error
+FAIL: 007_arr_defn4	Compile Error
 FAIL: 011_const_array_defn	Compile Error
 FAIL: 042_arr_expr_len	Compile Error
-FAIL: 061_sort_test1	Compile Error
-FAIL: 062_sort_test2	Compile Error
-FAIL: 064_sort_test4	Compile Error
-FAIL: 066_sort_test6	Compile Error
+PASS: 061_sort_test1
+PASS: 062_sort_test2
+PASS: 064_sort_test4
+PASS: 066_sort_test6
 PASS: 068_genealogical_tree
 FAIL: 070_multiplication_puzzle	Compile Error
 FAIL: 071_exchange_array	Wrong Answer
 FAIL: 073_backpack	Compile Error
-FAIL: 074_matrix_add	Compile Error
-FAIL: 075_matrix_sub	Compile Error
-FAIL: 076_matrix_mul	Compile Error
-FAIL: 077_matrix_tran	Compile Error
-FAIL: 078_big_int_mul	Wrong Answer
-FAIL: 081_exgcd	Compile Error
-FAIL: 083_brainfk	Compile Error
+PASS: 074_matrix_add
+PASS: 075_matrix_sub
+PASS: 076_matrix_mul
+PASS: 077_matrix_tran
+FAIL: 078_big_int_mul	Compile Error
+FAIL: 081_exgcd	Wrong Answer
+PASS: 083_brainfk
 PASS: 085_dijkstra
-FAIL: 086_full_conn	Compile Error
+FAIL: 086_full_conn	Assemble Error
 FAIL: 089_hidden_var	Compile Error
-FAIL: 091_kmp	Compile Error
-FAIL: 092_max_flow	Compile Error
+FAIL: 091_kmp	Assemble Error
+FAIL: 092_max_flow	Assemble Error
 FAIL: 093_n_queens	Assemble Error
 FAIL: 094_substr	Compile Error
 PASS: 1066_go_upstairs
-FAIL: 1067_remove_duplicate_element	Compile Error
-FAIL: 1069_last_word_length	Compile Error
-FAIL: 1071_max_subsequence_sum	Compile Error
+PASS: 1067_remove_duplicate_element
+PASS: 1069_last_word_length
+PASS: 1071_max_subsequence_sum
 PASS: 1077_unique_path
-FAIL: 1081_jump_game	Compile Error
-FAIL: 1082_int_split	Compile Error
+PASS: 1081_jump_game
+PASS: 1082_int_split
 PASS: 1084_palindrome_number
 PASS: 1086_bin_search
-FAIL: 1088_array_concat	Compile Error
-FAIL: 1090_insert_order	Compile Error
+PASS: 1088_array_concat
+PASS: 1090_insert_order
 PASS: 1091_line_search
 PASS: 058_short_circuit
 PASS: 059_short_circuit2
-FAIL: 063_sort_test3	Compile Error
-FAIL: 065_sort_test5	Compile Error
+FAIL: 063_sort_test3	Wrong Answer
+FAIL: 065_sort_test5	Wrong Answer
 FAIL: 067_sort_test7	Assemble Error
 PASS: 072_percolation
-FAIL: 079_calculator	Compile Error
-FAIL: 080_color	Compile Error
+FAIL: 079_calculator	Compile Timeout
+FAIL: 080_color	Assemble Error
 FAIL: 084_expr_eval	Compile Error
 FAIL: 097_var_name	Wrong Answer
 FAIL: 098_chaos_token	Compile Error
 FAIL: 103_long_func	Compile Error
 FAIL: 104_long_array	Assemble Error
-PASS: 105_long_array2
-FAIL: 106_long_code	Compile Error
+FAIL: 105_long_array2	Compile Error
+FAIL: 106_long_code	Assemble Error
 FAIL: 107_long_code2	Compile Timeout
-FAIL: 108_many_params	Compile Error
+FAIL: 108_many_params	Assemble Error
 FAIL: 109_many_params2	Compile Error
-FAIL: 110_many_params3	Compile Error
-FAIL: 111_many_globals	Compile Error
-FAIL: 112_many_locals	Wrong Answer
+PASS: 110_many_params3
+PASS: 111_many_globals
+PASS: 112_many_locals
 PASS: 113_many_locals2
 PASS: 114_register_alloc
-FAIL: 115_nested_calls	Compile Error
+PASS: 115_nested_calls
 PASS: 116_nested_calls2
-FAIL: 117_nested_loops	Assemble Error
-FAIL: 196_float	Compile Error
-FAIL: 198_matrix_add	Compile Error
-FAIL: 199_matrix_sub	Compile Error
-FAIL: 200_matrix_mul	Compile Error
-FAIL: 201_matrix_tran	Compile Error
+PASS: 117_nested_loops
+FAIL: 196_float	Assemble Error
+FAIL: 198_matrix_add	Assemble Error
+FAIL: 199_matrix_sub	Assemble Error
+FAIL: 200_matrix_mul	Assemble Error
+FAIL: 201_matrix_tran	Assemble Error
 PASS: 202_register_realloc
 FAIL: 35_math	Assemble Error
 FAIL: 36_rotate	Assemble Error
-FAIL: 37_dct	Compile Error
-FAIL: 38_light2d	Compile Error
-FAIL: 39_fp_params	Compile Error
-Total: 160	Accept: 91	Fail: 69
+FAIL: 37_dct	Assemble Error
+FAIL: 38_light2d	Assemble Error
+FAIL: 39_fp_params	Compile Timeout
+Total: 160	Accept: 112	Fail: 48

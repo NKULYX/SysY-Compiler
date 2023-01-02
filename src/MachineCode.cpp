@@ -432,10 +432,12 @@ void MachineBlock::insertAfter(MachineInstruction* at, MachineInstruction* src)
 
 void MachineFunction::output()
 {
-    const char *func_name = this->sym_ptr->toStr().c_str() + 1;
-    fprintf(yyout, "\t.global %s\n", func_name);
-    fprintf(yyout, "\t.type %s , %%function\n", func_name);
-    fprintf(yyout, "%s:\n", func_name);
+    //我也不知道这里用func_name接一下为什么就乱码了
+    // const char *func_name = this->sym_ptr->toStr().c_str() + 1;
+    // printf("%s\n", this->sym_ptr->toStr().c_str() + 1);
+    fprintf(yyout, "\t.global %s\n", this->sym_ptr->toStr().c_str() + 1);
+    fprintf(yyout, "\t.type %s , %%function\n", this->sym_ptr->toStr().c_str() + 1);
+    fprintf(yyout, "%s:\n", this->sym_ptr->toStr().c_str() + 1);
     //3. Save callee saved register
     fprintf(yyout, "\tpush {");
     for(auto reg : getSavedRegs()){
