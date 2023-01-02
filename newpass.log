@@ -84,31 +84,31 @@ PASS: 088_hanoi
 PASS: 004_arr_defn
 PASS: 005_arr_defn2
 PASS: 006_arr_defn3
-PASS: 007_arr_defn4
-PASS: 011_const_array_defn
+FAIL: 007_arr_defn4	Compile Error
+FAIL: 011_const_array_defn	Compile Error
 PASS: 042_arr_expr_len
-FAIL: 061_sort_test1	Compile Error
-FAIL: 062_sort_test2	Compile Error
-FAIL: 064_sort_test4	Compile Error
-FAIL: 066_sort_test6	Compile Error
+PASS: 061_sort_test1
+PASS: 062_sort_test2
+PASS: 064_sort_test4
+PASS: 066_sort_test6
 PASS: 068_genealogical_tree
 PASS: 070_multiplication_puzzle
 PASS: 071_exchange_array
-FAIL: 073_backpack	Compile Error
+PASS: 073_backpack
 PASS: 074_matrix_add
 PASS: 075_matrix_sub
 PASS: 076_matrix_mul
 PASS: 077_matrix_tran
-FAIL: 078_big_int_mul	Compile Error
-FAIL: 081_exgcd	Wrong Answer
+PASS: 078_big_int_mul
+PASS: 081_exgcd
 PASS: 083_brainfk
 PASS: 085_dijkstra
 FAIL: 086_full_conn	Assemble Error
-FAIL: 089_hidden_var	Compile Error
+PASS: 089_hidden_var
 FAIL: 091_kmp	Assemble Error
 FAIL: 092_max_flow	Assemble Error
-FAIL: 093_n_queens	Assemble Error
-FAIL: 094_substr	Compile Error
+PASS: 093_n_queens
+FAIL: 094_substr	Assemble Error
 PASS: 1066_go_upstairs
 PASS: 1067_remove_duplicate_element
 PASS: 1069_last_word_length
@@ -123,22 +123,22 @@ PASS: 1090_insert_order
 PASS: 1091_line_search
 PASS: 058_short_circuit
 PASS: 059_short_circuit2
-FAIL: 063_sort_test3	Compile Error
-FAIL: 065_sort_test5	Compile Error
-FAIL: 067_sort_test7	Wrong Answer
+PASS: 063_sort_test3
+PASS: 065_sort_test5
+PASS: 067_sort_test7
 PASS: 072_percolation
-FAIL: 079_calculator	Compile Error
+FAIL: 079_calculator	Compile Timeout
 FAIL: 080_color	Assemble Error
-FAIL: 084_expr_eval	Compile Error
+FAIL: 084_expr_eval	Assemble Error
 PASS: 097_var_name
-FAIL: 098_chaos_token	Compile Error
-FAIL: 103_long_func	Compile Timeout
+PASS: 098_chaos_token
+FAIL: 103_long_func	Compile Error
 FAIL: 104_long_array	Assemble Error
 FAIL: 105_long_array2	Compile Timeout
-FAIL: 106_long_code	Compile Error
+FAIL: 106_long_code	Assemble Error
 FAIL: 107_long_code2	Compile Timeout
 FAIL: 108_many_params	Assemble Error
-FAIL: 109_many_params2	Compile Error
+FAIL: 109_many_params2	Compile Timeout
 PASS: 110_many_params3
 PASS: 111_many_globals
 PASS: 112_many_locals
@@ -147,15 +147,15 @@ PASS: 114_register_alloc
 PASS: 115_nested_calls
 PASS: 116_nested_calls2
 PASS: 117_nested_loops
-FAIL: 196_float	Compile Error
-FAIL: 198_matrix_add	Compile Error
-FAIL: 199_matrix_sub	Compile Error
-FAIL: 200_matrix_mul	Compile Error
-FAIL: 201_matrix_tran	Compile Error
+FAIL: 196_float	Assemble Error
+FAIL: 198_matrix_add	Assemble Error
+FAIL: 199_matrix_sub	Assemble Error
+FAIL: 200_matrix_mul	Assemble Error
+FAIL: 201_matrix_tran	Assemble Error
 PASS: 202_register_realloc
 FAIL: 35_math	Assemble Error
 FAIL: 36_rotate	Assemble Error
-FAIL: 37_dct	Compile Error
-FAIL: 38_light2d	Compile Error
-FAIL: 39_fp_params	Compile Error
-Total: 160	Accept: 105	Fail: 55
+FAIL: 37_dct	Assemble Error
+FAIL: 38_light2d	Assemble Error
+FAIL: 39_fp_params	Compile Timeout
+Total: 160	Accept: 126	Fail: 34
