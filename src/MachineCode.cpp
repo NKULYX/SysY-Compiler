@@ -457,7 +457,13 @@ void MachineFunction::output()
     fprintf(yyout, "\tmov fp, sp\n");
     //4. Allocate stack space for local variable
     if(stack_size!=0){
-        fprintf(yyout, "\tsub sp, sp, #%d\n", stack_size);
+        if(stack_size > 255) {
+            fprintf(yyout, "\tldr r4,=%d\n", stack_size);
+            fprintf(yyout, "\tsub sp, sp, r4\n");
+        }
+        else {
+            fprintf(yyout, "\tsub sp, sp, #%d\n", stack_size);
+        }
     }
     // Traverse all the block in block_list to print assembly code.
 //    for(auto iter : block_list)
@@ -481,7 +487,13 @@ void MachineFunction::output()
     fprintf(yyout, ".L%s_END:\n", this->sym_ptr->toStr().erase(0,1).c_str());
     //2. Restore callee saved registers and sp, fp
     if(stack_size!=0){
-        fprintf(yyout, "\tadd sp, sp, #%d\n", stack_size);
+        if(stack_size > 255) {
+            fprintf(yyout, "\tldr r4,=%d\n", stack_size);
+            fprintf(yyout, "\tadd sp, sp, r4\n");
+        }
+        else {
+            fprintf(yyout, "\tadd sp, sp, #%d\n", stack_size);
+        }
     }
     //恢复saved registers和fp
     fprintf(yyout, "\tpop {");

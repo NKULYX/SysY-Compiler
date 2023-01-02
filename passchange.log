@@ -1,14 +1,12 @@
-103c103
-< FAIL: 081_exgcd	Wrong Answer
+108c108
+< FAIL: 091_kmp	Assemble Error
 ---
-> PASS: 081_exgcd
-126,127c126,127
-< FAIL: 063_sort_test3	Wrong Answer
-< FAIL: 065_sort_test5	Wrong Answer
+> FAIL: 091_kmp	Wrong Answer
+136c136
+< FAIL: 104_long_array	Assemble Error
 ---
-> PASS: 063_sort_test3
-> PASS: 065_sort_test5
+> PASS: 104_long_array
 161c161
-< Total: 160	Accept: 123	Fail: 37
+< Total: 160	Accept: 129	Fail: 31
 ---
-> Total: 160	Accept: 126	Fail: 34
+> Total: 160	Accept: 130	Fail: 30

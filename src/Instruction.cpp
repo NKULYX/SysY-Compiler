@@ -647,7 +647,14 @@ void LoadInstruction::genMachineCode(AsmBuilder* builder)
         // example: load r1, [r0, #4]
         auto dst = genMachineOperand(operands[0]);
         auto src1 = genMachineReg(11);
-        auto src2 = genMachineImm(dynamic_cast<TemporarySymbolEntry*>(operands[1]->getEntry())->getOffset());
+        int offset = dynamic_cast<TemporarySymbolEntry*>(operands[1]->getEntry())->getOffset();
+        auto src2 = genMachineImm(offset);
+        if(offset > 255 || offset < -255) {
+            auto internal_reg = genMachineVReg();
+            cur_inst = new LoadMInstruction(cur_block, internal_reg, src2);
+            cur_block->InsertInst(cur_inst);
+            src2 = new MachineOperand(*internal_reg);
+        }
         cur_inst = new LoadMInstruction(cur_block, dst, src1, src2);
         cur_block->InsertInst(cur_inst);
         // 如果是函数参数 则保留其偏移量方便后续调整
@@ -666,8 +673,14 @@ void LoadInstruction::genMachineCode(AsmBuilder* builder)
             if(operands[1]->getEntry()->getType()->isIntArray()){
                 dimensions = dynamic_cast<IntArrayType*>(operands[1]->getEntry()->getType())->getDimensions();
             }
-            else{
+            else if(operands[1]->getEntry()->getType()->isConstIntArray()){
+                dimensions = dynamic_cast<ConstIntArrayType*>(operands[1]->getEntry()->getType())->getDimensions();
+            }
+            else if(operands[1]->getEntry()->getType()->isFloatArray()){
                 dimensions = dynamic_cast<FloatArrayType*>(operands[1]->getEntry()->getType())->getDimensions();
+            }
+            else{
+                dimensions = dynamic_cast<ConstFloatArrayType*>(operands[1]->getEntry()->getType())->getDimensions();
             }
             if(dynamic_cast<TemporarySymbolEntry*>(operands[1]->getEntry())->getGlobalArray() ||
                 dimensions[dimensions.size()-1]==-1){
@@ -680,6 +693,15 @@ void LoadInstruction::genMachineCode(AsmBuilder* builder)
                 auto src_addr = genMachineVReg();
                 auto fp = genMachineReg(11);
                 auto offset = genMachineOperand(operands[1]);
+                if(offset->isImm()) {
+                    if(((ConstantSymbolEntry*)(operands[1]->getEntry()))->getValue() > 255 ||
+                        ((ConstantSymbolEntry*)(operands[1]->getEntry()))->getValue() < -255) {
+                        auto internal_reg = genMachineVReg();
+                        cur_inst = new LoadMInstruction(cur_block, internal_reg, offset);
+                        cur_block->InsertInst(cur_inst);
+                        offset = new MachineOperand(*internal_reg);
+                    }
+                }
                 auto dst = genMachineOperand(operands[0]);
                 cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, src_addr, fp, offset);
                 cur_block->InsertInst(cur_inst);
@@ -743,7 +765,14 @@ void StoreInstruction::genMachineCode(AsmBuilder* builder)
     {
         // example: store r1, [r0, #4]
         auto dst1 = genMachineReg(11);
-        auto dst2 = genMachineImm(dynamic_cast<TemporarySymbolEntry*>(operands[0]->getEntry())->getOffset());
+        int offset = dynamic_cast<TemporarySymbolEntry*>(operands[0]->getEntry())->getOffset();
+        auto dst2 = genMachineImm(offset);
+        if(offset > 255 || offset < -255) {
+            auto internal_reg = genMachineVReg();
+            cur_inst = new LoadMInstruction(cur_block, internal_reg, dst2);
+            cur_block->InsertInst(cur_inst);
+            dst2 = new MachineOperand(*internal_reg);
+        }
         cur_inst = new StoreMInstruction(cur_block, src, dst1, dst2);
         cur_block->InsertInst(cur_inst);
     }
@@ -758,8 +787,14 @@ void StoreInstruction::genMachineCode(AsmBuilder* builder)
             if(operands[0]->getEntry()->getType()->isIntArray()){
                 dimensions = dynamic_cast<IntArrayType*>(operands[0]->getEntry()->getType())->getDimensions();
             }
-            else{
+            else if(operands[0]->getEntry()->getType()->isConstIntArray()){
+                dimensions = dynamic_cast<ConstIntArrayType*>(operands[0]->getEntry()->getType())->getDimensions();
+            }
+            else if(operands[0]->getEntry()->getType()->isFloatArray()){
                 dimensions = dynamic_cast<FloatArrayType*>(operands[0]->getEntry()->getType())->getDimensions();
+            }
+            else{
+                dimensions = dynamic_cast<ConstFloatArrayType*>(operands[0]->getEntry()->getType())->getDimensions();
             }
             if(dynamic_cast<TemporarySymbolEntry*>(operands[0]->getEntry())->getGlobalArray() ||
                 dimensions[dimensions.size()-1]==-1){
@@ -771,6 +806,15 @@ void StoreInstruction::genMachineCode(AsmBuilder* builder)
                 auto dst_addr = genMachineVReg();
                 auto fp = genMachineReg(11);
                 auto offset = genMachineOperand(operands[0]);
+                if(offset->isImm()) {
+                    if(((ConstantSymbolEntry*)(operands[0]->getEntry()))->getValue() > 255 ||
+                       ((ConstantSymbolEntry*)(operands[0]->getEntry()))->getValue() < -255) {
+                        auto internal_reg = genMachineVReg();
+                        cur_inst = new LoadMInstruction(cur_block, internal_reg, offset);
+                        cur_block->InsertInst(cur_inst);
+                        offset = new MachineOperand(*internal_reg);
+                    }
+                }
                 cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, dst_addr, fp, offset);
                 cur_block->InsertInst(cur_inst);
 
@@ -788,7 +832,6 @@ void StoreInstruction::genMachineCode(AsmBuilder* builder)
 
 void BinaryInstruction::genMachineCode(AsmBuilder* builder)
 {
-    // TODO: 超过范围的立即数
     // complete other instructions
     auto cur_block = builder->getBlock();
     auto dst = genMachineOperand(operands[0]);
@@ -816,6 +859,12 @@ void BinaryInstruction::genMachineCode(AsmBuilder* builder)
             cur_block->InsertInst(cur_inst);
             src2 = new MachineOperand(*internal_reg);
         }
+    }
+    if(src2->isImm() && (src2->getVal() > 255 || src2->getVal() < -255)) {
+        auto internal_reg = genMachineVReg();
+        cur_inst = new LoadMInstruction(cur_block, internal_reg, src2);
+        cur_block->InsertInst(cur_inst);
+        src2 = new MachineOperand(*internal_reg);
     }
     switch (opcode)
     {
@@ -969,6 +1018,15 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
                 auto dst_addr = genMachineVReg();
                 auto fp = genMachineReg(11);
                 auto offset = genMachineOperand(operands[i]);
+                if(offset->isImm()) {
+                    if(((ConstantSymbolEntry*)(operands[i]->getEntry()))->getValue() > 255 ||
+                       ((ConstantSymbolEntry*)(operands[i]->getEntry()))->getValue() < -255) {
+                        auto internal_reg = genMachineVReg();
+                        cur_inst = new LoadMInstruction(cur_block, internal_reg, offset);
+                        cur_block->InsertInst(cur_inst);
+                        offset = new MachineOperand(*internal_reg);
+                    }
+                }
                 cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, dst_addr, fp, offset);
                 cur_block->InsertInst(cur_inst);
 
@@ -1011,9 +1069,15 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
                 cur_block->InsertInst(cur_inst);
             }
             else{
-                additional_args.push_back(genMachineOperand(operands[i]));
                 additional_args.clear();
-                additional_args.push_back(genMachineOperand(operands[i]));
+                MachineOperand* operand = genMachineOperand(operands[i]);
+                if(operand->isImm()) {
+                    MachineOperand* internal_reg = genMachineVReg();
+                    cur_inst = new LoadMInstruction(cur_block, internal_reg, operand);
+                    cur_block->InsertInst(cur_inst);
+                    operand = new MachineOperand(*internal_reg);
+                }
+                additional_args.push_back(operand);
                 cur_inst = new StackMInstruction(cur_block, StackMInstruction::PUSH, additional_args);
                 cur_block->InsertInst(cur_inst);
                 saved_reg_cnt++;
@@ -1043,6 +1107,12 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
     if(saved_reg_cnt){
         auto src1 = genMachineReg(13);
         auto src2 = genMachineImm(saved_reg_cnt*4);
+        if(saved_reg_cnt*4 > 255 || saved_reg_cnt*4 < -255) {
+            auto internal_reg = genMachineVReg();
+            cur_inst = new LoadMInstruction(cur_block, internal_reg, src2);
+            cur_block->InsertInst(cur_inst);
+            src2 = new MachineOperand(*internal_reg);
+        }
         auto dst = genMachineReg(13);
         cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, dst, src1, src2);
         cur_block->InsertInst(cur_inst);

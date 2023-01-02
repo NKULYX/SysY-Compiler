@@ -84,8 +84,8 @@ PASS: 088_hanoi
 PASS: 004_arr_defn
 PASS: 005_arr_defn2
 PASS: 006_arr_defn3
-FAIL: 007_arr_defn4	Compile Error
-FAIL: 011_const_array_defn	Compile Error
+PASS: 007_arr_defn4
+PASS: 011_const_array_defn
 PASS: 042_arr_expr_len
 PASS: 061_sort_test1
 PASS: 062_sort_test2
@@ -100,7 +100,7 @@ PASS: 075_matrix_sub
 PASS: 076_matrix_mul
 PASS: 077_matrix_tran
 PASS: 078_big_int_mul
-FAIL: 081_exgcd	Wrong Answer
+PASS: 081_exgcd
 PASS: 083_brainfk
 PASS: 085_dijkstra
 FAIL: 086_full_conn	Assemble Error
@@ -123,16 +123,16 @@ PASS: 1090_insert_order
 PASS: 1091_line_search
 PASS: 058_short_circuit
 PASS: 059_short_circuit2
-FAIL: 063_sort_test3	Wrong Answer
-FAIL: 065_sort_test5	Wrong Answer
+PASS: 063_sort_test3
+PASS: 065_sort_test5
 PASS: 067_sort_test7
 PASS: 072_percolation
-FAIL: 079_calculator	Compile Timeout
-FAIL: 080_color	Assemble Error
+FAIL: 079_calculator	Assemble Error
+PASS: 080_color
 FAIL: 084_expr_eval	Assemble Error
 PASS: 097_var_name
 PASS: 098_chaos_token
-FAIL: 103_long_func	Compile Error
+FAIL: 103_long_func	Compile Timeout
 FAIL: 104_long_array	Assemble Error
 FAIL: 105_long_array2	Compile Timeout
 FAIL: 106_long_code	Assemble Error
@@ -158,4 +158,4 @@ FAIL: 36_rotate	Assemble Error
 FAIL: 37_dct	Assemble Error
 FAIL: 38_light2d	Assemble Error
 FAIL: 39_fp_params	Compile Timeout
-Total: 160	Accept: 123	Fail: 37
+Total: 160	Accept: 129	Fail: 31
