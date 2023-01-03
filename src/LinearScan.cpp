@@ -8,6 +8,8 @@ LinearScan::LinearScan(MachineUnit *unit)
     this->unit = unit;
     for (int i = 4; i < 11; i++)
         regs.push_back(i);
+    for (int i = 21; i < 48; i++)
+        fregs.push_back(i);
 }
 
 void LinearScan::allocateRegisters()
@@ -76,7 +78,7 @@ void LinearScan::computeLiveIntervals()
         int t = -1;
         for (auto &use : du_chain.second)
             t = std::max(t, use->getParent()->getNo());
-        Interval *interval = new Interval({du_chain.first->getParent()->getNo(), t, false, 0, 0, {du_chain.first}, du_chain.second});
+        Interval *interval = new Interval({du_chain.first->getParent()->getNo(), t, false, 0, 0, du_chain.first->isFloat(), {du_chain.first}, du_chain.second});
         intervals.push_back(interval);
     }
     for (auto& interval : intervals) {
@@ -166,22 +168,38 @@ bool LinearScan::linearScanRegisterAllocation()
     regs.clear();
     for (int i = 4; i < 11; i++)
         regs.push_back(i);
+    for (int i = 21; i < 48; i++)
+        fregs.push_back(i);
     for(auto &interval : intervals){
         expireOldIntervals(interval);
         //判断 active 列表中 interval 的数目和可用的物理寄存器数目是否相等
-        if(regs.size() == 0){//溢出
-            spillAtInterval(interval);
-            // printf("%d\t%d\n", interval->start, interval->end);
-            retValue = false;
+        if(interval->freg){
+            if(fregs.size() == 0){//溢出
+                spillAtInterval(interval);
+                retValue = false;
+            }
+            else{//当前有可用于分配的物理寄存器
+                interval->rreg = fregs[fregs.size()-1];//为 unhandled interval 分配物理寄存器
+                fregs.pop_back();
+                active.push_back(interval);
+                sort(active.begin(), active.end(), insertComp);
+            }
         }
-        else{//当前有可用于分配的物理寄存器
-            interval->rreg = regs[regs.size()-1];//为 unhandled interval 分配物理寄存器
-            regs.pop_back();
-            //再按照活跃区间结束位置，将其插入到 active 列表中
-            // std::vector<Interval*>::iterator insertPos = std::lower_bound(active.begin(), active.end(), interval, insertComp);
-            // active.insert(insertPos, interval);//按照unhandled interval活跃区间结束位置，将其插入到 active 列表中
-            active.push_back(interval);
-            sort(active.begin(), active.end(), insertComp);
+        else{
+            if(regs.size() == 0){//溢出
+                spillAtInterval(interval);
+                // printf("%d\t%d\n", interval->start, interval->end);
+                retValue = false;
+            }
+            else{//当前有可用于分配的物理寄存器
+                interval->rreg = regs[regs.size()-1];//为 unhandled interval 分配物理寄存器
+                regs.pop_back();
+                //再按照活跃区间结束位置，将其插入到 active 列表中
+                // std::vector<Interval*>::iterator insertPos = std::lower_bound(active.begin(), active.end(), interval, insertComp);
+                // active.insert(insertPos, interval);//按照unhandled interval活跃区间结束位置，将其插入到 active 列表中
+                active.push_back(interval);
+                sort(active.begin(), active.end(), insertComp);
+            }
         }
     }
     return retValue;
@@ -216,12 +234,62 @@ void LinearScan::genSpillCode()
         // 1. insert ldr inst before the use of vreg
         for (auto use : interval->uses){
             MachineBlock* block = use->getParent()->getParent();
-            block->insertBefore(use->getParent(), new LoadMInstruction(block, new MachineOperand(*use), new MachineOperand(MachineOperand::REG, 11), new MachineOperand(MachineOperand::IMM, -interval->disp)));
+            MachineOperand* offset = new MachineOperand(MachineOperand::IMM, -interval->disp);
+            //如果栈帧偏移是大于255的立即数，需要重新load
+            // if (interval->disp > 255 || interval->disp < -255) {
+            //     MachineOperand* temp = new MachineOperand(MachineOperand::VREG, SymbolTable::getLabel());
+            //     //先把立即数load到寄存器
+            //     block->insertBefore(use->getParent(), new LoadMInstruction(block, temp, offset));
+            //     offset = new MachineOperand(*temp);
+            //     MachineOperand* addr = new MachineOperand(MachineOperand::VREG, SymbolTable::getLabel());
+            //     //然后add fp和立即数
+            //     block->insertBefore(use->getParent(), new BinaryMInstruction(block, BinaryMInstruction::ADD, addr, new MachineOperand(MachineOperand::REG, 11), offset));
+            //     //最后load
+            //     if(!use->isFloat()){
+            //         block->insertBefore(use->getParent(), new LoadMInstruction(block, new MachineOperand(*use), new MachineOperand(*addr), nullptr, LoadMInstruction::LDR));
+            //     }
+            //     else{
+            //         block->insertBefore(use->getParent(), new LoadMInstruction(block, new MachineOperand(*use), new MachineOperand(*addr), nullptr, LoadMInstruction::VLDR));
+            //     }
+            // }
+            // else{
+                if(!use->isFloat()){
+                    block->insertBefore(use->getParent(), new LoadMInstruction(block, new MachineOperand(*use), new MachineOperand(MachineOperand::REG, 11), offset, LoadMInstruction::LDR));
+                }
+                else{
+                    block->insertBefore(use->getParent(), new LoadMInstruction(block, new MachineOperand(*use), new MachineOperand(MachineOperand::REG, 11), offset, LoadMInstruction::VLDR));
+                }
+            // }
         }
         // 2. insert str inst after the def of vreg
         for (auto def : interval->defs){
             MachineBlock* block = def->getParent()->getParent();
-            block->insertAfter(def->getParent(), new StoreMInstruction(block, new MachineOperand(*def), new MachineOperand(MachineOperand::REG, 11), new MachineOperand(MachineOperand::IMM, -interval->disp)));
+            MachineOperand* offset = new MachineOperand(MachineOperand::IMM, -interval->disp);
+            //如果栈帧偏移是大于255的立即数，需要重新load
+            // if (interval->disp > 255 || interval->disp < -255) {
+            //     MachineOperand* temp = new MachineOperand(MachineOperand::VREG, SymbolTable::getLabel());
+            //     //先把立即数load到寄存器
+            //     block->insertAfter(def->getParent(), new LoadMInstruction(block, temp, offset));
+            //     offset = new MachineOperand(*temp);
+            //     MachineOperand* addr = new MachineOperand(MachineOperand::VREG, SymbolTable::getLabel());
+            //     //然后add fp和立即数
+            //     block->insertAfter(def->getParent(), new BinaryMInstruction(block, BinaryMInstruction::ADD, addr, new MachineOperand(MachineOperand::REG, 11), offset));
+            //     //最后load
+            //     if(!def->isFloat()){
+            //         block->insertAfter(def->getParent(), new StoreMInstruction(block, new MachineOperand(*def), new MachineOperand(*addr), nullptr, StoreMInstruction::STR));
+            //     }
+            //     else{
+            //         block->insertAfter(def->getParent(), new StoreMInstruction(block, new MachineOperand(*def), new MachineOperand(*addr), nullptr, StoreMInstruction::VSTR));
+            //     }
+            // }
+            // else{
+                if(!def->isFloat()){
+                    block->insertAfter(def->getParent(), new StoreMInstruction(block, new MachineOperand(*def), new MachineOperand(MachineOperand::REG, 11), offset, StoreMInstruction::STR));
+                }
+                else{
+                    block->insertAfter(def->getParent(), new StoreMInstruction(block, new MachineOperand(*def), new MachineOperand(MachineOperand::REG, 11), offset, StoreMInstruction::VSTR));
+                }
+            // }
         }
     }
 }
@@ -233,9 +301,18 @@ void LinearScan::expireOldIntervals(Interval *interval)
         if(!victimComp(*it, interval)){
             return;
         }
-        regs.push_back((*it)->rreg);//释放寄存器
-        it = active.erase(find(active.begin(), active.end(), *it));//注意此处的迭代方式
-        sort(regs.begin(), regs.end());
+        //rreg
+        if ((*it)->rreg < 11) {
+            regs.push_back((*it)->rreg);//释放寄存器
+            it = active.erase(find(active.begin(), active.end(), *it));//注意此处的迭代方式
+            sort(regs.begin(), regs.end());
+        }
+        //freg
+        else{
+            fregs.push_back((*it)->rreg);//释放寄存器
+            it = active.erase(find(active.begin(), active.end(), *it));//注意此处的迭代方式
+            sort(fregs.begin(), fregs.end()); 
+        }
     }
     // active.erase(active.begin(),top);//删除结束早于interval开始的所有区间
 }
@@ -243,6 +320,7 @@ void LinearScan::expireOldIntervals(Interval *interval)
 void LinearScan::spillAtInterval(Interval *interval)
 {
     if(active[active.size()-1]->end <= interval->end){//unhandled interval 的结束时间更晚
+    // || (active[active.size()-1]->freg != interval->freg)
         interval->spill = true;//只需要置位其 spill 标志位
     }
     else{// active 列表中的 interval 结束时间更晚
