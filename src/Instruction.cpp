@@ -368,8 +368,8 @@ void StoreInstruction::output() const
 
 ZextInstruction::ZextInstruction(Operand *src, Operand *dst, BasicBlock *insert_bb) : Instruction(ZEXT, insert_bb)
 {
-    operands.push_back(src);
     operands.push_back(dst);
+    operands.push_back(src);
     dst->setDef(this);
     src->addUse(this);
 }
@@ -384,10 +384,10 @@ ZextInstruction::~ZextInstruction()
 
 void ZextInstruction::output() const
 {
-    std::string src = operands[0]->toStr();
-    std::string dst = operands[1]->toStr();
-    std::string src_type = operands[0]->getType()->toStr();
-    std::string dst_type = operands[1]->getType()->toStr();
+    std::string src = operands[1]->toStr();
+    std::string dst = operands[0]->toStr();
+    std::string src_type = operands[1]->getType()->toStr();
+    std::string dst_type = operands[0]->getType()->toStr();
     fprintf(yyout, "  %s = zext %s %s to %s\n", dst.c_str(), src_type.c_str(), src.c_str(), dst_type.c_str());
 }
 
@@ -496,8 +496,8 @@ void FCmpInstruction::output() const
 IntFloatCastInstructionn::IntFloatCastInstructionn(unsigned opcode, Operand *src, Operand *dst, BasicBlock *insert_bb) : Instruction(CAST, insert_bb)
 {
     this->opcode = opcode;
-    operands.push_back(src);
     operands.push_back(dst);
+    operands.push_back(src);
     dst->setDef(this);
     src->addUse(this);
 }
@@ -512,10 +512,10 @@ IntFloatCastInstructionn::~IntFloatCastInstructionn()
 
 void IntFloatCastInstructionn::output() const
 {
-    std::string src = operands[0]->toStr();
-    std::string dst = operands[1]->toStr();
-    std::string src_type = operands[0]->getType()->toStr();
-    std::string dst_type = operands[1]->getType()->toStr();
+    std::string src = operands[1]->toStr();
+    std::string dst = operands[0]->toStr();
+    std::string src_type = operands[1]->getType()->toStr();
+    std::string dst_type = operands[0]->getType()->toStr();
     std::string castType;
     switch(opcode) {
         case I2F:
@@ -531,53 +531,104 @@ void IntFloatCastInstructionn::output() const
     fprintf(yyout, "  %s = %s %s %s to %s\n", dst.c_str(), castType.c_str(), src_type.c_str(), src.c_str(), dst_type.c_str());
 }
 //lab7 starts here
-MachineOperand* Instruction::genMachineOperand(Operand* ope)
+MachineOperand* Instruction::genMachineOperand(Operand* ope, bool isFloat)
 {
-    auto se = ope->getEntry();
-    MachineOperand* mope = nullptr;
-    if(se->isConstant())
-        mope = new MachineOperand(MachineOperand::IMM, dynamic_cast<ConstantSymbolEntry*>(se)->getValue());
-    else if(se->isTemporary())
-    {
-        if(se->getType()->isPointer()) {
-            if(dynamic_cast<PointerType*>(se->getType())->getValueType()->isArray()) {
-                mope = new MachineOperand(MachineOperand::IMM, dynamic_cast<TemporarySymbolEntry*>(se)->getOffset());
+    // TODO: 生成float类型的MachineOperand
+    if(isFloat) {
+        auto se = ope->getEntry();
+        MachineOperand* mope = nullptr;
+        if(se->isConstant())
+            mope = new MachineOperand(MachineOperand::IMM, dynamic_cast<ConstantSymbolEntry*>(se)->getValue(), true);
+        else if(se->isTemporary())
+        {
+            if(se->getType()->isPointer()) {
+                if(dynamic_cast<PointerType*>(se->getType())->getValueType()->isArray()) {
+                    mope = new MachineOperand(MachineOperand::IMM, dynamic_cast<TemporarySymbolEntry*>(se)->getOffset());
+                }
+            }
+            else {
+                mope = new MachineOperand(MachineOperand::VREG, dynamic_cast<TemporarySymbolEntry*>(se)->getLabel(), true);
             }
         }
-        else {
-            mope = new MachineOperand(MachineOperand::VREG, dynamic_cast<TemporarySymbolEntry*>(se)->getLabel());
-        }
-    }
-    else if(se->isVariable())
-    {
-        auto id_se = dynamic_cast<IdentifierSymbolEntry*>(se);
-        Type* type = id_se->getType();
-        // 如果是函数参数
-        if(id_se->isParam()) {
-            auto param_id = this->parent->getParent()->getParamId(ope);
-            if(param_id >= 0 && param_id <= 3) {
-                mope = new MachineOperand(MachineOperand::REG, param_id);
-            }
-            else if(param_id >= 4) {
+        else if(se->isVariable())
+        {
+            auto id_se = dynamic_cast<IdentifierSymbolEntry*>(se);
+            Type* type = id_se->getType();
+            // 如果是函数参数
+            if(id_se->isParam()) {
+                auto param_id = this->parent->getParent()->getParamId(ope);
+                if(param_id >= 0 && param_id <= 3) {
+                    mope = new MachineOperand(MachineOperand::REG, param_id, true);
+                }
+                else if(param_id >= 4) {
 
+                }
+            }
+                // 如果是全局变量
+            else if(id_se->isGlobal()) {
+                mope = new MachineOperand(id_se->toStr().erase(0,1).c_str());
+            }
+            else {
+                if(type==TypeSystem::constIntType){
+                    //TODO: add array manipulation here
+                    //TODO: add float manipulation here
+                    mope = new MachineOperand(MachineOperand::IMM, id_se->value, true);
+                }
+                else{
+                    mope = new MachineOperand(id_se->toStr().c_str());
+                }
             }
         }
-        // 如果是全局变量
-        else if(id_se->isGlobal()) {
-            mope = new MachineOperand(id_se->toStr().erase(0,1).c_str());
-        }
-        else {
-            if(type==TypeSystem::constIntType){
-                //TODO: add array manipulation here
-                //TODO: add float manipulation here
-                mope = new MachineOperand(MachineOperand::IMM, id_se->value);
-            }
-            else{
-                mope = new MachineOperand(id_se->toStr().c_str());
-            }
-        }
+        return mope;
     }
-    return mope;
+    else {
+
+        auto se = ope->getEntry();
+        MachineOperand* mope = nullptr;
+        if(se->isConstant())
+            mope = new MachineOperand(MachineOperand::IMM, dynamic_cast<ConstantSymbolEntry*>(se)->getValue());
+        else if(se->isTemporary())
+        {
+            if(se->getType()->isPointer()) {
+                if(dynamic_cast<PointerType*>(se->getType())->getValueType()->isArray()) {
+                    mope = new MachineOperand(MachineOperand::IMM, dynamic_cast<TemporarySymbolEntry*>(se)->getOffset());
+                }
+            }
+            else {
+                mope = new MachineOperand(MachineOperand::VREG, dynamic_cast<TemporarySymbolEntry*>(se)->getLabel());
+            }
+        }
+        else if(se->isVariable())
+        {
+            auto id_se = dynamic_cast<IdentifierSymbolEntry*>(se);
+            Type* type = id_se->getType();
+            // 如果是函数参数
+            if(id_se->isParam()) {
+                auto param_id = this->parent->getParent()->getParamId(ope);
+                if(param_id >= 0 && param_id <= 3) {
+                    mope = new MachineOperand(MachineOperand::REG, param_id);
+                }
+                else if(param_id >= 4) {
+
+                }
+            }
+            // 如果是全局变量
+            else if(id_se->isGlobal()) {
+                mope = new MachineOperand(id_se->toStr().erase(0,1).c_str());
+            }
+            else {
+                if(type==TypeSystem::constIntType){
+                    //TODO: add array manipulation here
+                    //TODO: add float manipulation here
+                    mope = new MachineOperand(MachineOperand::IMM, id_se->value);
+                }
+                else{
+                    mope = new MachineOperand(id_se->toStr().c_str());
+                }
+            }
+        }
+        return mope;
+    }
 }
 
 MachineOperand* Instruction::genMachineReg(int reg) 
@@ -973,18 +1024,30 @@ void RetInstruction::genMachineCode(AsmBuilder* builder)
     MachineInstruction* cur_inst = nullptr;
     //1. Generate mov instruction to save return value in r0
     if(!operands.empty()){
-        auto src = genMachineOperand(operands[0]);
-        //立即数->寄存器
-        if(src->isImm())
-        {
-            auto internal_reg = genMachineVReg();
-            cur_inst = new LoadMInstruction(cur_block, internal_reg, src);
-            cur_block->InsertInst(cur_inst);
-            src = new MachineOperand(*internal_reg);
+        if (operands[0]->getType()->isFloat()) {
+            auto src = genMachineOperand(operands[0], true);
+            if(src->isImm()) {
+                auto internal_reg = genMachineVReg();
+                cur_inst = new LoadMInstruction(cur_block, internal_reg, src);
+                cur_block->InsertInst(cur_inst);
+                src = internal_reg;
+            }
+            auto dst = new MachineOperand(MachineOperand::REG, 16, true);
         }
-        auto dst = new MachineOperand(MachineOperand::REG, 0);//r0
-        cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, src);
-        cur_block->InsertInst(cur_inst);
+        else {
+            auto src = genMachineOperand(operands[0]);
+            //立即数->寄存器
+            if(src->isImm())
+            {
+                auto internal_reg = genMachineVReg();
+                cur_inst = new LoadMInstruction(cur_block, internal_reg, src);
+                cur_block->InsertInst(cur_inst);
+                src = new MachineOperand(*internal_reg);
+            }
+            auto dst = new MachineOperand(MachineOperand::REG, 0);//r0
+            cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, src);
+            cur_block->InsertInst(cur_inst);
+        }
     }
     // 生成一条跳转到结尾函数栈帧处理的无条件跳转语句
     auto dst = new MachineOperand(".L" + this->getParent()->getParent()->getSymPtr()->toStr().erase(0,1) + "_END");
@@ -1124,7 +1187,7 @@ void ZextInstruction::genMachineCode(AsmBuilder* builder)
 {
     MachineBlock* cur_block = builder->getBlock();
     MachineInstruction* cur_inst = nullptr;
-    MachineOperand* src = genMachineOperand(operands[0]);
+    MachineOperand* src = genMachineOperand(operands[1]);
     if(src->isImm())
     {
         auto internal_reg = genMachineVReg();
@@ -1132,14 +1195,56 @@ void ZextInstruction::genMachineCode(AsmBuilder* builder)
         cur_block->InsertInst(cur_inst);
         src = new MachineOperand(*internal_reg);
     }
-    MachineOperand* dst = genMachineOperand(operands[1]);
+    MachineOperand* dst = genMachineOperand(operands[0]);
     cur_inst = new ZextMInstruction(cur_block, dst, src);
     cur_block->InsertInst(cur_inst);
 }
 
 void FBinaryInstruction::genMachineCode(AsmBuilder* builder)
 {
-
+    auto cur_block = builder->getBlock();
+    auto flag = false;
+    auto dst = genMachineOperand(operands[0], true);
+    auto src1 = genMachineOperand(operands[1], true);
+    auto src2 = genMachineOperand(operands[2], true);
+    MachineInstruction* cur_inst = nullptr;
+    if (src1->isImm()) {
+        auto tmp_reg = genMachineVReg(true);
+        auto internal_reg = genMachineVReg();
+        cur_inst = new LoadMInstruction(cur_block,internal_reg, src1);
+        cur_block->InsertInst(cur_inst);
+        internal_reg = new MachineOperand(*internal_reg);
+        cur_inst = new MovMInstruction(cur_block, MovMInstruction::VMOV,tmp_reg, internal_reg);
+        cur_block->InsertInst(cur_inst);
+        src1 = new MachineOperand(*tmp_reg);
+    }
+    if (src2->isImm()) {
+        auto tmp_reg = genMachineVReg(true);
+        auto internal_reg = genMachineVReg();
+        cur_inst = new LoadMInstruction(cur_block, internal_reg, src2);
+        cur_block->InsertInst(cur_inst);
+        internal_reg = new MachineOperand(*internal_reg);
+        cur_inst = new MovMInstruction(cur_block, MovMInstruction::VMOV,tmp_reg, internal_reg);
+        cur_block->InsertInst(cur_inst);
+        src2 = new MachineOperand(*tmp_reg);
+    }
+    switch (opcode) {
+        case ADD:
+            cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::VADD, dst, src1, src2);
+            break;
+        case SUB:
+            cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::VSUB, dst, src1, src2);
+            break;
+        case MUL:
+            cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::VMUL, dst, src1, src2);
+            break;
+        case DIV:
+            cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::VDIV, dst, src1, src2);
+            break;
+        default:
+            break;
+    }
+    cur_block->InsertInst(cur_inst);
 }
 
 void FCmpInstruction::genMachineCode(AsmBuilder* builder)
@@ -1153,15 +1258,22 @@ void FCmpInstruction::genMachineCode(AsmBuilder* builder)
         MachineOperand* internal_reg = genMachineVReg();
         cur_inst = new LoadMInstruction(cur_block, internal_reg, src1);
         cur_block->InsertInst(cur_inst);
-        src1 = new MachineOperand(*internal_reg);
+        internal_reg = new MachineOperand(*internal_reg);
+        cur_inst = new MovMInstruction(cur_block, MovMInstruction::VMOV,tmp_reg, internal_reg);
+        cur_block->InsertInst(cur_inst);
+        src1 = new MachineOperand(*tmp_reg);
     }
     if (src2->isImm()) {
+        MachineOperand* tmp_reg = genMachineVReg(true);
         MachineOperand* internal_reg = genMachineVReg();
         cur_inst = new LoadMInstruction(cur_block, internal_reg, src2);
         cur_block->InsertInst(cur_inst);
-        src2 = new MachineOperand(*internal_reg);
+        internal_reg = new MachineOperand(*internal_reg);
+        cur_inst = new MovMInstruction(cur_block, MovMInstruction::VMOV,tmp_reg, internal_reg);
+        cur_block->InsertInst(cur_inst);
+        src2 = new MachineOperand(*tmp_reg);
     }
-    cur_inst = new CmpMInstruction(cur_block, src1, src2, opcode);
+    cur_inst = new CmpMInstruction(cur_block, src1, src2, opcode, CmpMInstruction::VCMP);
     cur_block->InsertInst(cur_inst);
     cur_block->setCurrentBranchCond(opcode);
     // 采用条件存储的方式将1/0存储到dst中
@@ -1181,5 +1293,51 @@ void FCmpInstruction::genMachineCode(AsmBuilder* builder)
 
 void IntFloatCastInstructionn::genMachineCode(AsmBuilder* builder)
 {
-    // TODO
+    Operand* src = operands[1];
+    Operand* dst = operands[0];
+    if(opcode == F2I) {
+
+        MachineInstruction* cur_inst;
+        auto cur_block = builder->getBlock();
+
+        auto src_operand = genMachineOperand(src, true);
+        auto dst_operand = genMachineOperand(dst);
+
+        if (src_operand->isImm()) {
+            auto tmp = genMachineVReg(true);
+            auto internal_reg = genMachineVReg();
+            cur_inst = new LoadMInstruction(cur_block, internal_reg, src_operand);
+            cur_block->InsertInst(cur_inst);
+            internal_reg = new MachineOperand(*internal_reg);
+            cur_inst = new MovMInstruction(cur_block, MovMInstruction::VMOV, tmp,internal_reg);
+            cur_block->InsertInst(cur_inst);
+            src_operand = tmp;
+        }
+        auto vcvtDst = genMachineVReg(true);
+        cur_inst = new VcvtMInstruction(cur_block, VcvtMInstruction::F2S, vcvtDst, src_operand);
+        cur_block->InsertInst(cur_inst);
+        auto movUse = new MachineOperand(*vcvtDst);
+        cur_inst = new MovMInstruction(cur_block, MovMInstruction::VMOV, dst_operand, movUse);
+        cur_block->InsertInst(cur_inst);
+    }
+    else {
+        MachineInstruction* cur_inst;
+        auto cur_block = builder->getBlock();
+
+        auto src_operand = genMachineOperand(src);
+        auto dst_operand = genMachineOperand(dst, true);
+
+        if (src_operand->isImm()) {
+            auto tmp = genMachineVReg();
+            cur_inst = new LoadMInstruction(cur_block, tmp, src_operand);
+            cur_block->InsertInst(cur_inst);
+            src_operand = new MachineOperand(*tmp);
+        }
+        auto movDst = genMachineVReg(true);
+        cur_inst = new MovMInstruction(cur_block, MovMInstruction::VMOV, movDst, src_operand);
+        cur_block->InsertInst(cur_inst);
+        auto vcvtUse = new MachineOperand(*movDst);
+        cur_inst = new VcvtMInstruction(cur_block, VcvtMInstruction::S2F, dst_operand, vcvtUse);
+        cur_block->InsertInst(cur_inst);
+    }
 }

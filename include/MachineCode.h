@@ -58,7 +58,6 @@ public:
     MachineInstruction* getParent() { return this->parent;};
     void PrintReg();
     void output();
-    bool isFloat() const {return is_float;};
 };
 
 class MachineInstruction
@@ -76,7 +75,7 @@ protected:
     void addUse(MachineOperand* ope) { use_list.push_back(ope); };
     // Print execution code after printing opcode
     void PrintCond();
-    enum instType { BINARY, LOAD, STORE, MOV, BRANCH, CMP, STACK, ZEXT};
+    enum instType { BINARY, LOAD, STORE, MOV, BRANCH, CMP, STACK, ZEXT, VCVT};
 public:
     enum condType { EQ, NE, LT, LE , GT, GE, NONE };
     virtual void output() = 0;
@@ -144,15 +143,15 @@ class CmpMInstruction : public MachineInstruction
 public:
     enum opType { CMP, VCMP };
     CmpMInstruction(MachineBlock* p, 
-                MachineOperand* src1, MachineOperand* src2, int optype = CMP,
-                int cond = MachineInstruction::NONE);
+                MachineOperand* src1, MachineOperand* src2,
+                int cond = MachineInstruction::NONE, int optype = CMP);
     void output();
 };
 
 class StackMInstruction : public MachineInstruction
 {
 public:
-    enum opType { PUSH, POP };
+    enum opType { PUSH, POP, VPUSH, VPOP };
     StackMInstruction(MachineBlock* p, int op, 
                 std::vector<MachineOperand*> src,
                 int cond = MachineInstruction::NONE);
@@ -165,6 +164,17 @@ public:
     ZextMInstruction(MachineBlock* p,
                 MachineOperand* dst, MachineOperand* src,
                 int cond = MachineInstruction::NONE);
+    void output();
+};
+
+class VcvtMInstruction : public MachineInstruction {
+public:
+    enum opType { S2F, F2S };
+    VcvtMInstruction(MachineBlock* p,
+                     int op,
+                     MachineOperand* dst,
+                     MachineOperand* src,
+                     int cond = MachineInstruction::NONE);
     void output();
 };
 

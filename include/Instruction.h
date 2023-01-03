@@ -27,7 +27,7 @@ public:
     int getType() {return instType;};
     virtual void output() const = 0;
     //lab7
-    MachineOperand* genMachineOperand(Operand*);
+    MachineOperand* genMachineOperand(Operand*, bool isFloat = false);
     MachineOperand* genMachineReg(int reg);
     MachineOperand* genMachineVReg(bool isFloat = false);
     MachineOperand* genMachineImm(int val);

@@ -372,7 +372,7 @@ void BranchMInstruction::output()
 
 CmpMInstruction::CmpMInstruction(MachineBlock* p, 
     MachineOperand* src1, MachineOperand* src2, 
-    int optype, int cond)
+    int cond, int optype)
 {
     this->parent = p;
     this->type = optype;
@@ -424,14 +424,40 @@ void StackMInstruction::output()
     case POP:
         fprintf(yyout, "\tpop {");
         break;
+    case VPUSH:
+        fprintf(yyout, "\tvpush {");
+        break;
+    case VPOP:
+        fprintf(yyout, "\tvpop {");
+        break;
     }
-    bool is_first = true;
-    for(auto reg : use_list){
-        if(!is_first)
+    if(use_list.size() <= 16) {
+        this->use_list[0]->output();
+        for (long unsigned int i = 1; i < use_list.size(); i++) {
             fprintf(yyout, ", ");
-        else
-            is_first = false;
-        reg->output();
+            this->use_list[i]->output();
+        }
+    }
+    // 浮点寄存器可能会很多 每次只能push/pop16个
+    else {
+        this->use_list[0]->output();
+        for (long unsigned int i = 1; i < 16; i++) {
+            fprintf(yyout, ", ");
+            this->use_list[i]->output();
+        }
+        fprintf(yyout, "}\n");
+        if(op == VPUSH) {
+            fprintf(yyout, "\tvpush ");
+        }
+        else if(op == VPOP){
+            fprintf(yyout, "\tvpop ");
+        }
+        fprintf(yyout, "{");
+        this->use_list[16]->output();
+        for (long unsigned int i = 17; i < use_list.size(); i++) {
+            fprintf(yyout, ", ");
+            this->use_list[i]->output();
+        }
     }
     fprintf(yyout, "}\n");
 }
@@ -452,6 +478,41 @@ void ZextMInstruction::output() {
     def_list[0]->output();
     fprintf(yyout, ", ");
     use_list[0]->output();
+    fprintf(yyout, "\n");
+}
+
+VcvtMInstruction::VcvtMInstruction(MachineBlock* p,
+                                   int op,
+                                   MachineOperand* dst,
+                                   MachineOperand* src,
+                                   int cond) {
+    this->parent = p;
+    this->type = MachineInstruction::VCVT;
+    this->op = op;
+    this->cond = cond;
+    this->def_list.push_back(dst);
+    this->use_list.push_back(src);
+    dst->setParent(this);
+    src->setParent(this);
+//    dst->setDef(this);
+}
+
+void VcvtMInstruction::output() {
+    switch (this->op) {
+        case VcvtMInstruction::F2S:
+            fprintf(yyout, "\tvcvt.s32.f32 ");
+            break;
+        case VcvtMInstruction::S2F:
+            fprintf(yyout, "\tvcvt.f32.s32 ");
+            break;
+        default:
+            break;
+    }
+    PrintCond();
+    fprintf(yyout, " ");
+    this->def_list[0]->output();
+    fprintf(yyout, ", ");
+    this->use_list[0]->output();
     fprintf(yyout, "\n");
 }
 

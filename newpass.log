@@ -147,15 +147,15 @@ PASS: 114_register_alloc
 PASS: 115_nested_calls
 PASS: 116_nested_calls2
 PASS: 117_nested_loops
-FAIL: 196_float	Assemble Error
-FAIL: 198_matrix_add	Assemble Error
-FAIL: 199_matrix_sub	Assemble Error
-FAIL: 200_matrix_mul	Assemble Error
+FAIL: 196_float	Compile Error
+FAIL: 198_matrix_add	Compile Error
+FAIL: 199_matrix_sub	Compile Error
+FAIL: 200_matrix_mul	Compile Error
 FAIL: 201_matrix_tran	Assemble Error
 PASS: 202_register_realloc
-FAIL: 35_math	Assemble Error
-FAIL: 36_rotate	Assemble Error
-FAIL: 37_dct	Assemble Error
-FAIL: 38_light2d	Assemble Error
-FAIL: 39_fp_params	Compile Timeout
+FAIL: 35_math	Compile Error
+FAIL: 36_rotate	Compile Error
+FAIL: 37_dct	Compile Error
+FAIL: 38_light2d	Compile Error
+FAIL: 39_fp_params	Compile Error
 Total: 160	Accept: 137	Fail: 23
