@@ -4,20 +4,22 @@ extern FILE* yyout;
 
 int MachineBlock::spilt_label = 0;
 
-MachineOperand::MachineOperand(int tp, int val)
+MachineOperand::MachineOperand(int tp, int val, bool flt)
 {
     this->type = tp;
     if(tp == MachineOperand::IMM)
         this->val = val;
     else 
         this->reg_no = val;
+    is_float = flt;
 }
 
-MachineOperand::MachineOperand(std::string label, bool is_func)
+MachineOperand::MachineOperand(std::string label, bool is_func, bool flt)
 {
     this->type = MachineOperand::LABEL;
     this->label = label;
     is_funct = is_func;
+    is_float = flt;
 }
 
 bool MachineOperand::operator==(const MachineOperand&a) const
@@ -176,11 +178,11 @@ void BinaryMInstruction::output()
 
 LoadMInstruction::LoadMInstruction(MachineBlock* p,
     MachineOperand* dst, MachineOperand* src1, MachineOperand* src2,
-    int cond)
+    int op, int cond)
 {
     this->parent = p;
     this->type = MachineInstruction::LOAD;
-    this->op = -1;
+    this->op = op;
     this->cond = cond;
     this->def_list.push_back(dst);
     this->use_list.push_back(src1);
@@ -223,11 +225,11 @@ void LoadMInstruction::output()
 
 StoreMInstruction::StoreMInstruction(MachineBlock* p,
     MachineOperand* src1, MachineOperand* src2, MachineOperand* src3, 
-    int cond)
+    int op, int cond)
 {
     this->parent = p;
     this->type = MachineInstruction::STORE;
-    this->op = -1;
+    this->op = op;
     this->cond = cond;
     this->use_list.push_back(src1);
     this->use_list.push_back(src2);

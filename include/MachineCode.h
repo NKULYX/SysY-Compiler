@@ -34,10 +34,12 @@ private:
     int reg_no; // register no
     std::string label; // address label
     bool is_funct; //用于判断是否函数
+    bool is_float = false;  // 判断是否浮点数
+    float fval;
 public:
     enum { IMM, VREG, REG, LABEL };
-    MachineOperand(int tp, int val);
-    MachineOperand(std::string label, bool is_func = false);
+    MachineOperand(int tp, int val, bool flt = false);
+    MachineOperand(std::string label, bool is_func = false, bool flt = false);
     bool operator == (const MachineOperand&) const;
     bool operator < (const MachineOperand&) const;
     bool isImm() { return this->type == IMM; }; 
@@ -46,6 +48,9 @@ public:
     bool isLabel() { return this->type == LABEL; };
     void setVal(int in_val) {this->val = in_val;};
     int getVal() {return this->val; };
+    float getFVal() { return this->fval; }
+    void setFVal(float fval) { this->fval = fval;}
+    bool isFloat() { return this->is_float; }
     int getReg() {return this->reg_no; };
     void setReg(int regno) {this->type = REG; this->reg_no = regno;};
     std::string getLabel() {return this->label; };
@@ -95,18 +100,20 @@ public:
 class LoadMInstruction : public MachineInstruction
 {
 public:
+    enum opType { LDR, VLDR };
     LoadMInstruction(MachineBlock* p,
                     MachineOperand* dst, MachineOperand* src1, MachineOperand* src2 = nullptr, 
-                    int cond = MachineInstruction::NONE);
+                    int op = LDR, int cond = MachineInstruction::NONE);
     void output();
 };
 
 class StoreMInstruction : public MachineInstruction
 {
 public:
+    enum opType { STR, VSTR };
     StoreMInstruction(MachineBlock* p,
                     MachineOperand* src1, MachineOperand* src2, MachineOperand* src3 = nullptr, 
-                    int cond = MachineInstruction::NONE);
+                    int op = STR, int cond = MachineInstruction::NONE);
     void output();
 };
 
