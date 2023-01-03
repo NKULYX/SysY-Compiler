@@ -105,7 +105,7 @@ PASS: 083_brainfk
 PASS: 085_dijkstra
 FAIL: 086_full_conn	Assemble Error
 PASS: 089_hidden_var
-FAIL: 091_kmp	Assemble Error
+FAIL: 091_kmp	Wrong Answer
 FAIL: 092_max_flow	Assemble Error
 PASS: 093_n_queens
 FAIL: 094_substr	Assemble Error
@@ -133,7 +133,7 @@ FAIL: 084_expr_eval	Assemble Error
 PASS: 097_var_name
 PASS: 098_chaos_token
 FAIL: 103_long_func	Compile Timeout
-FAIL: 104_long_array	Assemble Error
+PASS: 104_long_array
 FAIL: 105_long_array2	Compile Timeout
 FAIL: 106_long_code	Assemble Error
 FAIL: 107_long_code2	Compile Timeout
@@ -158,4 +158,4 @@ FAIL: 36_rotate	Assemble Error
 FAIL: 37_dct	Assemble Error
 FAIL: 38_light2d	Assemble Error
 FAIL: 39_fp_params	Compile Timeout
-Total: 160	Accept: 129	Fail: 31
+Total: 160	Accept: 130	Fail: 30

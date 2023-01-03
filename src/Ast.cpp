@@ -1015,7 +1015,7 @@ void Id::typeCheck(Node** parentToChild)
     if(!isArray() && symbolEntry->getType()->isConst() && parentToChild != nullptr) {
         ConstantSymbolEntry* newConst = new ConstantSymbolEntry(symbolEntry->getType(), dynamic_cast<IdentifierSymbolEntry*>(symbolEntry)->value);
         Constant* newNode = new Constant(newConst);
-        *parentToChild = newNode;
+        (*parentToChild) = newNode;
     }
     // 如果是数组 要看看维度信息有没有初始化
     // 由于在语法解析阶段已经判断了标识符先定义再使用
@@ -1306,9 +1306,8 @@ void DefNode::typeCheck(Node** parentToChild)
 
 void FuncCallParamsNode::typeCheck(Node** parentToChild)
 {
-    // 对每一个孩子节点进行常量计算
-    for(ExprNode* param : paramsList) {
-        param->typeCheck((Node**)&param);
+    for(int i = 0; i < (int)paramsList.size(); i++) {
+        paramsList[i]->typeCheck((Node**)&(paramsList[i]));
     }
 }
 
