@@ -378,6 +378,7 @@ void Id::genCode()
         else{
             //为区分数组指针和数组值，需要置位dst的type中的pointer
             if(dst->getType()->isIntArray()){
+                dst->getEntry()->setType(new IntArrayType(*(dynamic_cast<IntArrayType*>(dst->getType()))));
                 dynamic_cast<IntArrayType*>(dst->getType())->setPointer(true);
             }
             new BinaryInstruction(BinaryInstruction::ADD, dst, offset1, addr, bb); 
