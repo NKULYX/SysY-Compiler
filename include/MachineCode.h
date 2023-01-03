@@ -34,12 +34,12 @@ private:
     int reg_no; // register no
     std::string label; // address label
     bool is_funct; //用于判断是否函数
-    bool is_float = false; //用于判断是否浮点数
-    float float_val; //浮点数值
+    bool is_float = false;  // 判断是否浮点数
+    float fval;
 public:
     enum { IMM, VREG, REG, LABEL };
-    MachineOperand(int tp, int val, bool is_float =false);
-    MachineOperand(std::string label, bool is_func = false);
+    MachineOperand(int tp, int val, bool flt = false);
+    MachineOperand(std::string label, bool is_func = false, bool flt = false);
     bool operator == (const MachineOperand&) const;
     bool operator < (const MachineOperand&) const;
     bool isImm() { return this->type == IMM; }; 
@@ -48,6 +48,9 @@ public:
     bool isLabel() { return this->type == LABEL; };
     void setVal(int in_val) {this->val = in_val;};
     int getVal() {return this->val; };
+    float getFVal() { return this->fval; }
+    void setFVal(float fval) { this->fval = fval;}
+    bool isFloat() { return this->is_float; }
     int getReg() {return this->reg_no; };
     void setReg(int regno) {this->type = REG; this->reg_no = regno;};
     std::string getLabel() {return this->label; };

@@ -14,11 +14,12 @@ MachineOperand::MachineOperand(int tp, int val, bool is_float)
     this->is_float = is_float;
 }
 
-MachineOperand::MachineOperand(std::string label, bool is_func)
+MachineOperand::MachineOperand(std::string label, bool is_func, bool flt)
 {
     this->type = MachineOperand::LABEL;
     this->label = label;
     is_funct = is_func;
+    is_float = flt;
 }
 
 bool MachineOperand::operator==(const MachineOperand&a) const
