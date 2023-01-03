@@ -34,9 +34,11 @@ private:
     int reg_no; // register no
     std::string label; // address label
     bool is_funct; //用于判断是否函数
+    bool is_float = false; //用于判断是否浮点数
+    float float_val; //浮点数值
 public:
     enum { IMM, VREG, REG, LABEL };
-    MachineOperand(int tp, int val);
+    MachineOperand(int tp, int val, bool is_float =false);
     MachineOperand(std::string label, bool is_func = false);
     bool operator == (const MachineOperand&) const;
     bool operator < (const MachineOperand&) const;
@@ -53,6 +55,8 @@ public:
     MachineInstruction* getParent() { return this->parent;};
     void PrintReg();
     void output();
+    bool isFloat() const {return is_float;};
+    float getFloatVal() const {return float_val;};
 };
 
 class MachineInstruction
@@ -84,7 +88,7 @@ public:
 class BinaryMInstruction : public MachineInstruction
 {
 public:
-    enum opType { ADD, SUB, MUL, DIV, AND, OR };
+    enum opType { ADD, SUB, MUL, DIV, AND, OR, VADD, VSUB, VMUL, VDIV};
     BinaryMInstruction(MachineBlock* p, int op, 
                     MachineOperand* dst, MachineOperand* src1, MachineOperand* src2, 
                     int cond = MachineInstruction::NONE);
@@ -95,18 +99,20 @@ public:
 class LoadMInstruction : public MachineInstruction
 {
 public:
+    enum opType{LDR, VLDR};
     LoadMInstruction(MachineBlock* p,
                     MachineOperand* dst, MachineOperand* src1, MachineOperand* src2 = nullptr, 
-                    int cond = MachineInstruction::NONE);
+                    int op = LDR, int cond = MachineInstruction::NONE);
     void output();
 };
 
 class StoreMInstruction : public MachineInstruction
 {
 public:
+    enum opType{STR, VSTR};
     StoreMInstruction(MachineBlock* p,
                     MachineOperand* src1, MachineOperand* src2, MachineOperand* src3 = nullptr, 
-                    int cond = MachineInstruction::NONE);
+                    int op = STR, int cond = MachineInstruction::NONE);
     void output();
 };
 
@@ -114,7 +120,7 @@ class MovMInstruction : public MachineInstruction
 {
 public:
     //MVN指令不同的是在传送之前，将被传送的对象先按位取反，再传送到目的寄存器。
-    enum opType { MOV, MVN };
+    enum opType { MOV, MVN, MOVT, VMOV, VMOVF32};
     MovMInstruction(MachineBlock* p, int op, 
                 MachineOperand* dst, MachineOperand* src,
                 int cond = MachineInstruction::NONE);
@@ -134,9 +140,9 @@ public:
 class CmpMInstruction : public MachineInstruction
 {
 public:
-    enum opType { CMP };
+    enum opType { CMP, VCMP };
     CmpMInstruction(MachineBlock* p, 
-                MachineOperand* src1, MachineOperand* src2, 
+                MachineOperand* src1, MachineOperand* src2, int optype = CMP,
                 int cond = MachineInstruction::NONE);
     void output();
 };

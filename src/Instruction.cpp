@@ -585,9 +585,9 @@ MachineOperand* Instruction::genMachineReg(int reg)
     return new MachineOperand(MachineOperand::REG, reg);
 }
 
-MachineOperand* Instruction::genMachineVReg() 
+MachineOperand* Instruction::genMachineVReg(bool isFloat)
 {
-    return new MachineOperand(MachineOperand::VREG, SymbolTable::getLabel());
+    return new MachineOperand(MachineOperand::VREG, SymbolTable::getLabel(), isFloat);
 }
 
 MachineOperand* Instruction::genMachineImm(int val) 
@@ -1139,12 +1139,44 @@ void ZextInstruction::genMachineCode(AsmBuilder* builder)
 
 void FBinaryInstruction::genMachineCode(AsmBuilder* builder)
 {
-    // TODO
+
 }
 
 void FCmpInstruction::genMachineCode(AsmBuilder* builder)
 {
-    // TODO
+    MachineBlock* cur_block = builder->getBlock();
+    MachineOperand* src1 = genMachineOperand(operands[1]);
+    MachineOperand* src2 = genMachineOperand(operands[2]);
+    MachineInstruction* cur_inst = nullptr;
+    if (src1->isImm()) {
+        MachineOperand* tmp_reg = genMachineVReg(true);
+        MachineOperand* internal_reg = genMachineVReg();
+        cur_inst = new LoadMInstruction(cur_block, internal_reg, src1);
+        cur_block->InsertInst(cur_inst);
+        src1 = new MachineOperand(*internal_reg);
+    }
+    if (src2->isImm()) {
+        MachineOperand* internal_reg = genMachineVReg();
+        cur_inst = new LoadMInstruction(cur_block, internal_reg, src2);
+        cur_block->InsertInst(cur_inst);
+        src2 = new MachineOperand(*internal_reg);
+    }
+    cur_inst = new CmpMInstruction(cur_block, src1, src2, opcode);
+    cur_block->InsertInst(cur_inst);
+    cur_block->setCurrentBranchCond(opcode);
+    // 采用条件存储的方式将1/0存储到dst中
+    MachineOperand* dst = genMachineOperand(operands[0]);
+    MachineOperand* trueOperand = genMachineImm(1);
+    MachineOperand* falseOperand = genMachineImm(0);
+    cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, trueOperand, opcode);
+    cur_block->InsertInst(cur_inst);
+    if(opcode == CmpInstruction::E || opcode == CmpInstruction::NE){
+        cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, falseOperand, 1-opcode);
+    }
+    else {
+        cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, falseOperand, 7-opcode);
+    }
+    cur_block->InsertInst(cur_inst);
 }
 
 void IntFloatCastInstructionn::genMachineCode(AsmBuilder* builder)

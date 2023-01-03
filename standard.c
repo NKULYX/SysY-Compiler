@@ -1,3 +1,12 @@
 int main() {
-    int a[4][2] = {1,2,3,{4},{5},{6}};
+    float a = 10.0;
+    float b = 1.0;
+    a = a + b;
+    a = a - b;
+    a = a * b;
+    a = a / b;
+    a = a < b;
+    a = a > b;
+    a = a <= b;
+    a = a >= b;
 }

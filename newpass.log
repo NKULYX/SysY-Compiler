@@ -127,7 +127,7 @@ PASS: 063_sort_test3
 PASS: 065_sort_test5
 PASS: 067_sort_test7
 PASS: 072_percolation
-FAIL: 079_calculator	Compile Timeout
+PASS: 079_calculator
 PASS: 080_color
 PASS: 084_expr_eval
 PASS: 097_var_name
@@ -137,7 +137,7 @@ PASS: 104_long_array
 FAIL: 105_long_array2	Compile Timeout
 PASS: 106_long_code
 FAIL: 107_long_code2	Compile Timeout
-FAIL: 108_many_params	Compile Timeout
+PASS: 108_many_params
 FAIL: 109_many_params2	Compile Timeout
 PASS: 110_many_params3
 PASS: 111_many_globals
@@ -158,4 +158,4 @@ FAIL: 36_rotate	Assemble Error
 FAIL: 37_dct	Assemble Error
 FAIL: 38_light2d	Assemble Error
 FAIL: 39_fp_params	Compile Timeout
-Total: 160	Accept: 135	Fail: 25
+Total: 160	Accept: 137	Fail: 23

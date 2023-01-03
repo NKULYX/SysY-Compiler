@@ -4,13 +4,14 @@ extern FILE* yyout;
 
 int MachineBlock::spilt_label = 0;
 
-MachineOperand::MachineOperand(int tp, int val)
+MachineOperand::MachineOperand(int tp, int val, bool is_float)
 {
     this->type = tp;
     if(tp == MachineOperand::IMM)
         this->val = val;
     else 
         this->reg_no = val;
+    this->is_float = is_float;
 }
 
 MachineOperand::MachineOperand(std::string label, bool is_func)
@@ -162,6 +163,18 @@ void BinaryMInstruction::output()
     case BinaryMInstruction::OR:
         fprintf(yyout, "\tor ");
         break;
+    case BinaryMInstruction::VADD:
+        fprintf(yyout, "\tvadd.f32 ");
+        break;
+    case BinaryMInstruction::VSUB:
+        fprintf(yyout, "\tvsub.f32 ");
+        break;
+    case BinaryMInstruction::VMUL:
+        fprintf(yyout, "\tvmul.f32 ");
+        break;
+    case BinaryMInstruction::VDIV:
+        fprintf(yyout, "\tvdiv.f32 ");
+        break;
     default:
         break;
     }
@@ -176,11 +189,11 @@ void BinaryMInstruction::output()
 
 LoadMInstruction::LoadMInstruction(MachineBlock* p,
     MachineOperand* dst, MachineOperand* src1, MachineOperand* src2,
-    int cond)
+    int op, int cond)
 {
     this->parent = p;
     this->type = MachineInstruction::LOAD;
-    this->op = -1;
+    this->op = op;
     this->cond = cond;
     this->def_list.push_back(dst);
     this->use_list.push_back(src1);
@@ -194,14 +207,30 @@ LoadMInstruction::LoadMInstruction(MachineBlock* p,
 
 void LoadMInstruction::output()
 {
-    fprintf(yyout, "\tldr ");
+    switch(this->op) {
+        case LoadMInstruction::LDR:
+            fprintf(yyout, "\tldr ");
+            break;
+        case LoadMInstruction::VLDR:
+            fprintf(yyout, "\tvldr.32 ");
+            break;
+        default:
+            break;
+    }
     this->def_list[0]->output();
     fprintf(yyout, ", ");
 
     // Load immediate num, eg: ldr r1, =8
     if(this->use_list[0]->isImm())
     {
-        fprintf(yyout, "=%d\n", this->use_list[0]->getVal());
+        if(this->use_list[0]->isFloat()) {
+            float val = this->use_list[0]->getFloatVal();
+            uint32_t val_int =  reinterpret_cast<uint32_t&>(val);
+            fprintf(yyout, "=%u\n", val_int);
+        }
+        else {
+            fprintf(yyout, "=%d\n", this->use_list[0]->getVal());
+        }
         return;
     }
 
@@ -223,11 +252,11 @@ void LoadMInstruction::output()
 
 StoreMInstruction::StoreMInstruction(MachineBlock* p,
     MachineOperand* src1, MachineOperand* src2, MachineOperand* src3, 
-    int cond)
+    int op, int cond)
 {
     this->parent = p;
     this->type = MachineInstruction::STORE;
-    this->op = -1;
+    this->op = op;
     this->cond = cond;
     this->use_list.push_back(src1);
     this->use_list.push_back(src2);
@@ -241,7 +270,15 @@ StoreMInstruction::StoreMInstruction(MachineBlock* p,
 
 void StoreMInstruction::output()
 {
-    fprintf(yyout, "\tstr ");
+    switch(this->op)
+    {
+        case StoreMInstruction::STR:
+            fprintf(yyout, "\tstr ");
+            break;
+        case StoreMInstruction::VSTR:
+            fprintf(yyout, "\tvstr.32 ");
+            break;
+    }
     this->use_list[0]->output();
     fprintf(yyout, ", ");
 
@@ -277,7 +314,22 @@ MovMInstruction::MovMInstruction(MachineBlock* p, int op,
 
 void MovMInstruction::output() 
 {
-    fprintf(yyout, "\tmov");
+    switch(this->op) {
+        case MovMInstruction::MOV:
+            fprintf(yyout, "\tmov");
+            break;
+        case MovMInstruction::MOVT:
+            fprintf(yyout, "\tmovt");
+            break;
+        case MovMInstruction::VMOV:
+            fprintf(yyout, "\tmovv");
+            break;
+        case MovMInstruction::VMOVF32:
+            fprintf(yyout, "\tvmov.f32");
+            break;
+        default:
+            break;
+    }
     PrintCond();
     fprintf(yyout, " ");
     this->def_list[0]->output();
@@ -319,10 +371,10 @@ void BranchMInstruction::output()
 
 CmpMInstruction::CmpMInstruction(MachineBlock* p, 
     MachineOperand* src1, MachineOperand* src2, 
-    int cond)
+    int optype, int cond)
 {
     this->parent = p;
-    this->type = MachineInstruction::CMP;
+    this->type = optype;
     this->cond = cond;
     this->use_list.push_back(src1);
     this->use_list.push_back(src2);
@@ -332,7 +384,16 @@ CmpMInstruction::CmpMInstruction(MachineBlock* p,
 
 void CmpMInstruction::output()
 {
-    fprintf(yyout, "\tcmp ");
+    switch(this->op) {
+        case CMP:
+            fprintf(yyout, "\tcmp ");
+            break;
+        case VCMP:
+            fprintf(yyout, "\tvcmp.f32 ");
+            break;
+        default:
+            break;
+    }
     this->use_list[0]->output();
     fprintf(yyout, ", ");
     this->use_list[1]->output();
@@ -572,6 +633,7 @@ void MachineUnit::output()
     * 2. Traverse all the function in func_list to print assembly code;
     * 3. Don't forget print bridge label at the end of assembly code!! */
     fprintf(yyout, "\t.arch armv8-a\n");
+    fprintf(yyout, "\t.fpu vfpv3-d16\n");
     fprintf(yyout, "\t.arch_extension crc\n");
     fprintf(yyout, "\t.arm\n");
     PrintGlobalDecl();

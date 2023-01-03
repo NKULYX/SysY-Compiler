@@ -29,7 +29,7 @@ public:
     //lab7
     MachineOperand* genMachineOperand(Operand*);
     MachineOperand* genMachineReg(int reg);
-    MachineOperand* genMachineVReg();
+    MachineOperand* genMachineVReg(bool isFloat = false);
     MachineOperand* genMachineImm(int val);
     MachineOperand* genMachineLabel(int block_no);
     virtual void genMachineCode(AsmBuilder*) = 0;
@@ -170,7 +170,7 @@ public:
     ~FBinaryInstruction();
     void output() const;
     void genMachineCode(AsmBuilder*);
-    enum {ADD, SUB, MUL, DIV, MOD, AND, OR};
+    enum {ADD, SUB, MUL, DIV};
 };
 
 // 浮点数的比较指令
