@@ -1531,6 +1531,11 @@ void ExprStmtNode::addNext(ExprNode* next)
     exprList.push_back(next);
 }
 
+void ExprStmtNode::addFirst(ExprNode* first)
+{
+    exprList.insert(exprList.begin(), first);
+}
+
 void ExprStmtNode::output(int level)
 {
     fprintf(yyout, "%*cExprStmtNode\n", level, ' ');

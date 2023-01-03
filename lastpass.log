@@ -54,13 +54,13 @@ PASS: 030_if_test3
 PASS: 031_if_test4
 PASS: 032_if_test5
 PASS: 035_while_test2
-FAIL: 036_while_test3	Assemble Error
+PASS: 036_while_test3
 PASS: 039_while_if_test1
 PASS: 040_while_if_test2
 PASS: 041_while_if_test3
 PASS: 069_greatest_common_divisor
-FAIL: 100_int_literal	Assemble Error
-FAIL: 102_short_circuit3	Assemble Error
+PASS: 100_int_literal
+PASS: 102_short_circuit3
 PASS: 1074_itera_sqrt
 PASS: 1075_max_container
 PASS: 1076_int_factor_sum
@@ -83,30 +83,30 @@ PASS: 087_gcd
 PASS: 088_hanoi
 PASS: 004_arr_defn
 PASS: 005_arr_defn2
-FAIL: 006_arr_defn3	Assemble Error
-FAIL: 007_arr_defn4	Assemble Error
+PASS: 006_arr_defn3
+PASS: 007_arr_defn4
 PASS: 011_const_array_defn
 PASS: 042_arr_expr_len
 PASS: 061_sort_test1
 PASS: 062_sort_test2
 PASS: 064_sort_test4
-FAIL: 066_sort_test6	Assemble Error
+PASS: 066_sort_test6
 PASS: 068_genealogical_tree
-FAIL: 070_multiplication_puzzle	Assemble Error
-FAIL: 071_exchange_array	Assemble Error
-FAIL: 073_backpack	Assemble Error
-FAIL: 074_matrix_add	Assemble Error
-FAIL: 075_matrix_sub	Assemble Error
-FAIL: 076_matrix_mul	Assemble Error
-FAIL: 077_matrix_tran	Assemble Error
-FAIL: 078_big_int_mul	Assemble Error
+PASS: 070_multiplication_puzzle
+PASS: 071_exchange_array
+PASS: 073_backpack
+PASS: 074_matrix_add
+PASS: 075_matrix_sub
+PASS: 076_matrix_mul
+PASS: 077_matrix_tran
+PASS: 078_big_int_mul
 PASS: 081_exgcd
-FAIL: 083_brainfk	Assemble Error
-FAIL: 085_dijkstra	Assemble Error
-FAIL: 086_full_conn	Assemble Error
-FAIL: 089_hidden_var	Assemble Error
+PASS: 083_brainfk
+PASS: 085_dijkstra
+FAIL: 086_full_conn	Wrong Answer
+PASS: 089_hidden_var
 FAIL: 091_kmp	Wrong Answer
-FAIL: 092_max_flow	Assemble Error
+PASS: 092_max_flow
 PASS: 093_n_queens
 FAIL: 094_substr	Assemble Error
 PASS: 1066_go_upstairs
@@ -123,39 +123,39 @@ PASS: 1090_insert_order
 PASS: 1091_line_search
 PASS: 058_short_circuit
 PASS: 059_short_circuit2
-FAIL: 063_sort_test3	Assemble Error
+PASS: 063_sort_test3
 PASS: 065_sort_test5
-FAIL: 067_sort_test7	Assemble Error
-FAIL: 072_percolation	Assemble Error
-FAIL: 079_calculator	Assemble Error
-FAIL: 080_color	Assemble Error
+PASS: 067_sort_test7
+PASS: 072_percolation
+PASS: 079_calculator
+PASS: 080_color
 FAIL: 084_expr_eval	Assemble Error
-FAIL: 097_var_name	Assemble Error
+PASS: 097_var_name
 PASS: 098_chaos_token
 FAIL: 103_long_func	Compile Timeout
-FAIL: 104_long_array	Assemble Error
+PASS: 104_long_array
 FAIL: 105_long_array2	Compile Timeout
-FAIL: 106_long_code	Assemble Error
+FAIL: 106_long_code	Wrong Answer
 FAIL: 107_long_code2	Compile Timeout
-FAIL: 108_many_params	Assemble Error
+FAIL: 108_many_params	Wrong Answer
 FAIL: 109_many_params2	Compile Timeout
-FAIL: 110_many_params3	Assemble Error
-FAIL: 111_many_globals	Assemble Error
+PASS: 110_many_params3
+PASS: 111_many_globals
 PASS: 112_many_locals
-FAIL: 113_many_locals2	Assemble Error
-FAIL: 114_register_alloc	Assemble Error
-FAIL: 115_nested_calls	Assemble Error
+PASS: 113_many_locals2
+PASS: 114_register_alloc
+PASS: 115_nested_calls
 PASS: 116_nested_calls2
-FAIL: 117_nested_loops	Assemble Error
+PASS: 117_nested_loops
 FAIL: 196_float	Assemble Error
 FAIL: 198_matrix_add	Assemble Error
 FAIL: 199_matrix_sub	Assemble Error
 FAIL: 200_matrix_mul	Assemble Error
 FAIL: 201_matrix_tran	Assemble Error
-FAIL: 202_register_realloc	Assemble Error
+PASS: 202_register_realloc
 FAIL: 35_math	Assemble Error
 FAIL: 36_rotate	Assemble Error
 FAIL: 37_dct	Assemble Error
 FAIL: 38_light2d	Assemble Error
 FAIL: 39_fp_params	Compile Timeout
-Total: 160	Accept: 100	Fail: 60
+Total: 160	Accept: 132	Fail: 28

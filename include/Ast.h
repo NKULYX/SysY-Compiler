@@ -97,6 +97,7 @@ public:
     std::vector<ExprNode*> exprList;
     ExprStmtNode(){};
     void addNext(ExprNode* next);
+    void addFirst(ExprNode* first);
     void output(int level);
     void typeCheck(Node** parentToChild);
     void genCode();

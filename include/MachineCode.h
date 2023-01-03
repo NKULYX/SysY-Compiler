@@ -170,6 +170,7 @@ private:
     std::set<MachineOperand*> live_in;
     std::set<MachineOperand*> live_out;
     int current_branch_cond = MachineInstruction::NONE;
+    static int spilt_label;
 public:
     std::vector<MachineInstruction*>& getInsts() {return inst_list;};
     std::vector<MachineInstruction*>::iterator begin() { return inst_list.begin(); };

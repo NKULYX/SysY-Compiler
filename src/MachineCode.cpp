@@ -2,6 +2,8 @@
 #include "Type.h"
 extern FILE* yyout;
 
+int MachineBlock::spilt_label = 0;
+
 MachineOperand::MachineOperand(int tp, int val)
 {
     this->type = tp;
@@ -413,8 +415,17 @@ void MachineBlock::output()
 //    if(this->inst_list.size() == 0)
 //        return;
     fprintf(yyout, ".L%d:\n", this->no);
-    for(auto iter : inst_list)
+    int cnt = 0;
+    for(auto iter : inst_list) {
         iter->output();
+        cnt++;
+        if(cnt % 500 == 0) {
+            fprintf(yyout, "\tb .B%d\n", spilt_label);
+            fprintf(yyout, ".LTORG\n");
+            parent->getParent()->PrintGlobal();
+            fprintf(yyout, ".B%d:\n", spilt_label++);
+        }
+    }
 }
 
 void MachineBlock::insertBefore(MachineInstruction* at, MachineInstruction* src)

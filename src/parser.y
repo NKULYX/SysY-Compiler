@@ -732,13 +732,15 @@ FuncParam
             Type* arrayType; 
             if($1==TypeSystem::intType){
                 arrayType = new IntArrayType();
-                (dynamic_cast<IntArrayType*>(arrayType))->pushBackDimension(-1);
+                // (dynamic_cast<IntArrayType*>(arrayType))->pushBackDimension(-1);
             }
             else if($1==TypeSystem::floatType){
                 arrayType = new FloatArrayType();
-                (dynamic_cast<FloatArrayType*>(arrayType))->pushBackDimension(-1);
+                // (dynamic_cast<FloatArrayType*>(arrayType))->pushBackDimension(-1);
             }
             //最高维未指定，记为默认值-1
+            SymbolEntry *addDim = new ConstantSymbolEntry(TypeSystem::constIntType, -1);
+            dynamic_cast<ExprStmtNode*>($5)->addFirst(new Constant(addDim));
             SymbolEntry *se = new IdentifierSymbolEntry(arrayType, $2, identifiers->getLevel());
             identifiers->install($2, se);
             Id* id = new Id(se);
@@ -749,16 +751,20 @@ FuncParam
             Type* arrayType; 
             if($1==TypeSystem::intType){
                 arrayType = new IntArrayType();
-                (dynamic_cast<IntArrayType*>(arrayType))->pushBackDimension(-1);
+                // (dynamic_cast<IntArrayType*>(arrayType))->pushBackDimension(-1);
             }
             else if($1==TypeSystem::floatType){
                 arrayType = new FloatArrayType();
-                (dynamic_cast<FloatArrayType*>(arrayType))->pushBackDimension(-1);
+                // (dynamic_cast<FloatArrayType*>(arrayType))->pushBackDimension(-1);
             }
             //最高维未指定，记为默认值-1
+            SymbolEntry *addDim = new ConstantSymbolEntry(TypeSystem::constIntType, -1);
+            ExprStmtNode* indices = new ExprStmtNode();
+            indices->addNext(new Constant(addDim));
             SymbolEntry *se = new IdentifierSymbolEntry(arrayType, $2, identifiers->getLevel());
             identifiers->install($2, se);
             Id* id = new Id(se);
+            id->addIndices(indices);
             $$ = new DefNode(id, nullptr, false, true);
         }
     ;
