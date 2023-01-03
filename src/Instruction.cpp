@@ -1007,7 +1007,7 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
             bool isPointer = false;
             if(operands[i]->getEntry()->getType()->isIntArray()){
                 isPointer = dynamic_cast<IntArrayType*>(operands[i]->getEntry()->getType())->getPointer();
-                dynamic_cast<IntArrayType*>(operands[i]->getEntry()->getType())->setPointer(false);
+                // dynamic_cast<IntArrayType*>(operands[i]->getEntry()->getType())->setPointer(false);
                 //如果第一维为-1，表明其为指针，传参时需要注意不加fp
                 if(dynamic_cast<IntArrayType*>(operands[i]->getEntry()->getType())->getDimensions()[0]==-1){
                     isPointer = false;

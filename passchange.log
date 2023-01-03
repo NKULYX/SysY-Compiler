@@ -1,8 +1,0 @@
-111c111
-< FAIL: 094_substr	Assemble Error
----
-> FAIL: 094_substr	Wrong Answer
-132c132
-< FAIL: 084_expr_eval	Assemble Error
----
-> FAIL: 084_expr_eval	Wrong Answer
