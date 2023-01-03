@@ -215,6 +215,7 @@ public:
     void addSavedRegs(int regno) {saved_regs.insert(regno);};
     std::vector<MachineOperand*> getSavedRegs();
     void insertSavedParamsOffset(MachineOperand* offset) {saved_params_offset.push_back(offset);};
+    MachineUnit* getParent() {return parent;}
     void output();
 };
 
@@ -224,13 +225,15 @@ private:
     std::vector<MachineFunction*> func_list;
     std::vector<IdentifierSymbolEntry*> global_var_list;
     void PrintGlobalDecl();
-    void PrintGlobal();
+    int n;
 public:
     std::vector<MachineFunction*>& getFuncs() {return func_list;};
     std::vector<MachineFunction*>::iterator begin() { return func_list.begin(); };
     std::vector<MachineFunction*>::iterator end() { return func_list.end(); };
     void InsertFunc(MachineFunction* func) { func_list.push_back(func);};
     void insertGlobalVar(IdentifierSymbolEntry* sym_ptr);
+    void PrintGlobal();
+    int getN() {return n;}
     void output();
 };
 

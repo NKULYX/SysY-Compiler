@@ -106,7 +106,7 @@ PASS: 085_dijkstra
 FAIL: 086_full_conn	Assemble Error
 PASS: 089_hidden_var
 FAIL: 091_kmp	Wrong Answer
-FAIL: 092_max_flow	Assemble Error
+PASS: 092_max_flow
 PASS: 093_n_queens
 FAIL: 094_substr	Assemble Error
 PASS: 1066_go_upstairs
@@ -127,7 +127,7 @@ PASS: 063_sort_test3
 PASS: 065_sort_test5
 PASS: 067_sort_test7
 PASS: 072_percolation
-FAIL: 079_calculator	Assemble Error
+PASS: 079_calculator
 PASS: 080_color
 FAIL: 084_expr_eval	Assemble Error
 PASS: 097_var_name
@@ -135,9 +135,9 @@ PASS: 098_chaos_token
 FAIL: 103_long_func	Compile Timeout
 PASS: 104_long_array
 FAIL: 105_long_array2	Compile Timeout
-FAIL: 106_long_code	Assemble Error
+FAIL: 106_long_code	Wrong Answer
 FAIL: 107_long_code2	Compile Timeout
-FAIL: 108_many_params	Assemble Error
+FAIL: 108_many_params	Wrong Answer
 FAIL: 109_many_params2	Compile Timeout
 PASS: 110_many_params3
 PASS: 111_many_globals
@@ -158,4 +158,4 @@ FAIL: 36_rotate	Assemble Error
 FAIL: 37_dct	Assemble Error
 FAIL: 38_light2d	Assemble Error
 FAIL: 39_fp_params	Compile Timeout
-Total: 160	Accept: 130	Fail: 30
+Total: 160	Accept: 132	Fail: 28

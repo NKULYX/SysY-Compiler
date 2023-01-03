@@ -88,7 +88,7 @@ void MachineOperand::output()
         if (this->label.substr(0, 2) == ".L" || is_funct)
             fprintf(yyout, "%s", this->label.c_str());
         else
-            fprintf(yyout, "addr_%s", this->label.c_str());
+            fprintf(yyout, "addr_%s_%d", this->label.c_str(), parent->getParent()->getParent()->getParent()->getN());
     default:
         break;
     }
@@ -410,8 +410,8 @@ std::vector<MachineOperand*> MachineFunction::getSavedRegs()
 void MachineBlock::output()
 {
     // 如果是一个空块则直接返回
-    if(this->inst_list.size() == 0)
-        return;
+//    if(this->inst_list.size() == 0)
+//        return;
     fprintf(yyout, ".L%d:\n", this->no);
     for(auto iter : inst_list)
         iter->output();
@@ -472,10 +472,19 @@ void MachineFunction::output()
     std::set<MachineBlock*> v;
     q.push(block_list[0]);
     v.insert(block_list[0]);
+    int cnt = 0;
     while(!q.empty()) {
         MachineBlock* cur = q.front();
         q.pop();
         cur->output();
+        cnt += int(cur->getInsts().size());
+        if(cnt > 160) {
+            fprintf(yyout, "\tb .F%d\n", parent->getN());
+            fprintf(yyout, ".LTORG\n");
+            parent->PrintGlobal();
+            fprintf(yyout, ".F%d:\n", parent->getN()-1);
+            cnt = 0;
+        }
         for(auto iter : cur->getSuccs()) {
             if(v.find(iter) == v.end()) {
                 q.push(iter);
@@ -566,7 +575,8 @@ void MachineUnit::insertGlobalVar(IdentifierSymbolEntry *sym_ptr) {
 
 void MachineUnit::PrintGlobal() {
     for (auto sym_ptr: global_var_list) {
-        fprintf(yyout, "addr_%s:\n", sym_ptr->toStr().erase(0,1).c_str());
+        fprintf(yyout, "addr_%s_%d:\n", sym_ptr->toStr().erase(0,1).c_str(), n);
         fprintf(yyout, "\t.word %s\n", sym_ptr->toStr().erase(0,1).c_str());
     }
+    n++;
 }
