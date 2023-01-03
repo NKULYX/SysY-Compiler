@@ -1,4 +1,4 @@
-FAIL: 1	Assemble Error
+PASS: 1
 FAIL: 01_var_undef	Compile Error
 FAIL: 02_var_redef	Compile Error
 FAIL: 03_func_undef	Compile Error
@@ -6,7 +6,7 @@ FAIL: 04_func_redef	Compile Error
 FAIL: 05_func_ret_val1	Compile Error
 FAIL: 06_func_ret_val2	Compile Error
 FAIL: 07_expr_test	Compile Error
-FAIL: 08_cond_test	Assemble Error
+FAIL: 08_cond_test	Execute Timeout
 PASS: 000_main
 PASS: 001_var_defn
 PASS: 003_var_defn3
@@ -25,26 +25,26 @@ PASS: 022_div
 PASS: 023_divc
 PASS: 024_mod
 PASS: 025_rem
-FAIL: 026_if	Assemble Error
-FAIL: 027_if2	Assemble Error
+PASS: 026_if
+PASS: 027_if2
 PASS: 043_op_priority1
 PASS: 044_op_priority2
 PASS: 045_op_priority3
-FAIL: 046_op_priority4	Assemble Error
-FAIL: 047_op_priority5	Assemble Error
-FAIL: 048_stmt_expr	Assemble Error
-FAIL: 049_unary_op	Assemble Error
-FAIL: 050_unary_op2	Assemble Error
-FAIL: 051_logi_assign	Assemble Error
+PASS: 046_op_priority4
+PASS: 047_op_priority5
+PASS: 048_stmt_expr
+PASS: 049_unary_op
+PASS: 050_unary_op2
+PASS: 051_logi_assign
 PASS: 054_hex_defn
 PASS: 055_hex_oct_add
 PASS: 056_assign_complex_expr
-FAIL: 057_if_complex_expr	Assemble Error
+PASS: 057_if_complex_expr
 PASS: 095_empty_stmt
-FAIL: 099_skip_spaces	Assemble Error
-FAIL: 1068_accumulate	Assemble Error
-FAIL: 1070_multi	Assemble Error
-FAIL: 1072_enum	Assemble Error
+PASS: 099_skip_spaces
+PASS: 1068_accumulate
+PASS: 1070_multi
+PASS: 1072_enum
 PASS: 1073_exchange_value
 PASS: 012_func_defn
 PASS: 013_var_defn_func
@@ -127,7 +127,7 @@ PASS: 063_sort_test3
 PASS: 065_sort_test5
 PASS: 067_sort_test7
 PASS: 072_percolation
-FAIL: 079_calculator	Compile Timeout
+PASS: 079_calculator
 PASS: 080_color
 PASS: 084_expr_eval
 PASS: 097_var_name
@@ -158,4 +158,4 @@ FAIL: 36_rotate	Assemble Error
 FAIL: 37_dct	Assemble Error
 FAIL: 38_light2d	Assemble Error
 FAIL: 39_fp_params	Compile Timeout
-Total: 160	Accept: 136	Fail: 24
+Total: 160	Accept: 137	Fail: 23

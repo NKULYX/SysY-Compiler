@@ -225,7 +225,7 @@ void LoadMInstruction::output()
     if(this->use_list[0]->isImm())
     {
         if(this->use_list[0]->isFloat()) {
-            float val = this->use_list[0]->getFloatVal();
+            float val = this->use_list[0]->getFVal();
             uint32_t val_int =  reinterpret_cast<uint32_t&>(val);
             fprintf(yyout, "=%u\n", val_int);
         }

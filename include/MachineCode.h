@@ -59,7 +59,6 @@ public:
     void PrintReg();
     void output();
     bool isFloat() const {return is_float;};
-    float getFloatVal() const {return float_val;};
 };
 
 class MachineInstruction
