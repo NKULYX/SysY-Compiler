@@ -4,7 +4,7 @@ extern FILE* yyout;
 
 int MachineBlock::spilt_label = 0;
 
-MachineOperand::MachineOperand(int tp, int val, bool is_float)
+MachineOperand::MachineOperand(int tp, int val, bool is_float, float fval)
 {
     this->type = tp;
     if(tp == MachineOperand::IMM)
@@ -12,6 +12,9 @@ MachineOperand::MachineOperand(int tp, int val, bool is_float)
     else 
         this->reg_no = val;
     this->is_float = is_float;
+    if(is_float) {
+        this->fval = fval;
+    }
 }
 
 MachineOperand::MachineOperand(std::string label, bool is_func, bool flt)
@@ -65,7 +68,18 @@ void MachineOperand::PrintReg()
         fprintf(yyout, "pc");
         break;
     default:
-        fprintf(yyout, "r%d", reg_no);
+        if(is_float) {
+            int freg_no = reg_no - 16;
+            if(freg_no <= 31) {
+                fprintf(yyout, "s%d", freg_no);
+            }
+            else {
+                fprintf(yyout, "FPSCR");
+            }
+        }
+        else {
+            fprintf(yyout, "r%d", reg_no);
+        }
         break;
     }
 }
@@ -80,7 +94,13 @@ void MachineOperand::output()
     switch (this->type)
     {
     case IMM:
-        fprintf(yyout, "#%d", this->val);
+        if(is_float) {
+            uint32_t temp = reinterpret_cast<uint32_t&>(this->fval);
+            fprintf(yyout, "#%u", temp);
+        }
+        else {
+            fprintf(yyout, "#%d", this->val);
+        }
         break;
     case VREG:
         fprintf(yyout, "v%d", this->reg_no);
@@ -323,7 +343,7 @@ void MovMInstruction::output()
             fprintf(yyout, "\tmovt");
             break;
         case MovMInstruction::VMOV:
-            fprintf(yyout, "\tmovv");
+            fprintf(yyout, "\tvmov");
             break;
         case MovMInstruction::VMOVF32:
             fprintf(yyout, "\tvmov.f32");
@@ -523,11 +543,28 @@ MachineFunction::MachineFunction(MachineUnit* p, SymbolEntry* sym_ptr)
     this->stack_size = 0;
 };
 
-std::vector<MachineOperand*> MachineFunction::getSavedRegs() 
+std::vector<MachineOperand*> MachineFunction::getSavedRRegs()
 {
     std::vector<MachineOperand*> ret;
     for(auto no : saved_regs){
-        ret.push_back(new MachineOperand(MachineOperand::REG, no));
+        MachineOperand* reg = nullptr;
+        if(no < 16) {
+            reg = new MachineOperand(MachineOperand::REG, no);
+            ret.push_back(reg);
+        }
+    }
+    return ret;
+};
+
+std::vector<MachineOperand*> MachineFunction::getSavedFRegs()
+{
+    std::vector<MachineOperand*> ret;
+    for(auto no : saved_regs){
+        MachineOperand* reg = nullptr;
+        if(no >= 16) {
+            reg = new MachineOperand(MachineOperand::REG, no, true);
+            ret.push_back(reg);
+        }
     }
     return ret;
 };
@@ -577,12 +614,22 @@ void MachineFunction::output()
     fprintf(yyout, "%s:\n", this->sym_ptr->toStr().c_str() + 1);
     //3. Save callee saved register
     fprintf(yyout, "\tpush {");
-    for(auto reg : getSavedRegs()){
+    for(auto reg : getSavedRRegs()){
         reg->output();
         fprintf(yyout, ", ");
     }
     //1. Save fp
     fprintf(yyout, "fp, lr}\n");
+    std::vector<MachineOperand*> fregs = getSavedFRegs();
+    if(!fregs.empty()) {
+        fprintf(yyout, "\tvpush {");
+        fregs[0]->output();
+        for (int i = 1; i < int(fregs.size()); i++) {
+            fprintf(yyout, ", ");
+            fregs[i]->output();
+        }
+        fprintf(yyout, "}\n");
+    }
     // 调整 additional_args 中的偏移
     for(auto param : this->saved_params_offset) {
         param->setVal(4 * (this->saved_regs.size() + 2) + param->getVal());
@@ -639,8 +686,17 @@ void MachineFunction::output()
         }
     }
     //恢复saved registers和fp
+    if(!fregs.empty()) {
+        fprintf(yyout, "\tvpop {");
+        fregs[0]->output();
+        for (int i = 1; i < int(fregs.size()); i++) {
+            fprintf(yyout, ", ");
+            fregs[i]->output();
+        }
+        fprintf(yyout, "}\n");
+    }
     fprintf(yyout, "\tpop {");
-    for(auto reg : getSavedRegs()){
+    for(auto reg : getSavedRRegs()){
         reg->output();
         fprintf(yyout, ", ");
     }
@@ -669,7 +725,11 @@ void MachineUnit::PrintGlobalDecl()
                     }
                 }
                 else {
-
+                    for (auto value: var->arrayValues) {
+                        auto tmp_value = float(value);
+                        uint32_t temp = reinterpret_cast<uint32_t&>(tmp_value);
+                        fprintf(yyout, "\t.word %u\n", temp);
+                    }
                 }
             }
         }
@@ -681,7 +741,9 @@ void MachineUnit::PrintGlobalDecl()
             if(var->getType()->isInt()) {
                 fprintf(yyout, "\t.word %d\n", int(var->value));
             } else {
-
+                auto value = float(var->value);
+                uint32_t temp = reinterpret_cast<uint32_t&>(value);
+                fprintf(yyout, "\t.word %u\n", temp);
             }
         }
     }

@@ -533,12 +533,11 @@ void IntFloatCastInstructionn::output() const
 //lab7 starts here
 MachineOperand* Instruction::genMachineOperand(Operand* ope, bool isFloat)
 {
-    // TODO: 生成float类型的MachineOperand
     if(isFloat) {
         auto se = ope->getEntry();
         MachineOperand* mope = nullptr;
         if(se->isConstant())
-            mope = new MachineOperand(MachineOperand::IMM, dynamic_cast<ConstantSymbolEntry*>(se)->getValue(), true);
+            mope = new MachineOperand(MachineOperand::IMM, 0, true, dynamic_cast<ConstantSymbolEntry*>(se)->getValue());
         else if(se->isTemporary())
         {
             if(se->getType()->isPointer()) {
@@ -569,10 +568,9 @@ MachineOperand* Instruction::genMachineOperand(Operand* ope, bool isFloat)
                 mope = new MachineOperand(id_se->toStr().erase(0,1).c_str());
             }
             else {
-                if(type==TypeSystem::constIntType){
-                    //TODO: add array manipulation here
+                if(type==TypeSystem::constFloatType){
                     //TODO: add float manipulation here
-                    mope = new MachineOperand(MachineOperand::IMM, id_se->value, true);
+                    mope = new MachineOperand(MachineOperand::IMM, 0, true, id_se->value);
                 }
                 else{
                     mope = new MachineOperand(id_se->toStr().c_str());
@@ -729,7 +727,7 @@ void LoadInstruction::genMachineCode(AsmBuilder* builder)
                 cur_block->InsertInst(cur_inst);
             }
             else {
-                cur_inst = new LoadMInstruction(cur_block, dst, src1, src2);
+                cur_inst = new LoadMInstruction(cur_block, dst, src1, src2, LoadMInstruction::VLDR);
                 cur_block->InsertInst(cur_inst);
             }
             // 如果是函数参数 则保留其偏移量方便后续调整
@@ -859,6 +857,7 @@ void StoreInstruction::genMachineCode(AsmBuilder* builder)
     auto cur_block = builder->getBlock();
     MachineInstruction* cur_inst = nullptr;
     // 如果当前是存参数 则直接修改dst的offset
+    // 这个地方 整型、浮点和数组逻辑都一致
     if(operands[1]->getEntry()->isVariable()) {
         auto id_se = dynamic_cast<IdentifierSymbolEntry*>(operands[1]->getEntry());
         if(id_se->isParam()) {
@@ -870,13 +869,32 @@ void StoreInstruction::genMachineCode(AsmBuilder* builder)
             }
         }
     }
-    MachineOperand* src = genMachineOperand(operands[1]);
-    //如果src为常数，需要先load进来
-    if(src->isImm()){
-        auto internal_reg = genMachineVReg();
-        cur_inst = new LoadMInstruction(cur_block, internal_reg, src);
-        cur_block->InsertInst(cur_inst);
-        src = new MachineOperand(*internal_reg);
+
+    MachineOperand* src = nullptr;
+
+    if(operands[1]->getType()->isFloat()) {
+        src = genMachineOperand(operands[1], true);
+        //如果src为常数，需要先load进来
+        if(src->isImm()){
+            auto tmp_dst = genMachineVReg(true);
+            auto internal_reg = genMachineVReg();
+            cur_inst = new LoadMInstruction(cur_block, internal_reg, src);
+            cur_block->InsertInst(cur_inst);
+            internal_reg = new MachineOperand(*internal_reg);
+            cur_inst = new MovMInstruction(cur_block, MovMInstruction::VMOV, tmp_dst, internal_reg);
+            cur_block->InsertInst(cur_inst);
+            src = new MachineOperand(*tmp_dst);
+        }
+    }
+    else {
+        src = genMachineOperand(operands[1]);
+        //如果src为常数，需要先load进来
+        if(src->isImm()){
+            auto internal_reg = genMachineVReg();
+            cur_inst = new LoadMInstruction(cur_block, internal_reg, src);
+            cur_block->InsertInst(cur_inst);
+            src = new MachineOperand(*internal_reg);
+        }
     }
     // store global operand
     if(operands[0]->getEntry()->isVariable()
@@ -885,12 +903,22 @@ void StoreInstruction::genMachineCode(AsmBuilder* builder)
         auto internal_reg1 = genMachineVReg();
         auto internal_reg2 = new MachineOperand(*internal_reg1);
         auto dst = genMachineOperand(operands[0]);
-        // example: load r0, addr_a
-        cur_inst = new LoadMInstruction(cur_block, internal_reg1, dst);
-        cur_block->InsertInst(cur_inst);
-        // example: store r1, [r0]
-        cur_inst = new StoreMInstruction(cur_block, src, internal_reg2);
-        cur_block->InsertInst(cur_inst);
+        if(operands[1]->getType()->isFloat()) {
+            // example: load r0, addr_a
+            cur_inst = new LoadMInstruction(cur_block, internal_reg1, dst);
+            cur_block->InsertInst(cur_inst);
+            // example: store r1, [r0]
+            cur_inst = new StoreMInstruction(cur_block, src, internal_reg2, nullptr, StoreMInstruction::VSTR);
+            cur_block->InsertInst(cur_inst);
+        }
+        else {
+            // example: load r0, addr_a
+            cur_inst = new LoadMInstruction(cur_block, internal_reg1, dst);
+            cur_block->InsertInst(cur_inst);
+            // example: store r1, [r0]
+            cur_inst = new StoreMInstruction(cur_block, src, internal_reg2);
+            cur_block->InsertInst(cur_inst);
+        }
     }
     // store local operand
     else if(operands[0]->getEntry()->isTemporary()
@@ -907,8 +935,21 @@ void StoreInstruction::genMachineCode(AsmBuilder* builder)
             cur_block->InsertInst(cur_inst);
             dst2 = new MachineOperand(*internal_reg);
         }
-        cur_inst = new StoreMInstruction(cur_block, src, dst1, dst2);
-        cur_block->InsertInst(cur_inst);
+        if(operands[1]->getType()->isFloat()) {
+            // 对于浮点数 超过范围的 offset 需要再做处理
+            if(offset > 255 || offset < -255) {
+                auto reg = genMachineVReg();
+                cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, reg, dst1, dst2);
+                cur_block->InsertInst(cur_inst);
+                dst2 = reg;
+            }
+            cur_inst = new StoreMInstruction(cur_block, src, dst1, dst2, StoreMInstruction::VSTR);
+            cur_block->InsertInst(cur_inst);
+        }
+        else {
+            cur_inst = new StoreMInstruction(cur_block, src, dst1, dst2);
+            cur_block->InsertInst(cur_inst);
+        }
     }
     // store operand from temporary variable
     else
@@ -931,10 +972,16 @@ void StoreInstruction::genMachineCode(AsmBuilder* builder)
                 dimensions = dynamic_cast<ConstFloatArrayType*>(operands[0]->getEntry()->getType())->getDimensions();
             }
             if(dynamic_cast<TemporarySymbolEntry*>(operands[0]->getEntry())->getGlobalArray() ||
-                dimensions[dimensions.size()-1]==-1){
+                dimensions[0]==-1){
                 auto dst_addr = genMachineOperand(operands[0]);
-                cur_inst = new StoreMInstruction(cur_block, src, dst_addr);
-                cur_block->InsertInst(cur_inst);
+                if(operands[1]->getType()->isFloat()) {
+                    cur_inst = new StoreMInstruction(cur_block, src, dst_addr, nullptr, StoreMInstruction::VSTR);
+                    cur_block->InsertInst(cur_inst);
+                }
+                else {
+                    cur_inst = new StoreMInstruction(cur_block, src, dst_addr);
+                    cur_block->InsertInst(cur_inst);
+                }
             }
             else{
                 auto dst_addr = genMachineVReg();
@@ -952,14 +999,26 @@ void StoreInstruction::genMachineCode(AsmBuilder* builder)
                 cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, dst_addr, fp, offset);
                 cur_block->InsertInst(cur_inst);
 
-                cur_inst = new StoreMInstruction(cur_block, src, dst_addr);
-                cur_block->InsertInst(cur_inst);
+                if(operands[1]->getType()->isFloat()) {
+                    cur_inst = new StoreMInstruction(cur_block, src, new MachineOperand(*dst_addr), nullptr, StoreMInstruction::VSTR);
+                    cur_block->InsertInst(cur_inst);
+                }
+                else {
+                    cur_inst = new StoreMInstruction(cur_block, src, new MachineOperand(*dst_addr));
+                    cur_block->InsertInst(cur_inst);
+                }
             }
         }
         else{
             auto dst = genMachineOperand(operands[0]);
-            cur_inst = new StoreMInstruction(cur_block, src, dst);
-            cur_block->InsertInst(cur_inst);
+            if(operands[1]->getType()->isFloat()) {
+                cur_inst = new StoreMInstruction(cur_block, src, dst, nullptr, StoreMInstruction::VSTR);
+                cur_block->InsertInst(cur_inst);
+            }
+            else {
+                cur_inst = new StoreMInstruction(cur_block, src, dst);
+                cur_block->InsertInst(cur_inst);
+            }
         }
     }
 }
@@ -1116,6 +1175,8 @@ void RetInstruction::genMachineCode(AsmBuilder* builder)
                 src = internal_reg;
             }
             auto dst = new MachineOperand(MachineOperand::REG, 16, true);
+            cur_inst = new MovMInstruction(cur_block, MovMInstruction::VMOV, dst, src);
+            cur_block->InsertInst(cur_inst);
         }
         else {
             auto src = genMachineOperand(operands[0]);
@@ -1286,7 +1347,6 @@ void ZextInstruction::genMachineCode(AsmBuilder* builder)
 void FBinaryInstruction::genMachineCode(AsmBuilder* builder)
 {
     auto cur_block = builder->getBlock();
-    auto flag = false;
     auto dst = genMachineOperand(operands[0], true);
     auto src1 = genMachineOperand(operands[1], true);
     auto src2 = genMachineOperand(operands[2], true);

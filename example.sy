@@ -1,5 +1,10 @@
+float a = 3.1;
+float arr[10] ={1.2};
+float func() {
+    float a = 1.0;
+    return a;
+}
 int main() {
-    float a = 10.0;
-    float b = 1.0;
-    return 0;
+    int tmp = a;
+    return tmp;
 }

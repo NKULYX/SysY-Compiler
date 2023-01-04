@@ -38,7 +38,7 @@ private:
     float fval;
 public:
     enum { IMM, VREG, REG, LABEL };
-    MachineOperand(int tp, int val, bool flt = false);
+    MachineOperand(int tp, int val, bool flt = false, float fval = 0.0);
     MachineOperand(std::string label, bool is_func = false, bool flt = false);
     bool operator == (const MachineOperand&) const;
     bool operator < (const MachineOperand&) const;
@@ -232,7 +232,8 @@ public:
     int AllocSpace(int size) { this->stack_size += size; return this->stack_size; };
     void InsertBlock(MachineBlock* block) { this->block_list.push_back(block); };
     void addSavedRegs(int regno) {saved_regs.insert(regno);};
-    std::vector<MachineOperand*> getSavedRegs();
+    std::vector<MachineOperand*> getSavedRRegs();
+    std::vector<MachineOperand*> getSavedFRegs();
     void insertSavedParamsOffset(MachineOperand* offset) {saved_params_offset.push_back(offset);};
     MachineUnit* getParent() {return parent;}
     void output();
