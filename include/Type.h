@@ -122,33 +122,42 @@ class FloatArrayType : public Type
 {
 private:
     std::vector<int> dimensions;
+    bool isPointer;
 public:
     FloatArrayType() : Type(Type::FLOAT_ARRAY){size = 4;};
     void pushBackDimension(int);
     std::vector<int> getDimensions();
     std::string toStr();
+    void setPointer(bool value){isPointer = value;};
+    bool getPointer() {return isPointer;};
 };
 
 class ConstIntArrayType : public Type
 {
 private:
     std::vector<int> dimensions;
+    bool isPointer;
 public:
     ConstIntArrayType() : Type(Type::CONST_INT_ARRAY){size = 4;};
     void pushBackDimension(int);
     std::vector<int> getDimensions();
     std::string toStr();
+    void setPointer(bool value){isPointer = value;};
+    bool getPointer() {return isPointer;};
 };
 
 class ConstFloatArrayType : public Type
 {
 private:
     std::vector<int> dimensions;
+    bool isPointer;
 public:
     ConstFloatArrayType() : Type(Type::CONST_FLOAT_ARRAY){size = 4;};
     void pushBackDimension(int);
     std::vector<int> getDimensions();
     std::string toStr();
+    void setPointer(bool value){isPointer = value;};
+    bool getPointer() {return isPointer;};
 };
 
 class PointerType : public Type

@@ -1207,6 +1207,47 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
     MachineInstruction* cur_inst = nullptr;
     std::vector<MachineOperand*> additional_args;
     // for(unsigned int i = 1;i < operands.size();i++){
+    int iparam_cnt = 0;
+    int fparam_cnt = 0;
+    for(int i = 1; i < int(operands.size()); i++) {
+        if(operands[i]->getType()->isInt()) {
+            iparam_cnt++;
+        }
+        else if(operands[i]->getType()->isFloat()) {
+            fparam_cnt++;
+        }
+        else if(operands[i]->getType()->isArray()) {
+            bool isPointer = false;
+            bool is_float = false;
+            if(operands[i]->getEntry()->getType()->isIntArray()){
+                isPointer = dynamic_cast<IntArrayType*>(operands[i]->getEntry()->getType())->getPointer();
+                is_float = false;
+            }
+            else if(operands[i]->getEntry()->getType()->isFloatArray()) {
+                isPointer = dynamic_cast<FloatArrayType *>(operands[i]->getEntry()->getType())->getPointer();
+                is_float = true;
+            }
+            else if(operands[i]->getEntry()->getType()->isConstIntArray()) {
+                isPointer = dynamic_cast<ConstIntArrayType *>(operands[i]->getEntry()->getType())->getPointer();
+                is_float = false;
+            }
+            else if(operands[i]->getEntry()->getType()->isConstFloatArray()) {
+                isPointer = dynamic_cast<ConstFloatArrayType *>(operands[i]->getEntry()->getType())->getPointer();
+                is_float = true;
+            }
+            if(isPointer) {
+                iparam_cnt++;
+            }
+            else {
+                if(is_float){
+                    fparam_cnt++;
+                }
+                else {
+                    iparam_cnt++;
+                }
+            }
+        }
+    }
     for(unsigned int i = operands.size() - 1; i > 0; i--){
         //如果类型是数组，需要考虑局部数组指针的情况
         if(operands[i]->getEntry()->getType()->isArray()){
@@ -1217,6 +1258,24 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
                 // dynamic_cast<IntArrayType*>(operands[i]->getEntry()->getType())->setPointer(false);
                 //如果第一维为-1，表明其为指针，传参时需要注意不加fp
                 if(dynamic_cast<IntArrayType*>(operands[i]->getEntry()->getType())->getDimensions()[0]==-1){
+                    isPointer = false;
+                }
+            }
+            else if(operands[i]->getEntry()->getType()->isFloatArray()) {
+                isPointer = dynamic_cast<FloatArrayType *>(operands[i]->getEntry()->getType())->getPointer();
+                if(dynamic_cast<FloatArrayType*>(operands[i]->getEntry()->getType())->getDimensions()[0]==-1){
+                    isPointer = false;
+                }
+            }
+            else if(operands[i]->getEntry()->getType()->isConstIntArray()) {
+                isPointer = dynamic_cast<ConstIntArrayType *>(operands[i]->getEntry()->getType())->getPointer();
+                if(dynamic_cast<ConstIntArrayType*>(operands[i]->getEntry()->getType())->getDimensions()[0]==-1){
+                    isPointer = false;
+                }
+            }
+            else if(operands[i]->getEntry()->getType()->isConstFloatArray()) {
+                isPointer = dynamic_cast<ConstFloatArrayType *>(operands[i]->getEntry()->getType())->getPointer();
+                if(dynamic_cast<ConstFloatArrayType*>(operands[i]->getEntry()->getType())->getDimensions()[0]==-1){
                     isPointer = false;
                 }
             }
@@ -1236,9 +1295,9 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
                 }
                 cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, dst_addr, fp, offset);
                 cur_block->InsertInst(cur_inst);
-
+                --iparam_cnt;
                 //左起前4个参数通过r0-r3传递
-                if(i<=4){
+                if(iparam_cnt < 4){
                     auto dst = new MachineOperand(MachineOperand::REG, i-1);//r0-r3
                     cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, dst_addr);
                     cur_block->InsertInst(cur_inst);
@@ -1251,15 +1310,17 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
                     saved_reg_cnt++;
                 }
             }
+            //情况1：传入的是数组的值（包括局部、全局和参数），这时需要区分float
+            //情况2：全局数组或传入的数组指针参数，此时一律按int处理，但不需要加fp
             else{
+                --iparam_cnt;
                 //左起前4个参数通过r0-r3传递
-                if(i<=4){
+                if(iparam_cnt < 4){
                     auto dst = new MachineOperand(MachineOperand::REG, i-1);//r0-r3
                     cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, genMachineOperand(operands[i]));
                     cur_block->InsertInst(cur_inst);
                 }
                 else{
-                    // additional_args.push_back(genMachineOperand(operands[i]));
                     additional_args.clear();
                     additional_args.push_back(genMachineOperand(operands[i]));
                     cur_inst = new StackMInstruction(cur_block, StackMInstruction::PUSH, additional_args);
@@ -1269,38 +1330,67 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
             }
         }
         else{
-            //左起前4个参数通过r0-r3传递
-            if(i<=4){
-                auto dst = new MachineOperand(MachineOperand::REG, i-1);//r0-r3
-                cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, genMachineOperand(operands[i]));
-                cur_block->InsertInst(cur_inst);
-            }
-            else{
-                additional_args.clear();
-                MachineOperand* operand = genMachineOperand(operands[i]);
-                if(operand->isImm()) {
-                    MachineOperand* internal_reg = genMachineVReg();
-                    cur_inst = new LoadMInstruction(cur_block, internal_reg, operand);
-                    cur_block->InsertInst(cur_inst);
-                    operand = new MachineOperand(*internal_reg);
+            if(operands[i]->getType()->isFloat()) {
+                --fparam_cnt;
+                //左起前4个参数通过s0-s3传递
+                if(fparam_cnt < 4){
+                    auto dst = new MachineOperand(MachineOperand::REG, i - 1 + 16, true);
+                    auto src = genMachineOperand(operands[i], true);
+                    if(src->isImm()) {
+                        auto internal_reg = genMachineVReg();
+                        cur_inst = new LoadMInstruction(cur_block, internal_reg, src);
+                        cur_block->InsertInst(cur_inst);
+                        internal_reg = new MachineOperand(*internal_reg);
+                        cur_inst = new MovMInstruction(cur_block, MovMInstruction::VMOV, dst, internal_reg);
+                        cur_block->InsertInst(cur_inst);
+                    }
+                    else {
+                        cur_inst = new MovMInstruction(cur_block, MovMInstruction::VMOV, dst, src);
+                        cur_block->InsertInst(cur_inst);
+                    }
                 }
-                additional_args.push_back(operand);
-                cur_inst = new StackMInstruction(cur_block, StackMInstruction::PUSH, additional_args);
-                cur_block->InsertInst(cur_inst);
-                saved_reg_cnt++;
+                else{
+                    additional_args.clear();
+                    MachineOperand* operand = genMachineOperand(operands[i], true);
+                    if(operand->isImm()) {
+                        MachineOperand* internal_reg = genMachineVReg();
+                        cur_inst = new LoadMInstruction(cur_block, internal_reg, operand);
+                        cur_block->InsertInst(cur_inst);
+                        operand = genMachineVReg(true);
+                        cur_inst = new MovMInstruction(cur_block, MovMInstruction::VMOV, operand, internal_reg);
+                        cur_block->InsertInst(cur_inst);
+                    }
+                    additional_args.push_back(operand);
+                    cur_inst = new StackMInstruction(cur_block, StackMInstruction::VPUSH, additional_args);
+                    cur_block->InsertInst(cur_inst);
+                    saved_reg_cnt++;
+                }
+            }
+            else {
+                --iparam_cnt;
+                //左起前4个参数通过r0-r3传递
+                if(iparam_cnt < 4){
+                    auto dst = new MachineOperand(MachineOperand::REG, i - 1);//r0-r3
+                    cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, genMachineOperand(operands[i]));
+                    cur_block->InsertInst(cur_inst);
+                }
+                else{
+                    additional_args.clear();
+                    MachineOperand* operand = genMachineOperand(operands[i]);
+                    if(operand->isImm()) {
+                        MachineOperand* internal_reg = genMachineVReg();
+                        cur_inst = new LoadMInstruction(cur_block, internal_reg, operand);
+                        cur_block->InsertInst(cur_inst);
+                        operand = new MachineOperand(*internal_reg);
+                    }
+                    additional_args.push_back(operand);
+                    cur_inst = new StackMInstruction(cur_block, StackMInstruction::PUSH, additional_args);
+                    cur_block->InsertInst(cur_inst);
+                    saved_reg_cnt++;
+                }
             }
         }
     }
-    // if(!additional_args.empty()){
-    //     // 参数需要逆序压栈
-    //     std::reverse(additional_args.begin(), additional_args.end());
-    //     for(auto arg : additional_args) {
-    //         std::vector<MachineOperand*> tmp;
-    //         tmp.push_back(arg);
-    //         cur_inst = new StackMInstruction(cur_block, StackMInstruction::PUSH, tmp);
-    //         cur_block->InsertInst(cur_inst);
-    //     }
-    // }
     cur_inst = new BranchMInstruction(cur_block, BranchMInstruction::BL, new MachineOperand(funcSE->getName(), true));
     cur_block->InsertInst(cur_inst);
     // 对于有返回值的函数调用 需要提供一条从mov r0, dst的指令
