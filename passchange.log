@@ -1,18 +1,28 @@
-36,37c36,37
-< FAIL: 049_unary_op	Assemble Error
-< FAIL: 050_unary_op2	Assemble Error
+106c106
+< FAIL: 086_full_conn	Wrong Answer
 ---
-> PASS: 049_unary_op
-> PASS: 050_unary_op2
-60c60
-< FAIL: 041_while_if_test3	Assemble Error
+> PASS: 086_full_conn
+150,153c150,153
+< FAIL: 196_float	Compile Error
+< FAIL: 198_matrix_add	Compile Error
+< FAIL: 199_matrix_sub	Compile Error
+< FAIL: 200_matrix_mul	Compile Error
 ---
-> PASS: 041_while_if_test3
-63c63
-< FAIL: 102_short_circuit3	Assemble Error
+> FAIL: 196_float	Assemble Error
+> FAIL: 198_matrix_add	Assemble Error
+> FAIL: 199_matrix_sub	Assemble Error
+> FAIL: 200_matrix_mul	Assemble Error
+156,161c156,161
+< FAIL: 35_math	Compile Error
+< FAIL: 36_rotate	Compile Error
+< FAIL: 37_dct	Compile Error
+< FAIL: 38_light2d	Compile Error
+< FAIL: 39_fp_params	Compile Error
+< Total: 160	Accept: 137	Fail: 23
 ---
-> PASS: 102_short_circuit3
-161c161
-< Total: 160	Accept: 133	Fail: 27
----
-> Total: 160	Accept: 137	Fail: 23
+> FAIL: 35_math	Assemble Error
+> FAIL: 36_rotate	Assemble Error
+> FAIL: 37_dct	Assemble Error
+> FAIL: 38_light2d	Assemble Error
+> FAIL: 39_fp_params	Compile Timeout
+> Total: 160	Accept: 138	Fail: 22

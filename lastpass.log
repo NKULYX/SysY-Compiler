@@ -33,8 +33,8 @@ PASS: 045_op_priority3
 PASS: 046_op_priority4
 PASS: 047_op_priority5
 PASS: 048_stmt_expr
-FAIL: 049_unary_op	Assemble Error
-FAIL: 050_unary_op2	Assemble Error
+PASS: 049_unary_op
+PASS: 050_unary_op2
 PASS: 051_logi_assign
 PASS: 054_hex_defn
 PASS: 055_hex_oct_add
@@ -57,10 +57,10 @@ PASS: 035_while_test2
 PASS: 036_while_test3
 PASS: 039_while_if_test1
 PASS: 040_while_if_test2
-FAIL: 041_while_if_test3	Assemble Error
+PASS: 041_while_if_test3
 PASS: 069_greatest_common_divisor
 PASS: 100_int_literal
-FAIL: 102_short_circuit3	Assemble Error
+PASS: 102_short_circuit3
 PASS: 1074_itera_sqrt
 PASS: 1075_max_container
 PASS: 1076_int_factor_sum
@@ -158,4 +158,4 @@ FAIL: 36_rotate	Compile Error
 FAIL: 37_dct	Compile Error
 FAIL: 38_light2d	Compile Error
 FAIL: 39_fp_params	Compile Error
-Total: 160	Accept: 133	Fail: 27
+Total: 160	Accept: 137	Fail: 23
