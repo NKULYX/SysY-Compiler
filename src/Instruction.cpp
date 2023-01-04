@@ -1249,39 +1249,40 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
         }
     }
     for(unsigned int i = operands.size() - 1; i > 0; i--){
+        //需要保证不是值而是数组指针
+        bool isPointer = false;
         //如果类型是数组，需要考虑局部数组指针的情况
-        if(operands[i]->getEntry()->getType()->isArray()){
-            //需要保证不是值而是数组指针
-            bool isPointer = false;
-            if(operands[i]->getEntry()->getType()->isIntArray()){
-                isPointer = dynamic_cast<IntArrayType*>(operands[i]->getEntry()->getType())->getPointer();
+        if(operands[i]->getEntry()->getType()->isArray()) {
+            if (operands[i]->getEntry()->getType()->isIntArray()) {
+                isPointer = dynamic_cast<IntArrayType *>(operands[i]->getEntry()->getType())->getPointer();
                 // dynamic_cast<IntArrayType*>(operands[i]->getEntry()->getType())->setPointer(false);
                 //如果第一维为-1，表明其为指针，传参时需要注意不加fp
-                if(dynamic_cast<IntArrayType*>(operands[i]->getEntry()->getType())->getDimensions()[0]==-1){
+                if (dynamic_cast<IntArrayType *>(operands[i]->getEntry()->getType())->getDimensions()[0] == -1) {
                     isPointer = false;
                 }
-            }
-            else if(operands[i]->getEntry()->getType()->isFloatArray()) {
+            } else if (operands[i]->getEntry()->getType()->isFloatArray()) {
                 isPointer = dynamic_cast<FloatArrayType *>(operands[i]->getEntry()->getType())->getPointer();
-                if(dynamic_cast<FloatArrayType*>(operands[i]->getEntry()->getType())->getDimensions()[0]==-1){
+                if (dynamic_cast<FloatArrayType *>(operands[i]->getEntry()->getType())->getDimensions()[0] == -1) {
                     isPointer = false;
                 }
-            }
-            else if(operands[i]->getEntry()->getType()->isConstIntArray()) {
+            } else if (operands[i]->getEntry()->getType()->isConstIntArray()) {
                 isPointer = dynamic_cast<ConstIntArrayType *>(operands[i]->getEntry()->getType())->getPointer();
-                if(dynamic_cast<ConstIntArrayType*>(operands[i]->getEntry()->getType())->getDimensions()[0]==-1){
+                if (dynamic_cast<ConstIntArrayType *>(operands[i]->getEntry()->getType())->getDimensions()[0] == -1) {
                     isPointer = false;
                 }
-            }
-            else if(operands[i]->getEntry()->getType()->isConstFloatArray()) {
+            } else if (operands[i]->getEntry()->getType()->isConstFloatArray()) {
                 isPointer = dynamic_cast<ConstFloatArrayType *>(operands[i]->getEntry()->getType())->getPointer();
-                if(dynamic_cast<ConstFloatArrayType*>(operands[i]->getEntry()->getType())->getDimensions()[0]==-1){
+                if (dynamic_cast<ConstFloatArrayType *>(operands[i]->getEntry()->getType())->getDimensions()[0] == -1) {
                     isPointer = false;
                 }
             }
-            //必须保证是局部数组，而且不是传进来的参数
-            if(isPointer && !dynamic_cast<TemporarySymbolEntry*>(operands[i]->getEntry())->getGlobalArray()){
-                auto dst_addr = genMachineVReg();
+        }
+        // 表示传入的是一个数组并且是指针
+        if(isPointer){
+            --iparam_cnt;
+            MachineOperand* dst_addr = nullptr;
+            // 情况1 必须保证是局部数组，而且不是传进来的参数 此时需要加fp
+            if(!dynamic_cast<TemporarySymbolEntry*>(operands[i]->getEntry())->getGlobalArray()) {
                 auto fp = genMachineReg(11);
                 auto offset = genMachineOperand(operands[i]);
                 if(offset->isImm()) {
@@ -1293,40 +1294,27 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
                         offset = new MachineOperand(*internal_reg);
                     }
                 }
+                dst_addr = genMachineVReg();
                 cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, dst_addr, fp, offset);
                 cur_block->InsertInst(cur_inst);
-                --iparam_cnt;
-                //左起前4个参数通过r0-r3传递
-                if(iparam_cnt < 4){
-                    auto dst = new MachineOperand(MachineOperand::REG, i-1);//r0-r3
-                    cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, dst_addr);
-                    cur_block->InsertInst(cur_inst);
-                }
-                else{
-                    additional_args.clear();
-                    additional_args.push_back(dst_addr);
-                    cur_inst = new StackMInstruction(cur_block, StackMInstruction::PUSH, additional_args);
-                    cur_block->InsertInst(cur_inst);
-                    saved_reg_cnt++;
-                }
             }
-            //情况1：传入的是数组的值（包括局部、全局和参数），这时需要区分float
-            //情况2：全局数组或传入的数组指针参数，此时一律按int处理，但不需要加fp
+            else {
+                dst_addr = genMachineOperand(operands[i]);
+            }
+            // 全局数组或传入的数组指针参数，此时一律按int处理，但不需要加fp
+            // 而对于局部数组需要添加fp的已经在上面处理完
+            // 左起前4个参数通过r0-r3传递
+            if(iparam_cnt < 4){
+                auto dst = new MachineOperand(MachineOperand::REG, i-1);//r0-r3
+                cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, dst_addr);
+                cur_block->InsertInst(cur_inst);
+            }
             else{
-                --iparam_cnt;
-                //左起前4个参数通过r0-r3传递
-                if(iparam_cnt < 4){
-                    auto dst = new MachineOperand(MachineOperand::REG, i-1);//r0-r3
-                    cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, genMachineOperand(operands[i]));
-                    cur_block->InsertInst(cur_inst);
-                }
-                else{
-                    additional_args.clear();
-                    additional_args.push_back(genMachineOperand(operands[i]));
-                    cur_inst = new StackMInstruction(cur_block, StackMInstruction::PUSH, additional_args);
-                    cur_block->InsertInst(cur_inst);
-                    saved_reg_cnt++;
-                }
+                additional_args.clear();
+                additional_args.push_back(dst_addr);
+                cur_inst = new StackMInstruction(cur_block, StackMInstruction::PUSH, additional_args);
+                cur_block->InsertInst(cur_inst);
+                saved_reg_cnt++;
             }
         }
         else{
