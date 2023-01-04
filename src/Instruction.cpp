@@ -837,10 +837,33 @@ void LoadInstruction::genMachineCode(AsmBuilder* builder)
         else{
             // example: load r1, [r0]
             if(operands[0]->getType()->isFloat()) {
-                auto dst = genMachineOperand(operands[0], true);
-                auto src = genMachineOperand(operands[1]);
-                cur_inst = new LoadMInstruction(cur_block, dst, src, nullptr, LoadMInstruction::VLDR);
-                cur_block->InsertInst(cur_inst);
+                if(dynamic_cast<FloatType*>(operands[0]->getType())->isNeedFP()) {
+                    auto src_addr = genMachineVReg();
+                    auto fp = genMachineReg(11);
+                    auto offset = genMachineOperand(operands[1]);
+                    if(offset->isImm()) {
+                        if(((ConstantSymbolEntry*)(operands[1]->getEntry()))->getValue() > 255 ||
+                           ((ConstantSymbolEntry*)(operands[1]->getEntry()))->getValue() < -255) {
+                            auto internal_reg = genMachineVReg();
+                            cur_inst = new LoadMInstruction(cur_block, internal_reg, offset);
+                            cur_block->InsertInst(cur_inst);
+                            offset = new MachineOperand(*internal_reg);
+                        }
+                    }
+                    auto dst = genMachineOperand(operands[0], true);
+                    cur_inst = new BinaryMInstruction(cur_block, BinaryMInstruction::ADD, src_addr, fp, offset);
+                    cur_block->InsertInst(cur_inst);
+
+                    cur_inst = new LoadMInstruction(cur_block, dst, src_addr, nullptr, LoadMInstruction::VLDR);
+                    cur_block->InsertInst(cur_inst);
+                    dynamic_cast<FloatType*>(operands[0]->getType())->setNeedFP(false);
+                }
+                else {
+                    auto dst = genMachineOperand(operands[0], true);
+                    auto src = genMachineOperand(operands[1]);
+                    cur_inst = new LoadMInstruction(cur_block, dst, src, nullptr, LoadMInstruction::VLDR);
+                    cur_block->InsertInst(cur_inst);
+                }
             }
             else {
                 auto dst = genMachineOperand(operands[0]);

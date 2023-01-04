@@ -166,6 +166,7 @@ bool LinearScan::linearScanRegisterAllocation()
     bool retValue = true;
     active.clear();
     regs.clear();
+    fregs.clear();
     for (int i = 4; i < 11; i++)
         regs.push_back(i);
     for (int i = 21; i < 48; i++)

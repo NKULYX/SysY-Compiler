@@ -148,14 +148,14 @@ PASS: 115_nested_calls
 PASS: 116_nested_calls2
 PASS: 117_nested_loops
 FAIL: 196_float	Assemble Error
-FAIL: 198_matrix_add	Assemble Error
-FAIL: 199_matrix_sub	Assemble Error
-FAIL: 200_matrix_mul	Assemble Error
-FAIL: 201_matrix_tran	Assemble Error
+PASS: 198_matrix_add
+PASS: 199_matrix_sub
+PASS: 200_matrix_mul
+PASS: 201_matrix_tran
 PASS: 202_register_realloc
 FAIL: 35_math	Assemble Error
 FAIL: 36_rotate	Assemble Error
 FAIL: 37_dct	Assemble Error
 FAIL: 38_light2d	Assemble Error
 FAIL: 39_fp_params	Compile Timeout
-Total: 160	Accept: 138	Fail: 22
+Total: 160	Accept: 142	Fail: 18

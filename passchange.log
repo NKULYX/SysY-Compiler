@@ -1,0 +1,8 @@
+153c153
+< FAIL: 200_matrix_mul	Wrong Answer
+---
+> PASS: 200_matrix_mul
+161c161
+< Total: 160	Accept: 141	Fail: 19
+---
+> Total: 160	Accept: 142	Fail: 18

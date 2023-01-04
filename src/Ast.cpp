@@ -373,6 +373,14 @@ void Id::genCode()
         if(indices!=nullptr && indices->exprList.size()==dimensions.size()){
             new BinaryInstruction(BinaryInstruction::ADD, offset_final, offset1, addr, bb);  //offset_final = offset1 + addr
             // printf("%s\n", getSymbolEntry()->toStr().c_str());
+            //进入此分支表明已经寻址完成，可以由array type转为普通type
+            if(dst->getType()->isFloatArray() || dst->getType()->isConstFloatArray()){
+                dst->getEntry()->setType(new FloatType(4));
+                // 如果不是全局变量 那么就设置 need_fp 标志位
+                if(!dynamic_cast<IdentifierSymbolEntry*>(getSymbolEntry())->isGlobal() && dimensions[0] != -1){
+                    dynamic_cast<FloatType*>(dst->getEntry()->getType())->setNeedFP(true);
+                }
+            }
             new LoadInstruction(dst, offset_final, bb);
         }
         else{
@@ -490,7 +498,12 @@ void AssignStmt::genCode()
     BasicBlock *bb = builder->getInsertBB();
     expr->genCode();
     Operand *addr = dynamic_cast<IdentifierSymbolEntry*>(lval->getSymPtr())->getAddr();
-    Operand *src = typeCast(dynamic_cast<PointerType*>(addr->getType())->getValueType(), expr->getOperand());
+    //如果左值是array type，需要将其先转为普通type，以产生vstr指令
+    Type* targetType = dynamic_cast<PointerType*>(addr->getType())->getValueType();
+    if(targetType->isFloatArray()){
+        targetType = TypeSystem::floatType;
+    }
+    Operand *src = typeCast(targetType, expr->getOperand());
     /***
      * We haven't implemented array yet, the lval can only be ID. So we just store the result of the `expr` to the addr of the id.
      * If you want to implement array, you have to caculate the address first and then store the result into it.
@@ -1408,8 +1421,8 @@ void OneOpExpr::typeCheck(Node** parentToChild)
         SymbolEntry *se;
         double val = 0;
         int initValue = expr->getSymPtr()->isConstant() ? 
-            ((ConstantSymbolEntry*)(expr->getSymPtr()))->getValue() : 
-            ((IdentifierSymbolEntry*)(expr->getSymPtr()))->value;
+            ((ConstantSymbolEntry*)(expr->getSymPtr()))->getValue() :
+            (((IdentifierSymbolEntry*)(expr->getSymPtr()))->value);
         switch (op) 
         {
         case SUB:
