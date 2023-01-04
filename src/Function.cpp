@@ -87,9 +87,69 @@ void Function::genMachineCode(AsmBuilder* builder)
 
 }
 
+void Function::insertParam(Operand* param) {
+    params_list.push_back(param);
+    if(param->getType()->isInt()) {
+        iparams_list.push_back(param);
+    }
+    else if(param->getType()->isFloat()) {
+        fparams_list.push_back(param);
+    }
+    else if(param->getType()->isArray()) {
+        bool isPointer = false;
+        bool is_float = false;
+        if(param->getEntry()->getType()->isIntArray()){
+            isPointer = dynamic_cast<IntArrayType*>(param->getEntry()->getType())->getPointer();
+            is_float = false;
+        }
+        else if(param->getEntry()->getType()->isFloatArray()) {
+            isPointer = dynamic_cast<FloatArrayType *>(param->getEntry()->getType())->getPointer();
+            is_float = true;
+        }
+        else if(param->getEntry()->getType()->isConstIntArray()) {
+            isPointer = dynamic_cast<ConstIntArrayType *>(param->getEntry()->getType())->getPointer();
+            is_float = false;
+        }
+        else if(param->getEntry()->getType()->isConstFloatArray()) {
+            isPointer = dynamic_cast<ConstFloatArrayType *>(param->getEntry()->getType())->getPointer();
+            is_float = true;
+        }
+        if(isPointer) {
+            iparams_list.push_back(param);
+        }
+        else {
+            if(is_float){
+                fparams_list.push_back(param);
+            }
+            else {
+                iparams_list.push_back(param);
+            }
+        }
+    }
+}
+
 int Function::getParamId(Operand *param) {
     int i = 0;
     for(auto p : params_list){
+        if(p == param) return i;
+        i++;
+    }
+    return -1;
+}
+
+int Function::getIParamId(Operand* param) {
+    int i = 0;
+    for(auto p : iparams_list){
+        if(p == param) return i;
+        i++;
+    }
+    return -1;
+}
+
+
+int Function::getFParamId(Operand* param) {
+    int i = 0;
+    for(auto p : fparams_list){
         if(p == param) return i;
         i++;
     }

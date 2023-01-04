@@ -556,8 +556,9 @@ MachineOperand* Instruction::genMachineOperand(Operand* ope, bool isFloat)
             // 如果是函数参数
             if(id_se->isParam()) {
                 auto param_id = this->parent->getParent()->getParamId(ope);
+//                auto param_id = this->parent->getParent()->getFParamId(ope);
                 if(param_id >= 0 && param_id <= 3) {
-                    mope = new MachineOperand(MachineOperand::REG, param_id, true);
+                    mope = new MachineOperand(MachineOperand::REG, param_id + 16, true);
                 }
                 else if(param_id >= 4) {
 
@@ -603,6 +604,7 @@ MachineOperand* Instruction::genMachineOperand(Operand* ope, bool isFloat)
             // 如果是函数参数
             if(id_se->isParam()) {
                 auto param_id = this->parent->getParent()->getParamId(ope);
+//                auto param_id = this->parent->getParent()->getIParamId(ope);
                 if(param_id >= 0 && param_id <= 3) {
                     mope = new MachineOperand(MachineOperand::REG, param_id);
                 }
@@ -1405,10 +1407,16 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
     cur_inst = new BranchMInstruction(cur_block, BranchMInstruction::BL, new MachineOperand(funcSE->getName(), true));
     cur_block->InsertInst(cur_inst);
     // 对于有返回值的函数调用 需要提供一条从mov r0, dst的指令
-    if(dynamic_cast<FunctionType*>(this->funcSE->getType())->getRetType() != TypeSystem::voidType) {
+    if(dynamic_cast<FunctionType*>(this->funcSE->getType())->getRetType() == TypeSystem::intType) {
         auto dst = genMachineOperand(operands[0]);
         auto src = new MachineOperand(MachineOperand::REG, 0);//r0
         cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, src);
+        cur_block->InsertInst(cur_inst);
+    }
+    else if(dynamic_cast<FunctionType*>(this->funcSE->getType())->getRetType() == TypeSystem::floatType) {
+        auto dst = genMachineOperand(operands[0], true);
+        auto src = new MachineOperand(MachineOperand::REG, 16, true);//s0
+        cur_inst = new MovMInstruction(cur_block, MovMInstruction::VMOV, dst, src);
         cur_block->InsertInst(cur_inst);
     }
     // 恢复栈帧 调整sp
@@ -1494,8 +1502,8 @@ void FBinaryInstruction::genMachineCode(AsmBuilder* builder)
 void FCmpInstruction::genMachineCode(AsmBuilder* builder)
 {
     MachineBlock* cur_block = builder->getBlock();
-    MachineOperand* src1 = genMachineOperand(operands[1]);
-    MachineOperand* src2 = genMachineOperand(operands[2]);
+    MachineOperand* src1 = genMachineOperand(operands[1], true);
+    MachineOperand* src2 = genMachineOperand(operands[2], true);
     MachineInstruction* cur_inst = nullptr;
     if (src1->isImm()) {
         MachineOperand* tmp_reg = genMachineVReg(true);
@@ -1518,6 +1526,8 @@ void FCmpInstruction::genMachineCode(AsmBuilder* builder)
         src2 = new MachineOperand(*tmp_reg);
     }
     cur_inst = new CmpMInstruction(cur_block, src1, src2, opcode, CmpMInstruction::VCMP);
+    cur_block->InsertInst(cur_inst);
+    cur_inst = new VmrsMInstruction(cur_block);
     cur_block->InsertInst(cur_inst);
     cur_block->setCurrentBranchCond(opcode);
     // 采用条件存储的方式将1/0存储到dst中

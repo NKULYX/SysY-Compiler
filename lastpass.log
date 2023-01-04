@@ -60,7 +60,7 @@ PASS: 040_while_if_test2
 PASS: 041_while_if_test3
 PASS: 069_greatest_common_divisor
 PASS: 100_int_literal
-PASS: 102_short_circuit3
+FAIL: 102_short_circuit3	Wrong Answer
 PASS: 1074_itera_sqrt
 PASS: 1075_max_container
 PASS: 1076_int_factor_sum
@@ -103,7 +103,7 @@ PASS: 078_big_int_mul
 PASS: 081_exgcd
 PASS: 083_brainfk
 PASS: 085_dijkstra
-PASS: 086_full_conn
+FAIL: 086_full_conn	Wrong Answer
 PASS: 089_hidden_var
 PASS: 091_kmp
 PASS: 092_max_flow
@@ -121,15 +121,15 @@ PASS: 1086_bin_search
 PASS: 1088_array_concat
 PASS: 1090_insert_order
 PASS: 1091_line_search
-PASS: 058_short_circuit
-PASS: 059_short_circuit2
+FAIL: 058_short_circuit	Wrong Answer
+FAIL: 059_short_circuit2	Wrong Answer
 PASS: 063_sort_test3
 PASS: 065_sort_test5
 PASS: 067_sort_test7
-PASS: 072_percolation
-PASS: 079_calculator
+FAIL: 072_percolation	Wrong Answer
+FAIL: 079_calculator	Wrong Answer
 PASS: 080_color
-PASS: 084_expr_eval
+FAIL: 084_expr_eval	Wrong Answer
 PASS: 097_var_name
 PASS: 098_chaos_token
 FAIL: 103_long_func	Compile Timeout
@@ -147,15 +147,15 @@ PASS: 114_register_alloc
 PASS: 115_nested_calls
 PASS: 116_nested_calls2
 PASS: 117_nested_loops
-FAIL: 196_float	Assemble Error
+FAIL: 196_float	Wrong Answer
 PASS: 198_matrix_add
 PASS: 199_matrix_sub
-FAIL: 200_matrix_mul	Wrong Answer
+PASS: 200_matrix_mul
 PASS: 201_matrix_tran
 PASS: 202_register_realloc
-FAIL: 35_math	Assemble Error
-FAIL: 36_rotate	Assemble Error
-FAIL: 37_dct	Assemble Error
-FAIL: 38_light2d	Assemble Error
+FAIL: 35_math	Wrong Answer
+FAIL: 36_rotate	Wrong Answer
+FAIL: 37_dct	Wrong Answer
+FAIL: 38_light2d	Execute Timeout
 FAIL: 39_fp_params	Compile Timeout
-Total: 160	Accept: 141	Fail: 19
+Total: 160	Accept: 135	Fail: 25

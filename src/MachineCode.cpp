@@ -405,7 +405,7 @@ CmpMInstruction::CmpMInstruction(MachineBlock* p,
 
 void CmpMInstruction::output()
 {
-    switch(this->op) {
+    switch(this->type) {
         case CMP:
             fprintf(yyout, "\tcmp ");
             break;
@@ -534,6 +534,15 @@ void VcvtMInstruction::output() {
     fprintf(yyout, ", ");
     this->use_list[0]->output();
     fprintf(yyout, "\n");
+}
+
+VmrsMInstruction::VmrsMInstruction(MachineBlock* p) {
+    this->parent = p;
+    this->type = MachineInstruction::VMRS;
+}
+
+void VmrsMInstruction::output() {
+    fprintf(yyout, "\tvmrs APSR_nzcv, FPSCR\n");
 }
 
 MachineFunction::MachineFunction(MachineUnit* p, SymbolEntry* sym_ptr) 
