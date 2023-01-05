@@ -723,9 +723,11 @@ void DefNode::genCode()
 
 void FuncCallParamsNode::genCode()
 {
+    genBr--;
     for(auto expr : paramsList){
         expr->genCode();
     }
+    genBr++;
 }
 
 std::vector<Operand*> FuncCallParamsNode::getOperandList()
