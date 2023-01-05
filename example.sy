@@ -1,8 +1,3 @@
-int func(int a) {
-    return 0;
-}
-
-int main() {
-    func(!func(1));
-    return 0;
+int main(){
+    return 3;
 }

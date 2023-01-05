@@ -1,8 +1,0 @@
-150c150
-< FAIL: 196_float	Assemble Error
----
-> PASS: 196_float
-161c161
-< Total: 160	Accept: 143	Fail: 17
----
-> Total: 160	Accept: 144	Fail: 16

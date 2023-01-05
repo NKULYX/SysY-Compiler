@@ -714,9 +714,11 @@ void MachineFunction::output()
     fprintf(yyout, "\tbx lr\n\n");
 }
 
-// TODO: 浮点数全局变量声明 数组全局变量声明
 void MachineUnit::PrintGlobalDecl()
 {
+    if(global_var_list.empty()) {
+        return;
+    }
     fprintf(yyout, "\t.data\n");
     for(auto var : global_var_list) {
         if(var->getType()->isArray()) {
@@ -766,10 +768,11 @@ void MachineUnit::output()
     * 2. Traverse all the function in func_list to print assembly code;
     * 3. Don't forget print bridge label at the end of assembly code!! */
     fprintf(yyout, "\t.arch armv8-a\n");
-    fprintf(yyout, "\t.fpu vfpv3-d16\n");
+//    fprintf(yyout, "\t.fpu vfpv3-d16\n");
     fprintf(yyout, "\t.arch_extension crc\n");
     fprintf(yyout, "\t.arm\n");
     PrintGlobalDecl();
+    fprintf(yyout, "\t.text\n");
     for(auto iter : func_list)
         iter->output();
     PrintGlobal();
