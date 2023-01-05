@@ -555,7 +555,7 @@ MachineOperand* Instruction::genMachineOperand(Operand* ope, bool isFloat)
             Type* type = id_se->getType();
             // 如果是函数参数
             if(id_se->isParam()) {
-                auto param_id = this->parent->getParent()->getParamId(ope);
+                auto param_id = this->parent->getParent()->getFParamId(ope);
 //                auto param_id = this->parent->getParent()->getFParamId(ope);
                 if(param_id >= 0 && param_id <= 3) {
                     mope = new MachineOperand(MachineOperand::REG, param_id + 16, true);
@@ -1330,7 +1330,7 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
             // 而对于局部数组需要添加fp的已经在上面处理完
             // 左起前4个参数通过r0-r3传递
             if(iparam_cnt < 4){
-                auto dst = new MachineOperand(MachineOperand::REG, i-1);//r0-r3
+                auto dst = new MachineOperand(MachineOperand::REG, iparam_cnt);//r0-r3
                 cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, dst_addr);
                 cur_block->InsertInst(cur_inst);
             }
@@ -1347,7 +1347,7 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
                 --fparam_cnt;
                 //左起前4个参数通过s0-s3传递
                 if(fparam_cnt < 4){
-                    auto dst = new MachineOperand(MachineOperand::REG, i - 1 + 16, true);
+                    auto dst = new MachineOperand(MachineOperand::REG, fparam_cnt + 16, true);
                     auto src = genMachineOperand(operands[i], true);
                     if(src->isImm()) {
                         auto internal_reg = genMachineVReg();
@@ -1383,7 +1383,7 @@ void CallInstruction::genMachineCode(AsmBuilder* builder)
                 --iparam_cnt;
                 //左起前4个参数通过r0-r3传递
                 if(iparam_cnt < 4){
-                    auto dst = new MachineOperand(MachineOperand::REG, i - 1);//r0-r3
+                    auto dst = new MachineOperand(MachineOperand::REG, iparam_cnt);//r0-r3
                     cur_inst = new MovMInstruction(cur_block, MovMInstruction::MOV, dst, genMachineOperand(operands[i]));
                     cur_block->InsertInst(cur_inst);
                 }

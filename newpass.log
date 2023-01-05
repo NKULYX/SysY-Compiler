@@ -153,9 +153,9 @@ PASS: 199_matrix_sub
 PASS: 200_matrix_mul
 PASS: 201_matrix_tran
 PASS: 202_register_realloc
-FAIL: 35_math	Wrong Answer
+PASS: 35_math
 PASS: 36_rotate
 FAIL: 37_dct	Wrong Answer
 FAIL: 38_light2d	Execute Timeout
 FAIL: 39_fp_params	Compile Timeout
-Total: 160	Accept: 144	Fail: 16
+Total: 160	Accept: 145	Fail: 15

@@ -148,14 +148,14 @@ PASS: 115_nested_calls
 PASS: 116_nested_calls2
 PASS: 117_nested_loops
 PASS: 196_float
-PASS: 198_matrix_add
-PASS: 199_matrix_sub
-PASS: 200_matrix_mul
-PASS: 201_matrix_tran
+FAIL: 198_matrix_add	Compile Error
+FAIL: 199_matrix_sub	Compile Error
+FAIL: 200_matrix_mul	Compile Error
+FAIL: 201_matrix_tran	Compile Error
 PASS: 202_register_realloc
 FAIL: 35_math	Wrong Answer
 PASS: 36_rotate
-FAIL: 37_dct	Wrong Answer
-FAIL: 38_light2d	Execute Timeout
-FAIL: 39_fp_params	Compile Timeout
-Total: 160	Accept: 144	Fail: 16
+FAIL: 37_dct	Compile Error
+FAIL: 38_light2d	Compile Error
+FAIL: 39_fp_params	Compile Error
+Total: 160	Accept: 140	Fail: 20
